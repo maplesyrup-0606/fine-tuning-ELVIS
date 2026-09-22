@@ -1,0 +1,19 @@
+# Fine-tuning framework
+ms-swift>=3.0.0
+
+# Base ML stack (matches ELVIS/requirements.txt where relevant)
+torch>=2.1
+transformers>=4.51.0
+peft>=0.11
+accelerate>=0.30
+datasets>=2.19
+Pillow
+numpy
+tqdm
+pyyaml
+
+# Experiment tracking
+wandb
+
+# Evaluation harness (SEED-Bench-2)
+vlmevalkit

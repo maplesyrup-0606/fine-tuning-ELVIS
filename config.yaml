@@ -1,0 +1,98 @@
+# Every locked decision for this experiment lives here.
+# Scripts read from this file; changes should be made here, not in code.
+
+experiment:
+  name: Qwen3-VL-4B-fine-tuning-continuity
+  hypothesis: >
+    Fine-tuning Qwen3-VL-4B on ELVIS continuity via LoRA improves its Gestalt
+    perceptual ability, and this improvement transfers to general vision
+    performance as measured by SEED-Bench-2.
+  seed: 42
+
+model:
+  base_id: Qwen/Qwen3-VL-4B-Instruct
+  loader: elvis.scripts.baseline_models.qwen.load_qwen_model  # reused from ELVIS
+
+lora:
+  rank: 4
+  alpha: 8
+  target_modules: [q_proj, k_proj, v_proj, o_proj]  # attention only
+  dropout: 0.0
+  scope: llm_only  # vision tower + merger frozen
+
+data:
+  source: elvis_continuity
+  principle: continuity
+  split_used_for_finetuning: train  # test split held out for evaluation
+
+  regeneration:
+    num_pos_per_pattern: 9   # first 3 → Stage 1 examples, remaining 6 → fine-tuning
+    num_neg_per_pattern: 9
+    img_size: 224
+    num_patterns: 432  # continuity total
+
+  stage1_examples_per_side: 3  # matches ELVIS img_num default
+  finetuning_samples_per_side: 6  # 9 - 3 = 6
+  total_finetuning_samples: 5184  # 432 patterns * 2 sides * 6 samples
+
+rules:
+  # Rules are pre-generated ONCE with the base model before ms-swift training.
+  # Baked into train.jsonl. No runtime cache, no per-epoch regeneration.
+  generator: elvis.scripts.baseline_models.qwen.infer_logic_rules
+  source_model: base  # base Qwen3-VL-4B, no LoRA
+  cache_path: data/rules.json
+
+training:
+  framework: ms-swift
+  dataset_path: data/train.jsonl
+  per_device_batch_size: 4
+  gradient_accumulation_steps: 8
+  effective_batch_size: 32
+  max_epochs: 3
+  learning_rate: 5.0e-5
+  lr_scheduler: cosine
+  warmup_ratio: 0.03
+  checkpoint_every: epoch
+  best_checkpoint_metric: continuity_test_accuracy
+
+  early_stopping:
+    metric: continuity_test_accuracy
+    target_absolute: 0.67   # ~7% absolute over 0.5976 baseline
+    regression_patience: 1  # stop if this epoch's accuracy < previous epoch
+
+wandb:
+  project: Qwen3-VL-4B-fine-tuning-continuity
+
+evaluation:
+  per_epoch:
+    - name: elvis_continuity_test
+      method: mode_1_baseline  # ELVIS._run_qwen_baseline, unchanged
+      data_split: test
+
+  final:
+    - name: elvis_continuity_test
+      method: mode_1_baseline
+      data_split: test
+    - name: seed_bench_2
+      harness: VLMEvalKit
+      scope: full  # all 27 dimensions
+
+  baseline_reference:
+    continuity_mode1_base: 0.5976  # from ELVIS results/continuity/baseline/20260630
+    seed_bench_2_base: null  # TBD — run before fine-tuning
+
+paths:
+  elvis_root_env: ELVIS_ROOT
+  elvis_data_env: ELVIS_DATA
+  results_env: ELVIS_FINETUNING_RESULTS
+
+cluster:
+  name: fir
+  training_gpu: 3g.40gb  # MIG slice
+  eval_gpu: h100:1       # full H100 for SEED-Bench-2 final run
+
+elvis_dependency:
+  mechanism: env_var_plus_sys_path
+  required_env: ELVIS_ROOT
+  required_changes_to_elvis:
+    - scripts/main.py: add --num_samples and --splits CLI flags (needed for Task #7)
