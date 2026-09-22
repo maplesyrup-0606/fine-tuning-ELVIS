@@ -13,18 +13,18 @@ set -euo pipefail
 # --- Environment ---
 module load StdEnv/2023 gcc opencv rdkit arrow
 
-VENV=${VENV:-/scratch/$USER/venv/elvis}
+VENV=${VENV:-$SCRATCH/venv/elvis}
 source "$VENV/bin/activate"
 
-VLMEVALKIT_DIR=${VLMEVALKIT_DIR:-$HOME/VLMEvalKit}
+VLMEVALKIT_DIR=${VLMEVALKIT_DIR:-$SCRATCH/VLMEvalKit}
 
 # Redirect HF cache to scratch (home quota is small on Alliance Canada)
-export HF_HOME=${HF_HOME:-/scratch/$USER/hf_cache}
+export HF_HOME=${HF_HOME:-$SCRATCH/hf_cache}
 export TRANSFORMERS_CACHE=$HF_HOME/transformers
 export HF_HUB_ENABLE_HF_TRANSFER=1
 mkdir -p "$HF_HOME"
 
-RESULTS_DIR=${ELVIS_FINETUNING_RESULTS:-/scratch/$USER/fine-tuning-ELVIS-results}
+RESULTS_DIR=${ELVIS_FINETUNING_RESULTS:-$SCRATCH/fine-tuning-ELVIS-results}
 mkdir -p "$RESULTS_DIR"
 mkdir -p logs
 
