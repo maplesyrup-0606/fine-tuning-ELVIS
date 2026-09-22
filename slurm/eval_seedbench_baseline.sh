@@ -1,6 +1,6 @@
 #!/bin/bash
 #SBATCH --job-name=seedbench2-baseline-qwen3vl4b
-#SBATCH --account=TODO_ACCOUNT
+#SBATCH --account=def-lsigal
 #SBATCH --time=12:00:00
 #SBATCH --gres=gpu:h100:1
 #SBATCH --cpus-per-task=8
