@@ -16,4 +16,7 @@ pyyaml
 wandb
 
 # Evaluation harness (SEED-Bench-2)
-vlmevalkit
+# NOTE: VLMEvalKit is NOT on PyPI. Install from source:
+#   git clone https://github.com/open-compass/VLMEvalKit.git
+#   cd VLMEvalKit && pip install -e .
+# On Alliance Canada: `module load gcc opencv rdkit arrow` first (rdkit/pyarrow are modules, not pip pkgs).
