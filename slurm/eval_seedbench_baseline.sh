@@ -1,8 +1,8 @@
 #!/bin/bash
 #SBATCH --job-name=seedbench2-baseline-qwen3vl4b
 #SBATCH --account=def-lsigal
-#SBATCH --time=24:00:00
-#SBATCH --gres=gpu:nvidia_h100_80gb_hbm3_3g.40gb:1
+#SBATCH --time=03:00:00
+#SBATCH --gres=gpu:h100:1
 #SBATCH --cpus-per-task=8
 #SBATCH --mem=48G
 #SBATCH --output=logs/seedbench_base_%j.out
@@ -37,22 +37,42 @@ python -c "import torch; print('cuda:', torch.cuda.is_available(), '|', torch.cu
 python -c "from vlmeval.config import supported_VLM; assert 'Qwen3-VL-4B-Instruct' in supported_VLM, 'model key missing'; print('vlmeval OK')"
 
 # --- Run ---
+# Job is capped at 3h; VLMEvalKit resumes from per-item partial output on the
+# next chained submission. If python exits nonzero (SIGTERM at time limit),
+# we chain another iteration below.
 cd "$VLMEVALKIT_DIR"
+set +e
 python run.py --data SEEDBench2 --model Qwen3-VL-4B-Instruct --verbose
+RC=$?
+set -e
 
-# --- Publish results to our results dir ---
-# Baseline (pre-fine-tuning) results go under seedbench_base/; the post-FT run
-# will drop into a sibling seedbench_ft/ so the two don't overwrite each other.
+# --- Publish (partial or complete) results ---
 OUT_SRC="$VLMEVALKIT_DIR/outputs/Qwen3-VL-4B-Instruct"
 DEST="$RESULTS_DIR/seedbench_base"
 mkdir -p "$DEST"
 if [ -d "$OUT_SRC" ]; then
-    cp "$OUT_SRC"/*SEEDBench2* "$DEST/" 2>/dev/null || true
-    echo "Copied SEEDBench2 outputs to $DEST"
+    cp -u "$OUT_SRC"/*SEEDBench2* "$DEST/" 2>/dev/null || true
+    echo "Copied any available SEEDBench2 outputs to $DEST"
     ls -la "$DEST" | grep -i seedbench || true
-else
-    echo "WARNING: expected outputs dir not found at $OUT_SRC"
+fi
+
+# --- Chain to next iteration if not done ---
+CHAIN_ITER=${CHAIN_ITER:-1}
+CHAIN_MAX=${CHAIN_MAX:-10}
+
+if [ $RC -eq 0 ]; then
+    echo "=== Eval completed (iter $CHAIN_ITER). Chain done. ==="
+    exit 0
+fi
+
+if [ $CHAIN_ITER -ge $CHAIN_MAX ]; then
+    echo "=== Chain cap $CHAIN_MAX reached without completion (exit $RC). Investigate. ==="
     exit 1
 fi
 
-echo "=== Done ==="
+NEXT_ITER=$((CHAIN_ITER + 1))
+echo "=== Iter $CHAIN_ITER exited $RC — submitting iter $NEXT_ITER (of max $CHAIN_MAX) ==="
+cd "$SLURM_SUBMIT_DIR"
+sbatch --dependency=afterany:$SLURM_JOB_ID \
+       --export=ALL,CHAIN_ITER=$NEXT_ITER,CHAIN_MAX=$CHAIN_MAX \
+       slurm/eval_seedbench_baseline.sh
