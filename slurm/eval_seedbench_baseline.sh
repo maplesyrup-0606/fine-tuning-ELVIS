@@ -39,11 +39,15 @@ cd "$VLMEVALKIT_DIR"
 python run.py --data SEEDBench2 --model Qwen3-VL-4B-Instruct --verbose
 
 # --- Publish results to our results dir ---
+# Baseline (pre-fine-tuning) results go under seedbench_base/; the post-FT run
+# will drop into a sibling seedbench_ft/ so the two don't overwrite each other.
 OUT_SRC="$VLMEVALKIT_DIR/outputs/Qwen3-VL-4B-Instruct"
+DEST="$RESULTS_DIR/seedbench_base"
+mkdir -p "$DEST"
 if [ -d "$OUT_SRC" ]; then
-    cp "$OUT_SRC"/*SEEDBench2* "$RESULTS_DIR/" 2>/dev/null || true
-    echo "Copied SEEDBench2 outputs to $RESULTS_DIR"
-    ls -la "$RESULTS_DIR" | grep -i seedbench || true
+    cp "$OUT_SRC"/*SEEDBench2* "$DEST/" 2>/dev/null || true
+    echo "Copied SEEDBench2 outputs to $DEST"
+    ls -la "$DEST" | grep -i seedbench || true
 else
     echo "WARNING: expected outputs dir not found at $OUT_SRC"
     exit 1
