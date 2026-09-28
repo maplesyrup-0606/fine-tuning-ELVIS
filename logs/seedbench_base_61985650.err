@@ -1,0 +1,14 @@
+[2026-09-28 15:47:56] ERROR - __init__.py: load_env - 20: Did not detect the .env file at /scratch/merc0606/VLMEvalKit/.env, failed to load.
+/scratch/merc0606/venv/elvis/lib/python3.11/site-packages/huggingface_hub/constants.py:298: FutureWarning: The `HF_HUB_ENABLE_HF_TRANSFER` environment variable is deprecated as 'hf_transfer' is not used anymore. Please use `HF_XET_HIGH_PERFORMANCE` instead to enable high performance transfer with Xet. Visit https://huggingface.co/docs/huggingface_hub/package_reference/environment_variables#hfxethighperformance for more details.
+  warnings.warn(
+Traceback (most recent call last):
+  File "/scratch/merc0606/VLMEvalKit/run.py", line 38, in <module>
+    GPU_LIST = get_gpu_list()
+               ^^^^^^^^^^^^^^
+  File "/scratch/merc0606/VLMEvalKit/run.py", line 23, in get_gpu_list
+    gpu_list = [int(x) for x in CUDA_VISIBLE_DEVICES.split(',')]
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/scratch/merc0606/VLMEvalKit/run.py", line 23, in <listcomp>
+    gpu_list = [int(x) for x in CUDA_VISIBLE_DEVICES.split(',')]
+                ^^^^^^
+ValueError: invalid literal for int() with base 10: 'MIG-32537e18-851b-5f4b-a3e4-e82b2f39769f'
