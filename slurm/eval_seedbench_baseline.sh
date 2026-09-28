@@ -2,9 +2,9 @@
 #SBATCH --job-name=seedbench2-baseline-qwen3vl4b
 #SBATCH --account=def-lsigal
 #SBATCH --time=03:00:00
-#SBATCH --gres=gpu:h100:1
-#SBATCH --cpus-per-task=8
-#SBATCH --mem=48G
+#SBATCH --gpus=nvidia_h100_80gb_hbm3_3g.40gb:1
+#SBATCH --cpus-per-task=6
+#SBATCH --mem=32G
 #SBATCH --output=logs/seedbench_base_%j.out
 #SBATCH --error=logs/seedbench_base_%j.err
 #SBATCH --mail-type=BEGIN,END,FAIL
@@ -13,7 +13,9 @@
 set -euo pipefail
 
 # --- Environment ---
-module load StdEnv/2023 gcc opencv rdkit arrow
+# Modules mirror ELVIS's working slurm scripts (python 3.11.5 + cuda 12.6 + opencv);
+# rdkit and arrow are extra deps VLMEvalKit needs at import time.
+module load python/3.11.5 cuda/12.6 opencv/4.13.0 rdkit arrow
 
 VENV=${VENV:-$SCRATCH/venv/elvis}
 source "$VENV/bin/activate"
