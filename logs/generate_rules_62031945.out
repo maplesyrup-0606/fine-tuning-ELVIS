@@ -1,0 +1,45 @@
+=== Job 62031945 on fc11004 ===
+Mon Sep 28 21:45:43 2026       
++-----------------------------------------------------------------------------------------+
+| NVIDIA-SMI 580.159.03             Driver Version: 580.159.03     CUDA Version: 13.0     |
++-----------------------------------------+------------------------+----------------------+
+| GPU  Name                 Persistence-M | Bus-Id          Disp.A | Volatile Uncorr. ECC |
+| Fan  Temp   Perf          Pwr:Usage/Cap |           Memory-Usage | GPU-Util  Compute M. |
+|                                         |                        |               MIG M. |
+|=========================================+========================+======================|
+|   0  NVIDIA H100 80GB HBM3          On  |   00000000:46:00.0 Off |                   On |
+| N/A   27C    P0            142W /  700W |     243MiB /  81559MiB |     N/A      Default |
+|                                         |                        |              Enabled |
++-----------------------------------------+------------------------+----------------------+
+
++-----------------------------------------------------------------------------------------+
+| MIG devices:                                                                            |
++------------------+----------------------------------+-----------+-----------------------+
+| GPU  GI  CI  MIG |              Shared Memory-Usage |        Vol|        Shared         |
+|      ID  ID  Dev |                Shared BAR1-Usage | SM     Unc| CE ENC  DEC  OFA  JPG |
+|                  |                                  |        ECC|                       |
+|==================+==================================+===========+=======================|
+|  0    2   0   0  |              44MiB / 40448MiB    | 60      0 |  3   0    3    0    3 |
+|                  |               0MiB / 24740MiB    |           |                       |
++------------------+----------------------------------+-----------+-----------------------+
+
++-----------------------------------------------------------------------------------------+
+| Processes:                                                                              |
+|  GPU   GI   CI              PID   Type   Process name                        GPU Memory |
+|        ID   ID                                                               Usage      |
+|=========================================================================================|
+|  No running processes found                                                             |
++-----------------------------------------------------------------------------------------+
+ELVIS_ROOT=/scratch/merc0606/ELVIS
+ELVIS_DATA=/scratch/merc0606/ELVIS/data
+cuda: True | NVIDIA H100 80GB HBM3 MIG 3g.40gb
+=== Full run: all patterns → data/continuity/rules.json ===
+Discovered 432 patterns in /scratch/merc0606/ELVIS/data/continuity/train; processing 432.
+Loading base model Qwen/Qwen3-VL-4B-Instruct (this will take a minute)...
+Wrote 432 rules to data/continuity/rules.json
+--- output summary ---
+{'source_model': 'Qwen/Qwen3-VL-4B-Instruct', 'principle': 'continuity', 'stage1_examples_per_side': 3, 'num_patterns': 432, 'elvis_data_path': '/scratch/merc0606/ELVIS/data/continuity/train', 'generated_at': '2026-09-28T22:10:37'}
+sample rule: The rule distinguishing the positive examples (images 1-3) from the negative examples (images 4-6) is based on the Gestalt principle of **continuity**.
+
+- **Positive examples (1-3)**: The shapes (circ
+=== Done ===
