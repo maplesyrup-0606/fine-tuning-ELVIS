@@ -1,0 +1,142 @@
+=== Job 62004698 on fc11015 ===
+Mon Sep 28 18:12:18 2026       
++-----------------------------------------------------------------------------------------+
+| NVIDIA-SMI 580.159.03             Driver Version: 580.159.03     CUDA Version: 13.0     |
++-----------------------------------------+------------------------+----------------------+
+| GPU  Name                 Persistence-M | Bus-Id          Disp.A | Volatile Uncorr. ECC |
+| Fan  Temp   Perf          Pwr:Usage/Cap |           Memory-Usage | GPU-Util  Compute M. |
+|                                         |                        |               MIG M. |
+|=========================================+========================+======================|
+|   0  NVIDIA H100 80GB HBM3          On  |   00000000:06:00.0 Off |                   On |
+| N/A   25C    P0            120W /  700W |    1814MiB /  81559MiB |     N/A      Default |
+|                                         |                        |              Enabled |
++-----------------------------------------+------------------------+----------------------+
+
++-----------------------------------------------------------------------------------------+
+| MIG devices:                                                                            |
++------------------+----------------------------------+-----------+-----------------------+
+| GPU  GI  CI  MIG |              Shared Memory-Usage |        Vol|        Shared         |
+|      ID  ID  Dev |                Shared BAR1-Usage | SM     Unc| CE ENC  DEC  OFA  JPG |
+|                  |                                  |        ECC|                       |
+|==================+==================================+===========+=======================|
+|  0    2   0   0  |              44MiB / 40448MiB    | 60      0 |  3   0    3    0    3 |
+|                  |               0MiB / 24740MiB    |           |                       |
++------------------+----------------------------------+-----------+-----------------------+
+
++-----------------------------------------------------------------------------------------+
+| Processes:                                                                              |
+|  GPU   GI   CI              PID   Type   Process name                        GPU Memory |
+|        ID   ID                                                               Usage      |
+|=========================================================================================|
+|  No running processes found                                                             |
++-----------------------------------------------------------------------------------------+
+cuda: True | NVIDIA H100 80GB HBM3 MIG 3g.40gb
+vlmeval OK
+[2026-09-28 18:14:08] WARNING - vlmeval.__main__: --reuse is not set, this run will start from a fresh output directory
+[2026-09-28 18:14:08] INFO - vlmeval.__main__: =========== Qwen3-VL-4B-Instruct ===========
+[2026-09-28 18:14:08] INFO - vlmeval.__main__: ----------- SEEDBench2 -----------
+[2026-09-28 18:14:21] INFO - vlmeval.__main__: {'nproc': 32, 'verbose': True, 'retry': 6, 'timeout': 600, 'model': 'gpt-4o-mini'}
+INFO 09-28 18:14:36 [api_utils.py:273] non-default args: {'trust_remote_code': True, 'gpu_memory_utilization': 0.9, 'max_num_seqs': 8, 'disable_log_stats': True, 'limit_mm_per_prompt': {'image': 24}, 'model': 'Qwen/Qwen3-VL-4B-Instruct'}
+INFO 09-28 18:14:56 [model.py:619] Resolved architecture: Qwen3VLForConditionalGeneration
+INFO 09-28 18:14:56 [model.py:1776] Using max model len 262144
+INFO 09-28 18:14:56 [scheduler.py:252] Chunked prefill is enabled with max_num_batched_tokens=16384.
+INFO 09-28 18:14:56 [vllm.py:1042] Asynchronous scheduling is enabled.
+INFO 09-28 18:14:56 [kernel.py:292] Final IR op priority after setting platform defaults: IrOpPriorityConfig(rms_norm=['native'], fused_add_rms_norm=['native'])
+(EngineCore pid=1627110) INFO 09-28 18:15:25 [core.py:114] Initializing a V1 LLM engine (v0.25.0) with config: model='Qwen/Qwen3-VL-4B-Instruct', speculative_config=None, tokenizer='Qwen/Qwen3-VL-4B-Instruct', skip_tokenizer_init=False, tokenizer_mode=auto, revision=None, tokenizer_revision=None, trust_remote_code=True, dtype=torch.bfloat16, max_seq_len=262144, download_dir=None, load_format=auto, tensor_parallel_size=1, pipeline_parallel_size=1, data_parallel_size=1, decode_context_parallel_size=1, dcp_comm_backend=ag_rs, disable_custom_all_reduce=False, quantization=None, quantization_config=None, enforce_eager=False, enable_return_routed_experts=False, kv_cache_dtype=auto, device_config=cuda, structured_outputs_config=StructuredOutputsConfig(backend='auto', disable_any_whitespace=False, disable_additional_properties=False, reasoning_parser='', reasoning_parser_plugin='', enable_in_reasoning=False), observability_config=ObservabilityConfig(show_hidden_metrics_for_version=None, otlp_traces_endpoint=None, collect_detailed_traces=None, kv_cache_metrics=False, kv_cache_metrics_sample=0.01, cudagraph_metrics=False, enable_layerwise_nvtx_tracing=False, enable_mfu_metrics=False, enable_mm_processor_stats=False, enable_logging_iteration_details=False, jit_monitor_mode='warn', jit_monitor_verbose=False), seed=0, served_model_name=Qwen/Qwen3-VL-4B-Instruct, enable_prefix_caching=True, enable_chunked_prefill=True, pooler_config=None, compilation_config={'mode': <CompilationMode.VLLM_COMPILE: 3>, 'debug_dump_path': None, 'cache_dir': '', 'compile_cache_save_format': 'binary', 'backend': 'inductor', 'custom_ops': ['none'], 'ir_enable_torch_wrap': True, 'splitting_ops': ['vllm::unified_attention_with_output', 'vllm::unified_mla_attention_with_output', 'vllm::mamba_mixer2', 'vllm::mamba_mixer', 'vllm::short_conv', 'vllm::linear_attention', 'vllm::plamo2_mamba_mixer', 'vllm::qwen_gdn_attention_core', 'vllm::gdn_attention_core_xpu', 'vllm::olmo_hybrid_gdn_full_forward', 'vllm::kda_attention', 'vllm::sparse_attn_indexer', 'vllm::rocm_aiter_sparse_attn_indexer', 'vllm::deepseek_v4_attention', 'vllm::hpc_rope_norm_forward', 'vllm::unified_kv_cache_update', 'vllm::unified_mla_kv_cache_update'], 'compile_mm_encoder': False, 'cudagraph_mm_encoder': False, 'encoder_cudagraph_token_budgets': [], 'encoder_cudagraph_max_vision_items_per_batch': 0, 'encoder_cudagraph_max_frames_per_batch': None, 'compile_sizes': [], 'compile_ranges_endpoints': [16384], 'inductor_compile_config': {'enable_auto_functionalized_v2': False, 'size_asserts': False, 'alignment_asserts': False, 'scalar_asserts': False, 'combo_kernels': True, 'benchmark_combo_kernel': True}, 'inductor_passes': {}, 'cudagraph_mode': <CUDAGraphMode.FULL_AND_PIECEWISE: (2, 1)>, 'cudagraph_num_of_warmups': 1, 'cudagraph_capture_sizes': [1, 2, 4, 8, 16], 'cudagraph_copy_inputs': False, 'cudagraph_specialize_lora': True, 'use_inductor_graph_partition': False, 'pass_config': {'fuse_norm_quant': False, 'fuse_act_quant': False, 'fuse_attn_quant': False, 'enable_sp': False, 'fuse_gemm_comms': False, 'fuse_allreduce_rms': False, 'fuse_rope_kvcache_cat_mla': False, 'fuse_act_padding': False}, 'max_cudagraph_capture_size': 16, 'dynamic_shapes_config': {'type': <DynamicShapesType.BACKED: 'backed'>, 'evaluate_guards': False, 'assume_32_bit_indexing': False}, 'local_cache_dir': None, 'fast_moe_cold_start': False, 'static_all_moe_layers': []}, kernel_config=KernelConfig(ir_op_priority=IrOpPriorityConfig(rms_norm=['native'], fused_add_rms_norm=['native']), enable_flashinfer_autotune=True, enable_cutedsl_warmup=True, moe_backend='auto', linear_backend='auto')
+(EngineCore pid=1627110) INFO 09-28 18:15:28 [parallel_state.py:1607] world_size=1 rank=0 local_rank=0 distributed_init_method=tcp://172.26.20.15:38453 backend=nccl
+(EngineCore pid=1627110) INFO 09-28 18:15:30 [parallel_state.py:1942] rank 0 in world size 1 is assigned as DP rank 0, PP rank 0, PCP rank 0, TP rank 0, EP rank N/A, EPLB rank N/A
+(EngineCore pid=1627110) INFO 09-28 18:15:30 [gpu_worker.py:360] Using V2 Model Runner
+(EngineCore pid=1627110) INFO 09-28 18:15:33 [model_runner.py:281] Loading model from scratch...
+(EngineCore pid=1627110) INFO 09-28 18:15:36 [cuda.py:535] Using backend AttentionBackendEnum.FLASH_ATTN for vit attention
+(EngineCore pid=1627110) INFO 09-28 18:15:36 [mm_encoder_attention.py:373] Using AttentionBackendEnum.FLASH_ATTN for MMEncoderAttention.
+(EngineCore pid=1627110) INFO 09-28 18:15:36 [vllm.py:1042] Asynchronous scheduling is enabled.
+(EngineCore pid=1627110) INFO 09-28 18:15:36 [kernel.py:292] Final IR op priority after setting platform defaults: IrOpPriorityConfig(rms_norm=['native'], fused_add_rms_norm=['native'])
+(EngineCore pid=1627110) INFO 09-28 18:15:51 [cuda.py:476] Using FLASH_ATTN attention backend out of potential backends: ['FLASH_ATTN', 'FLASHINFER', 'TRITON_ATTN', 'FLEX_ATTENTION'].
+(EngineCore pid=1627110) INFO 09-28 18:15:51 [flash_attn.py:718] Using FlashAttention version 3
+(EngineCore pid=1627110) INFO 09-28 18:16:01 [weight_utils.py:849] Filesystem type for checkpoints: LUSTRE. Checkpoint size: 8.27 GiB. Available RAM: 1066.81 GiB.
+(EngineCore pid=1627110) INFO 09-28 18:16:01 [weight_utils.py:811] Prefetching checkpoint files into page cache started (in background, num_threads=8, block_size=16777216 bytes)
+(EngineCore pid=1627110) INFO 09-28 18:16:04 [weight_utils.py:783] Prefetching checkpoint files: 10% (1/2)
+(EngineCore pid=1627110) INFO 09-28 18:16:04 [weight_utils.py:783] Prefetching checkpoint files: 20% (2/2)
+(EngineCore pid=1627110) INFO 09-28 18:16:04 [weight_utils.py:806] Prefetching checkpoint files into page cache finished in 2.95s
+(EngineCore pid=1627110) INFO 09-28 18:16:06 [default_loader.py:430] Loading weights took 5.69 seconds
+(EngineCore pid=1627110) INFO 09-28 18:16:07 [model_runner.py:302] Model loading took 8.8 GiB and 34.870395 seconds
+(EngineCore pid=1627110) INFO 09-28 18:16:07 [topk_topp_sampler.py:55] Using FlashInfer for top-p & top-k sampling.
+(EngineCore pid=1627110) INFO 09-28 18:16:23 [backends.py:1089] Using cache directory: /home/merc0606/.cache/vllm/torch_compile_cache/283db90de2/rank_0_0/backbone for vLLM's torch.compile
+(EngineCore pid=1627110) INFO 09-28 18:16:23 [backends.py:1148] Dynamo bytecode transform time: 10.97 s
+(EngineCore pid=1627110) INFO 09-28 18:16:38 [backends.py:378] Cache the graph of compile range (1, 16384) for later use
+(EngineCore pid=1627110) INFO 09-28 18:16:52 [backends.py:393] Compiling a graph for compile range (1, 16384) takes 28.54 s
+(EngineCore pid=1627110) INFO 09-28 18:16:56 [decorators.py:708] saved AOT compiled function to /home/merc0606/.cache/vllm/torch_compile_cache/torch_aot_compile/7bb552db2319b800bb1774a08aaa874160d1b78f55ae81617266f3577b25cadc/rank_0_0/model
+(EngineCore pid=1627110) INFO 09-28 18:16:56 [monitor.py:53] torch.compile took 44.20 s in total
+(EngineCore pid=1627110) INFO 09-28 18:16:57 [monitor.py:81] Initial profiling/warmup run took 1.55 s
+(EngineCore pid=1627110) INFO 09-28 18:17:01 [gpu_worker.py:538] Available KV cache memory: 25.37 GiB
+(EngineCore pid=1627110) ERROR 09-28 18:17:01 [core.py:1231] EngineCore failed to start.
+(EngineCore pid=1627110) ERROR 09-28 18:17:01 [core.py:1231] Traceback (most recent call last):
+(EngineCore pid=1627110) ERROR 09-28 18:17:01 [core.py:1231]   File "/scratch/merc0606/venv/elvis/lib/python3.11/site-packages/vllm/v1/engine/core.py", line 1200, in run_engine_core
+(EngineCore pid=1627110) ERROR 09-28 18:17:01 [core.py:1231]     engine_core = EngineCoreProc(*args, engine_index=dp_rank, **kwargs)
+(EngineCore pid=1627110) ERROR 09-28 18:17:01 [core.py:1231]                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+(EngineCore pid=1627110) ERROR 09-28 18:17:01 [core.py:1231]   File "/scratch/merc0606/venv/elvis/lib/python3.11/site-packages/vllm/tracing/otel.py", line 178, in sync_wrapper
+(EngineCore pid=1627110) ERROR 09-28 18:17:01 [core.py:1231]     return func(*args, **kwargs)
+(EngineCore pid=1627110) ERROR 09-28 18:17:01 [core.py:1231]            ^^^^^^^^^^^^^^^^^^^^^
+(EngineCore pid=1627110) ERROR 09-28 18:17:01 [core.py:1231]   File "/scratch/merc0606/venv/elvis/lib/python3.11/site-packages/vllm/v1/engine/core.py", line 966, in __init__
+(EngineCore pid=1627110) ERROR 09-28 18:17:01 [core.py:1231]     super().__init__(
+(EngineCore pid=1627110) ERROR 09-28 18:17:01 [core.py:1231]   File "/scratch/merc0606/venv/elvis/lib/python3.11/site-packages/vllm/v1/engine/core.py", line 133, in __init__
+(EngineCore pid=1627110) ERROR 09-28 18:17:01 [core.py:1231]     kv_cache_config = self._initialize_kv_caches(vllm_config)
+(EngineCore pid=1627110) ERROR 09-28 18:17:01 [core.py:1231]                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+(EngineCore pid=1627110) ERROR 09-28 18:17:01 [core.py:1231]   File "/scratch/merc0606/venv/elvis/lib/python3.11/site-packages/vllm/tracing/otel.py", line 178, in sync_wrapper
+(EngineCore pid=1627110) ERROR 09-28 18:17:01 [core.py:1231]     return func(*args, **kwargs)
+(EngineCore pid=1627110) ERROR 09-28 18:17:01 [core.py:1231]            ^^^^^^^^^^^^^^^^^^^^^
+(EngineCore pid=1627110) ERROR 09-28 18:17:01 [core.py:1231]   File "/scratch/merc0606/venv/elvis/lib/python3.11/site-packages/vllm/v1/engine/core.py", line 294, in _initialize_kv_caches
+(EngineCore pid=1627110) ERROR 09-28 18:17:01 [core.py:1231]     kv_cache_configs = get_kv_cache_configs(
+(EngineCore pid=1627110) ERROR 09-28 18:17:01 [core.py:1231]                        ^^^^^^^^^^^^^^^^^^^^^
+(EngineCore pid=1627110) ERROR 09-28 18:17:01 [core.py:1231]   File "/scratch/merc0606/venv/elvis/lib/python3.11/site-packages/vllm/v1/core/kv_cache_utils.py", line 2101, in get_kv_cache_configs
+(EngineCore pid=1627110) ERROR 09-28 18:17:01 [core.py:1231]     _check_enough_kv_cache_memory(
+(EngineCore pid=1627110) ERROR 09-28 18:17:01 [core.py:1231]   File "/scratch/merc0606/venv/elvis/lib/python3.11/site-packages/vllm/v1/core/kv_cache_utils.py", line 760, in _check_enough_kv_cache_memory
+(EngineCore pid=1627110) ERROR 09-28 18:17:01 [core.py:1231]     raise ValueError(
+(EngineCore pid=1627110) ERROR 09-28 18:17:01 [core.py:1231] ValueError: To serve at least one request with the model's max seq len (262144), (36.0 GiB KV cache is needed, which is larger than the available KV cache memory (25.37 GiB). Based on the available memory, the estimated maximum model length is 184704. Try increasing `gpu_memory_utilization` (which also controls CPU memory on the CPU backend) or decreasing `max_model_len` when initializing the engine. See https://docs.vllm.ai/en/latest/configuration/conserving_memory/ for more details.
+[2026-09-28 18:17:06] ERROR - vlmeval.__main__: Model Qwen3-VL-4B-Instruct x Dataset SEEDBench2 (SEEDBench2) combination failed: Engine core initialization failed. See root cause above. Failed core proc(s): {}, skipping this combination.
+Traceback (most recent call last):
+  File "/scratch/merc0606/VLMEvalKit/run.py", line 866, in run_local_mode
+    model = infer_data_job(
+            ^^^^^^^^^^^^^^^
+  File "/scratch/merc0606/VLMEvalKit/vlmeval/inference.py", line 244, in infer_data_job
+    model = infer_data(
+            ^^^^^^^^^^^
+  File "/scratch/merc0606/VLMEvalKit/vlmeval/inference.py", line 150, in infer_data
+    model = supported_VLM[model_name](**kwargs) if isinstance(model, str) else model
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/scratch/merc0606/VLMEvalKit/vlmeval/vlm/qwen3_vl/model.py", line 142, in __init__
+    self.llm = LLM(
+               ^^^^
+  File "/scratch/merc0606/venv/elvis/lib/python3.11/site-packages/vllm/entrypoints/llm.py", line 349, in __init__
+    self.llm_engine = LLMEngine.from_engine_args(
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/scratch/merc0606/venv/elvis/lib/python3.11/site-packages/vllm/v1/engine/llm_engine.py", line 179, in from_engine_args
+    return cls(
+           ^^^^
+  File "/scratch/merc0606/venv/elvis/lib/python3.11/site-packages/vllm/v1/engine/llm_engine.py", line 105, in __init__
+    self.engine_core = EngineCoreClient.make_client(
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/scratch/merc0606/venv/elvis/lib/python3.11/site-packages/vllm/v1/engine/core_client.py", line 103, in make_client
+    return SyncMPClient(vllm_config, executor_class, log_stats)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/scratch/merc0606/venv/elvis/lib/python3.11/site-packages/vllm/tracing/otel.py", line 178, in sync_wrapper
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/scratch/merc0606/venv/elvis/lib/python3.11/site-packages/vllm/v1/engine/core_client.py", line 786, in __init__
+    super().__init__(
+  File "/scratch/merc0606/venv/elvis/lib/python3.11/site-packages/vllm/v1/engine/core_client.py", line 573, in __init__
+    with launch_core_engines(
+  File "/cvmfs/soft.computecanada.ca/easybuild/software/2023/x86-64-v4/Compiler/gcccore/python/3.11.5/lib/python3.11/contextlib.py", line 144, in __exit__
+    next(self.gen)
+  File "/scratch/merc0606/venv/elvis/lib/python3.11/site-packages/vllm/v1/engine/utils.py", line 1213, in launch_core_engines
+    wait_for_engine_startup(
+  File "/scratch/merc0606/venv/elvis/lib/python3.11/site-packages/vllm/v1/engine/utils.py", line 1272, in wait_for_engine_startup
+    raise RuntimeError(
+RuntimeError: Engine core initialization failed. See root cause above. Failed core proc(s): {}
+[2026-09-28 18:17:06] INFO - vlmeval.__main__: Run Summary Report:
+[2026-09-28 18:17:06] INFO - vlmeval.__main__: 
+benchmark    infer_fail_rate    judge_fail_rate    primary_metric    primary_metric_value    skip_reason    eval_error
+-----------  -----------------  -----------------  ----------------  ----------------------  -------------  --------------------------------------------------------------------------------
+SEEDBench2   -                  -                  -                 -                       -              Engine core initialization failed. See root cause above. Failed core proc(s): {}
+Copied any available SEEDBench2 outputs to /scratch/merc0606/fine-tuning-ELVIS/results/seedbench_base
+=== Eval completed (iter 1). Chain done. ===
