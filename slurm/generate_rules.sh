@@ -37,10 +37,10 @@ python -c "import torch; print('cuda:', torch.cuda.is_available(), '|', torch.cu
 cd "$SLURM_SUBMIT_DIR"
 
 if [ "${SMOKE:-0}" = "1" ]; then
-    echo "=== SMOKE mode: 3 patterns → data/rules_smoke.json ==="
-    python scripts/generate_rules.py --patterns 000,001,002 --output data/rules_smoke.json
+    echo "=== SMOKE mode: 3 patterns → data/continuity/rules_smoke.json ==="
+    python scripts/generate_rules.py --patterns 000,001,002 --output data/continuity/rules_smoke.json
     echo "--- smoke output ---"
-    cat data/rules_smoke.json
+    cat data/continuity/rules_smoke.json
 else
     echo "=== Full run: all patterns → data/continuity/rules.json ==="
     python scripts/generate_rules.py
