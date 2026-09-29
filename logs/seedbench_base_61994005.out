@@ -1,0 +1,93 @@
+=== Job 61994005 on fc11019 ===
+Mon Sep 28 16:38:59 2026       
++-----------------------------------------------------------------------------------------+
+| NVIDIA-SMI 580.159.03             Driver Version: 580.159.03     CUDA Version: 13.0     |
++-----------------------------------------+------------------------+----------------------+
+| GPU  Name                 Persistence-M | Bus-Id          Disp.A | Volatile Uncorr. ECC |
+| Fan  Temp   Perf          Pwr:Usage/Cap |           Memory-Usage | GPU-Util  Compute M. |
+|                                         |                        |               MIG M. |
+|=========================================+========================+======================|
+|   0  NVIDIA H100 80GB HBM3          On  |   00000000:46:00.0 Off |                   On |
+| N/A   27C    P0            162W /  700W |    9719MiB /  81559MiB |     N/A      Default |
+|                                         |                        |              Enabled |
++-----------------------------------------+------------------------+----------------------+
+
++-----------------------------------------------------------------------------------------+
+| MIG devices:                                                                            |
++------------------+----------------------------------+-----------+-----------------------+
+| GPU  GI  CI  MIG |              Shared Memory-Usage |        Vol|        Shared         |
+|      ID  ID  Dev |                Shared BAR1-Usage | SM     Unc| CE ENC  DEC  OFA  JPG |
+|                  |                                  |        ECC|                       |
+|==================+==================================+===========+=======================|
+|  0    2   0   0  |              44MiB / 40448MiB    | 60      0 |  3   0    3    0    3 |
+|                  |               0MiB / 24740MiB    |           |                       |
++------------------+----------------------------------+-----------+-----------------------+
+
++-----------------------------------------------------------------------------------------+
+| Processes:                                                                              |
+|  GPU   GI   CI              PID   Type   Process name                        GPU Memory |
+|        ID   ID                                                               Usage      |
+|=========================================================================================|
+|  No running processes found                                                             |
++-----------------------------------------------------------------------------------------+
+cuda: True | NVIDIA H100 80GB HBM3 MIG 3g.40gb
+vlmeval OK
+[2026-09-28 16:40:27] WARNING - vlmeval.__main__: --reuse is not set, this run will start from a fresh output directory
+[2026-09-28 16:40:27] INFO - vlmeval.__main__: =========== Qwen3-VL-4B-Instruct ===========
+[2026-09-28 16:40:27] INFO - vlmeval.__main__: ----------- SEEDBench2 -----------
+[2026-09-28 17:27:24] ERROR - vlmeval.__main__: Model Qwen3-VL-4B-Instruct x Dataset SEEDBench2 (SEEDBench2) combination failed: Failed to download https://huggingface.co/datasets/VLMEval/SEEDBench2/resolve/main/SEEDBench2.tsv, skipping this combination.
+Traceback (most recent call last):
+  File "/scratch/merc0606/VLMEvalKit/vlmeval/smp/file.py", line 314, in download_file
+    urllib.request.urlretrieve(url, filename=filename, reporthook=t.update_to)
+  File "/cvmfs/soft.computecanada.ca/easybuild/software/2023/x86-64-v4/Compiler/gcccore/python/3.11.5/lib/python3.11/urllib/request.py", line 280, in urlretrieve
+    raise ContentTooShortError(
+urllib.error.ContentTooShortError: <urlopen error retrieval incomplete: got only 4214411840 out of 8345260588 bytes>
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/scratch/merc0606/VLMEvalKit/vlmeval/smp/file.py", line 314, in download_file
+    urllib.request.urlretrieve(url, filename=filename, reporthook=t.update_to)
+  File "/cvmfs/soft.computecanada.ca/easybuild/software/2023/x86-64-v4/Compiler/gcccore/python/3.11.5/lib/python3.11/urllib/request.py", line 280, in urlretrieve
+    raise ContentTooShortError(
+urllib.error.ContentTooShortError: <urlopen error retrieval incomplete: got only 458701907 out of 8345260588 bytes>
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/scratch/merc0606/VLMEvalKit/vlmeval/smp/file.py", line 322, in download_file
+    download_file(url_new, filename)
+  File "/scratch/merc0606/VLMEvalKit/vlmeval/smp/file.py", line 328, in download_file
+    raise Exception(f'Failed to download {url}')
+Exception: Failed to download https://hf-mirror.com/datasets/VLMEval/SEEDBench2/resolve/main/SEEDBench2.tsv
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/scratch/merc0606/VLMEvalKit/run.py", line 751, in run_local_mode
+    dataset = build_dataset_from_spec(spec, extra_kwargs=dataset_kwargs)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/scratch/merc0606/VLMEvalKit/run.py", line 247, in build_dataset_from_spec
+    return build_dataset(spec.dataset_name, **(extra_kwargs or {}))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/scratch/merc0606/VLMEvalKit/vlmeval/dataset/__init__.py", line 419, in build_dataset
+    return cls(dataset=dataset_name, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/scratch/merc0606/VLMEvalKit/vlmeval/dataset/image_base.py", line 152, in __init__
+    data = self.load_data(dataset)
+           ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/scratch/merc0606/VLMEvalKit/vlmeval/dataset/image_base.py", line 323, in load_data
+    return self.prepare_tsv(url, file_md5)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/scratch/merc0606/VLMEvalKit/vlmeval/dataset/image_base.py", line 254, in prepare_tsv
+    download_file(url, data_path)
+  File "/scratch/merc0606/VLMEvalKit/vlmeval/smp/file.py", line 326, in download_file
+    raise Exception(f'Failed to download {url}')
+Exception: Failed to download https://huggingface.co/datasets/VLMEval/SEEDBench2/resolve/main/SEEDBench2.tsv
+[2026-09-28 17:27:24] INFO - vlmeval.__main__: Run Summary Report:
+[2026-09-28 17:27:24] INFO - vlmeval.__main__: 
+benchmark    infer_fail_rate    judge_fail_rate    primary_metric    primary_metric_value    skip_reason    eval_error
+-----------  -----------------  -----------------  ----------------  ----------------------  -------------  -------------------------------------------------------------------------------------------------
+SEEDBench2   -                  -                  -                 -                       -              Failed to download https://huggingface.co/datasets/VLMEval/SEEDBench2/resolve/main/SEEDBench2.tsv
+Copied any available SEEDBench2 outputs to /scratch/merc0606/fine-tuning-ELVIS-results/seedbench_base
+=== Eval completed (iter 1). Chain done. ===
