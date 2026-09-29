@@ -9,6 +9,7 @@
 #SBATCH --error=logs/seedbench_base_%j.err
 #SBATCH --mail-type=BEGIN,END,FAIL
 #SBATCH --mail-user=mercurymcindoe@gmail.com
+#SBATCH --signal=B:USR1@120
 
 set -euo pipefail
 
@@ -39,12 +40,26 @@ python -c "import torch; print('cuda:', torch.cuda.is_available(), '|', torch.cu
 python -c "from vlmeval.config import supported_VLM; assert 'Qwen3-VL-4B-Instruct' in supported_VLM, 'model key missing'; print('vlmeval OK')"
 
 # --- Run ---
-# Job is capped at 3h; VLMEvalKit resumes from per-item partial output on the
-# next chained submission. If python exits nonzero (SIGTERM at time limit),
-# we chain another iteration below.
+# Job is capped at 3h. VLMEvalKit resumes from per-item partial output on the
+# next chained submission (--reuse flag). To ensure the chain-submit code runs
+# BEFORE SLURM kills the whole process tree at wallclock, we ask SLURM to send
+# SIGUSR1 120s early (--signal=B:USR1@120 above) and gracefully terminate python.
 cd "$VLMEVALKIT_DIR"
+
+handle_usr1() {
+    echo "=== SIGUSR1 received ($(date)): wallclock in <120s, terminating python (PID $PYTHON_PID) ==="
+    if [ -n "${PYTHON_PID:-}" ]; then
+        kill -TERM $PYTHON_PID 2>/dev/null || true
+        # Backup hard-kill after 60s if python doesn't respond to TERM
+        ( sleep 60 && kill -KILL $PYTHON_PID 2>/dev/null || true ) &
+    fi
+}
+trap handle_usr1 USR1
+
 set +e
-python run.py --data SEEDBench2 --model Qwen3-VL-4B-Instruct --verbose
+python run.py --data SEEDBench2 --model Qwen3-VL-4B-Instruct --reuse --verbose &
+PYTHON_PID=$!
+wait $PYTHON_PID
 RC=$?
 set -e
 
