@@ -42,10 +42,10 @@ if [ "${SMOKE:-0}" = "1" ]; then
     echo "--- smoke output ---"
     cat data/rules_smoke.json
 else
-    echo "=== Full run: all patterns → data/rules.json ==="
+    echo "=== Full run: all patterns → data/continuity/rules.json ==="
     python scripts/generate_rules.py
     echo "--- output summary ---"
-    python -c "import json; d=json.load(open('data/rules.json')); print(d['meta']); print('sample rule:', list(d['rules'].values())[0][:200])"
+    python -c "import json; d=json.load(open('data/continuity/rules.json')); print(d['meta']); print('sample rule:', list(d['rules'].values())[0][:200])"
 fi
 
 echo "=== Done ==="

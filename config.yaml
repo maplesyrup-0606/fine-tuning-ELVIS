@@ -40,11 +40,11 @@ rules:
   # Baked into train.jsonl. No runtime cache, no per-epoch regeneration.
   generator: elvis.scripts.baseline_models.qwen.infer_logic_rules
   source_model: base  # base Qwen3-VL-4B, no LoRA
-  cache_path: data/rules.json
+  cache_path: data/continuity/rules.json
 
 training:
   framework: ms-swift
-  dataset_path: data/train.jsonl
+  dataset_path: data/continuity/train.jsonl
   per_device_batch_size: 4
   gradient_accumulation_steps: 8
   effective_batch_size: 32
