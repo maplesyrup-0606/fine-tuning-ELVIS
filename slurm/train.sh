@@ -9,7 +9,6 @@
 #SBATCH --error=logs/train_%j.err
 #SBATCH --mail-type=BEGIN,END,FAIL
 #SBATCH --mail-user=mercurymcindoe@gmail.com
-#SBATCH --signal=B:USR1@120
 
 set -euo pipefail
 
@@ -43,32 +42,11 @@ python -c "import swift; print('ms-swift:', swift.__version__)"
 python -c "import peft; print('peft:', peft.__version__)"
 
 # --- Run ---
-# 3 epochs × 162 steps ≈ 60 min training + adapter saves. Single-shot, no chain.
-# SIGUSR1 handler mirrors the eval script so wallclock overruns don't wedge the
-# adapter save half-written.
+# 3 epochs × 162 steps ≈ 60 min. 8h wallclock is generous slack; if we blow past
+# that, something is stuck and we want to investigate rather than silently retry.
 cd "$SLURM_SUBMIT_DIR"
 
-handle_usr1() {
-    echo "=== SIGUSR1 received ($(date)): wallclock in <120s, terminating training (PID $PYTHON_PID) ==="
-    if [ -n "${PYTHON_PID:-}" ]; then
-        kill -TERM $PYTHON_PID 2>/dev/null || true
-        ( sleep 60 && kill -KILL $PYTHON_PID 2>/dev/null || true ) &
-    fi
-}
-trap handle_usr1 USR1
-
-set +e
-python scripts/train.py --output-dir "$RESULTS_DIR/checkpoints" &
-PYTHON_PID=$!
-wait $PYTHON_PID
-RC=$?
-set -e
-
-echo "=== train.py exited with $RC ==="
-if [ $RC -ne 0 ]; then
-    echo "Training failed. Adapters (if any) are in $RESULTS_DIR/checkpoints/"
-    exit $RC
-fi
+python scripts/train.py --output-dir "$RESULTS_DIR/checkpoints"
 
 echo "=== Done. Checkpoints in $RESULTS_DIR/checkpoints/ ==="
 ls -la "$RESULTS_DIR/checkpoints/" 2>/dev/null || true
