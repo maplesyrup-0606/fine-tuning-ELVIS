@@ -14,11 +14,38 @@ model:
   loader: elvis.scripts.baseline_models.qwen.load_qwen_model  # reused from ELVIS
 
 lora:
+  # Shared LoRA hyperparameters across all three variants. Per-variant
+  # routing (which modules get LoRA) lives under `variants:` below.
   rank: 4
   alpha: 8
-  target_modules: [q_proj, k_proj, v_proj, o_proj]  # attention only
   dropout: 0.0
-  scope: llm_only  # vision tower + merger frozen
+
+variants:
+  # Three fine-tuning ablations. Each becomes a separate `swift sft` run
+  # with its own output dir and WandB run. Selected via
+  # `python scripts/train.py --variant {llm|projector|both}`.
+  #
+  # Mechanism: ms-swift routes LoRA to the non-frozen components when
+  # target_modules=['all-linear']. See arguments/tuner_args.py docstring
+  # in ms-swift 4.5.3 for the freeze_* semantics.
+  llm:
+    description: LoRA on all linear layers of the LLM. Vision tower + merger frozen.
+    target_modules: [all-linear]
+    freeze_llm: false
+    freeze_vit: true
+    freeze_aligner: true
+  projector:
+    description: LoRA on the vision→LLM merger (aligner) only. LLM + vision tower frozen.
+    target_modules: [all-linear]
+    freeze_llm: true
+    freeze_vit: true
+    freeze_aligner: false
+  both:
+    description: LoRA on LLM + merger. Vision tower frozen.
+    target_modules: [all-linear]
+    freeze_llm: false
+    freeze_vit: true
+    freeze_aligner: false
 
 data:
   source: elvis_continuity

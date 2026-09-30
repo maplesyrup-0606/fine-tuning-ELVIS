@@ -12,6 +12,17 @@
 
 set -euo pipefail
 
+# Usage: sbatch slurm/train.sh <llm|projector|both>
+VARIANT=${1:-}
+if [ -z "$VARIANT" ]; then
+    echo "ERROR: variant required. Usage: sbatch slurm/train.sh <llm|projector|both>"
+    exit 1
+fi
+case "$VARIANT" in
+    llm|projector|both) ;;
+    *) echo "ERROR: variant must be one of: llm, projector, both (got: $VARIANT)"; exit 1 ;;
+esac
+
 # --- Environment (mirrors eval_seedbench_baseline.sh) ---
 module load python/3.11.5 cuda/12.6 opencv/4.13.0 rdkit arrow
 
@@ -35,18 +46,19 @@ RESULTS_DIR=${ELVIS_FINETUNING_RESULTS:-$SLURM_SUBMIT_DIR/results}
 mkdir -p "$RESULTS_DIR" logs
 
 # --- Sanity ---
-echo "=== Job $SLURM_JOB_ID on $(hostname) ==="
+echo "=== Job $SLURM_JOB_ID on $(hostname) — variant=$VARIANT ==="
 nvidia-smi
 python -c "import torch; print('cuda:', torch.cuda.is_available(), '|', torch.cuda.get_device_name(0))"
 python -c "import swift; print('ms-swift:', swift.__version__)"
 python -c "import peft; print('peft:', peft.__version__)"
 
 # --- Run ---
-# 3 epochs × 162 steps ≈ 60 min. 8h wallclock is generous slack; if we blow past
-# that, something is stuck and we want to investigate rather than silently retry.
+# 3 epochs × 162 steps ≈ 60 min per variant. 3h wallclock is generous slack.
 cd "$SLURM_SUBMIT_DIR"
 
-python scripts/train.py --output-dir "$RESULTS_DIR/checkpoints"
+python scripts/train.py \
+    --variant "$VARIANT" \
+    --output-dir "$RESULTS_DIR/checkpoints/$VARIANT"
 
-echo "=== Done. Checkpoints in $RESULTS_DIR/checkpoints/ ==="
-ls -la "$RESULTS_DIR/checkpoints/" 2>/dev/null || true
+echo "=== Done. Checkpoints in $RESULTS_DIR/checkpoints/$VARIANT/ ==="
+ls -la "$RESULTS_DIR/checkpoints/$VARIANT/" 2>/dev/null || true

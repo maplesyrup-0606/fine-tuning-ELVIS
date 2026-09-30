@@ -28,10 +28,14 @@ def load_config(path):
         return yaml.safe_load(f)
 
 
-def build_swift_args(cfg, output_dir, resume_from=None):
-    """Convert config.yaml → `swift sft` CLI arguments."""
+def build_swift_args(cfg, variant, output_dir, resume_from=None):
+    """Convert config.yaml + variant selection → `swift sft` CLI arguments.
+
+    variant: one of the keys under cfg["variants"] (llm, projector, both).
+    """
     train_cfg = cfg["training"]
     lora_cfg = cfg["lora"]
+    variant_cfg = cfg["variants"][variant]
 
     # 224*224 = 50176. Matches rule-gen (generate_rules.py, img_size=224) and
     # eval (Mode 1 in ELVIS uses 224 by default). All ELVIS-generated images
@@ -42,18 +46,22 @@ def build_swift_args(cfg, output_dir, resume_from=None):
     args = [
         "swift", "sft",
         "--model", cfg["model"]["base_id"],
-        "--train_type", "lora",
+        "--torch_dtype", "bfloat16",
+        "--tuner_type", "lora",
         "--dataset", train_cfg["dataset_path"],
         "--output_dir", str(output_dir),
 
-        # LoRA
+        # LoRA — shared hyperparameters
         "--lora_rank", str(lora_cfg["rank"]),
         "--lora_alpha", str(lora_cfg["alpha"]),
         "--lora_dropout", str(lora_cfg["dropout"]),
-        "--target_modules", ",".join(lora_cfg["target_modules"]),
-        # Freeze vision stack — config's scope: llm_only
-        "--freeze_vit", "true",
-        "--freeze_aligner", "true",
+
+        # Per-variant routing. target_modules is a List[str] in ms-swift
+        # (nargs='+'), so unpack the list as separate CLI values.
+        "--target_modules", *variant_cfg["target_modules"],
+        "--freeze_llm", str(variant_cfg["freeze_llm"]).lower(),
+        "--freeze_vit", str(variant_cfg["freeze_vit"]).lower(),
+        "--freeze_aligner", str(variant_cfg["freeze_aligner"]).lower(),
 
         # Training
         "--num_train_epochs", str(train_cfg["max_epochs"]),
@@ -87,8 +95,11 @@ def build_swift_args(cfg, output_dir, resume_from=None):
 def main():
     parser = argparse.ArgumentParser(description=__doc__.strip().splitlines()[0])
     parser.add_argument("--config", default="config.yaml")
+    parser.add_argument("--variant", required=True,
+                        choices=["llm", "projector", "both"],
+                        help="which LoRA target scope to train")
     parser.add_argument("--output-dir", default=None,
-                        help="override results/checkpoints dir")
+                        help="override results/checkpoints dir (default: <results>/checkpoints/<variant>)")
     parser.add_argument("--resume-from", default=None,
                         help="path to checkpoint to resume from")
     parser.add_argument("--dry-run", action="store_true",
@@ -97,16 +108,23 @@ def main():
 
     cfg = load_config(args.config)
 
+    if args.variant not in cfg.get("variants", {}):
+        parser.error(f"variant {args.variant!r} not found in {args.config} variants: block")
+
+    # One WandB project, three runs — comparable in the UI.
     os.environ.setdefault("WANDB_PROJECT", cfg["wandb"]["project"])
+    os.environ.setdefault("WANDB_NAME", f"continuity-{args.variant}")
 
     results_env = cfg["paths"]["results_env"]
     results_root = Path(os.environ.get(results_env, "results"))
-    output_dir = Path(args.output_dir) if args.output_dir else results_root / "checkpoints"
+    output_dir = Path(args.output_dir) if args.output_dir else results_root / "checkpoints" / args.variant
     output_dir.mkdir(parents=True, exist_ok=True)
 
-    swift_args = build_swift_args(cfg, output_dir, args.resume_from)
+    swift_args = build_swift_args(cfg, args.variant, output_dir, args.resume_from)
 
     print("=" * 60)
+    print(f"Variant: {args.variant}")
+    print(f"Output: {output_dir}")
     print("Running:")
     print(" \\\n  ".join(swift_args))
     print("=" * 60)
