@@ -76,6 +76,11 @@ def build_swift_args(cfg, variant, output_dir, resume_from=None):
         "--save_total_limit", str(train_cfg["max_epochs"]),
         "--logging_steps", "5",
 
+        # Trade compute for memory — recomputes activations on backward pass.
+        # Safety margin on 40 GB MIG; without this a variant could OOM at
+        # per_device_batch=4 despite comfortable estimates.
+        "--gradient_checkpointing", "true",
+
         # Image budget — match rule-gen + eval resolution
         "--max_pixels", str(max_pixels),
 
