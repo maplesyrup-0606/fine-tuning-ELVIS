@@ -1,0 +1,699 @@
+=== Job 62286746 on fc10910 ===
+Wed Sep 30 12:12:07 2026       
++-----------------------------------------------------------------------------------------+
+| NVIDIA-SMI 580.159.03             Driver Version: 580.159.03     CUDA Version: 13.0     |
++-----------------------------------------+------------------------+----------------------+
+| GPU  Name                 Persistence-M | Bus-Id          Disp.A | Volatile Uncorr. ECC |
+| Fan  Temp   Perf          Pwr:Usage/Cap |           Memory-Usage | GPU-Util  Compute M. |
+|                                         |                        |               MIG M. |
+|=========================================+========================+======================|
+|   0  NVIDIA H100 80GB HBM3          On  |   00000000:46:00.0 Off |                   On |
+| N/A   28C    P0            206W /  700W |    7729MiB /  81559MiB |     N/A      Default |
+|                                         |                        |              Enabled |
++-----------------------------------------+------------------------+----------------------+
+
++-----------------------------------------------------------------------------------------+
+| MIG devices:                                                                            |
++------------------+----------------------------------+-----------+-----------------------+
+| GPU  GI  CI  MIG |              Shared Memory-Usage |        Vol|        Shared         |
+|      ID  ID  Dev |                Shared BAR1-Usage | SM     Unc| CE ENC  DEC  OFA  JPG |
+|                  |                                  |        ECC|                       |
+|==================+==================================+===========+=======================|
+|  0    2   0   0  |              44MiB / 40448MiB    | 60      0 |  3   0    3    0    3 |
+|                  |               0MiB / 24740MiB    |           |                       |
++------------------+----------------------------------+-----------+-----------------------+
+
++-----------------------------------------------------------------------------------------+
+| Processes:                                                                              |
+|  GPU   GI   CI              PID   Type   Process name                        GPU Memory |
+|        ID   ID                                                               Usage      |
+|=========================================================================================|
+|  No running processes found                                                             |
++-----------------------------------------------------------------------------------------+
+cuda: True | NVIDIA H100 80GB HBM3 MIG 3g.40gb
+vlmeval OK
+[2026-09-30 12:14:10] INFO - vlmeval.__main__: --reuse is set, reuse-aux=all
+[2026-09-30 12:14:10] INFO - vlmeval.__main__: =========== Qwen3-VL-4B-Instruct ===========
+[2026-09-30 12:14:10] INFO - vlmeval.__main__: ----------- SEEDBench2 -----------
+[2026-09-30 12:14:23] INFO - vlmeval.smp.file: --reuse is set, will reuse prediction file outputs/Qwen3-VL-4B-Instruct/T20260930-085722/Qwen3-VL-4B-Instruct_SEEDBench2.xlsx
+[2026-09-30 12:14:26] INFO - vlmeval.smp.file: --reuse-aux=all, will reuse evaluation auxiliary file outputs/Qwen3-VL-4B-Instruct/T20260930-085722/Qwen3-VL-4B-Instruct_SEEDBench2_gpt-4o-mini_result.pkl
+[2026-09-30 12:14:26] INFO - vlmeval.__main__: {'nproc': 32, 'verbose': True, 'retry': 6, 'timeout': 600, 'model': 'gpt-4o-mini'}
+[2026-09-30 12:14:35] INFO - vlmeval.api.gpt: Using API Base: https://api.openai.com/v1/chat/completions; API Key: 
+[2026-09-30 12:14:35] ERROR - vlmeval.api.gpt: <class 'KeyError'>: 'choices'
+[2026-09-30 12:14:35] ERROR - vlmeval.api.gpt: {
+    "error": {
+        "message": "You didn't provide an API key. You need to provide your API key in an Authorization header using Bearer auth (i.e. Authorization: Bearer YOUR_KEY), or as the password field (with blank username) if you're accessing the API from your browser and are prompted for a username and password. You can obtain an API key from https://platform.openai.com/account/api-keys.",
+        "type": "invalid_request_error",
+        "param": null,
+        "code": null
+    }
+}
+
+[2026-09-30 12:14:35] INFO - vlmeval.api.base: RetCode: 401
+Answer: Failed to obtain answer via API.
+Log: {
+    "error": {
+        "message": "You didn't provide an API key. You need to provide your API key in an Authorization header using Bearer auth (i.e. Authorization: Bearer YOUR_KEY), or as the password field (with blank username) if you're accessing the API from your browser and are prompted for a username and password. You can obtain an API key from https://platform.openai.com/account/api-keys.",
+        "type": "invalid_request_error",
+        "param": null,
+        "code": null
+    }
+}
+
+[2026-09-30 12:14:37] ERROR - vlmeval.api.gpt: <class 'KeyError'>: 'choices'
+[2026-09-30 12:14:37] ERROR - vlmeval.api.gpt: {
+    "error": {
+        "message": "You didn't provide an API key. You need to provide your API key in an Authorization header using Bearer auth (i.e. Authorization: Bearer YOUR_KEY), or as the password field (with blank username) if you're accessing the API from your browser and are prompted for a username and password. You can obtain an API key from https://platform.openai.com/account/api-keys.",
+        "type": "invalid_request_error",
+        "param": null,
+        "code": null
+    }
+}
+
+[2026-09-30 12:14:37] INFO - vlmeval.api.base: RetCode: 401
+Answer: Failed to obtain answer via API.
+Log: {
+    "error": {
+        "message": "You didn't provide an API key. You need to provide your API key in an Authorization header using Bearer auth (i.e. Authorization: Bearer YOUR_KEY), or as the password field (with blank username) if you're accessing the API from your browser and are prompted for a username and password. You can obtain an API key from https://platform.openai.com/account/api-keys.",
+        "type": "invalid_request_error",
+        "param": null,
+        "code": null
+    }
+}
+
+[2026-09-30 12:14:37] ERROR - vlmeval.api.gpt: <class 'KeyError'>: 'choices'
+[2026-09-30 12:14:37] ERROR - vlmeval.api.gpt: {
+    "error": {
+        "message": "You didn't provide an API key. You need to provide your API key in an Authorization header using Bearer auth (i.e. Authorization: Bearer YOUR_KEY), or as the password field (with blank username) if you're accessing the API from your browser and are prompted for a username and password. You can obtain an API key from https://platform.openai.com/account/api-keys.",
+        "type": "invalid_request_error",
+        "param": null,
+        "code": null
+    }
+}
+
+[2026-09-30 12:14:37] INFO - vlmeval.api.base: RetCode: 401
+Answer: Failed to obtain answer via API.
+Log: {
+    "error": {
+        "message": "You didn't provide an API key. You need to provide your API key in an Authorization header using Bearer auth (i.e. Authorization: Bearer YOUR_KEY), or as the password field (with blank username) if you're accessing the API from your browser and are prompted for a username and password. You can obtain an API key from https://platform.openai.com/account/api-keys.",
+        "type": "invalid_request_error",
+        "param": null,
+        "code": null
+    }
+}
+
+[2026-09-30 12:14:39] ERROR - vlmeval.api.gpt: <class 'KeyError'>: 'choices'
+[2026-09-30 12:14:39] ERROR - vlmeval.api.gpt: {
+    "error": {
+        "message": "You didn't provide an API key. You need to provide your API key in an Authorization header using Bearer auth (i.e. Authorization: Bearer YOUR_KEY), or as the password field (with blank username) if you're accessing the API from your browser and are prompted for a username and password. You can obtain an API key from https://platform.openai.com/account/api-keys.",
+        "type": "invalid_request_error",
+        "param": null,
+        "code": null
+    }
+}
+
+[2026-09-30 12:14:39] INFO - vlmeval.api.base: RetCode: 401
+Answer: Failed to obtain answer via API.
+Log: {
+    "error": {
+        "message": "You didn't provide an API key. You need to provide your API key in an Authorization header using Bearer auth (i.e. Authorization: Bearer YOUR_KEY), or as the password field (with blank username) if you're accessing the API from your browser and are prompted for a username and password. You can obtain an API key from https://platform.openai.com/account/api-keys.",
+        "type": "invalid_request_error",
+        "param": null,
+        "code": null
+    }
+}
+
+[2026-09-30 12:14:39] ERROR - vlmeval.api.gpt: <class 'KeyError'>: 'choices'
+[2026-09-30 12:14:39] ERROR - vlmeval.api.gpt: {
+    "error": {
+        "message": "You didn't provide an API key. You need to provide your API key in an Authorization header using Bearer auth (i.e. Authorization: Bearer YOUR_KEY), or as the password field (with blank username) if you're accessing the API from your browser and are prompted for a username and password. You can obtain an API key from https://platform.openai.com/account/api-keys.",
+        "type": "invalid_request_error",
+        "param": null,
+        "code": null
+    }
+}
+
+[2026-09-30 12:14:39] INFO - vlmeval.api.base: RetCode: 401
+Answer: Failed to obtain answer via API.
+Log: {
+    "error": {
+        "message": "You didn't provide an API key. You need to provide your API key in an Authorization header using Bearer auth (i.e. Authorization: Bearer YOUR_KEY), or as the password field (with blank username) if you're accessing the API from your browser and are prompted for a username and password. You can obtain an API key from https://platform.openai.com/account/api-keys.",
+        "type": "invalid_request_error",
+        "param": null,
+        "code": null
+    }
+}
+
+[2026-09-30 12:14:41] ERROR - vlmeval.api.gpt: <class 'KeyError'>: 'choices'
+[2026-09-30 12:14:41] ERROR - vlmeval.api.gpt: {
+    "error": {
+        "message": "You didn't provide an API key. You need to provide your API key in an Authorization header using Bearer auth (i.e. Authorization: Bearer YOUR_KEY), or as the password field (with blank username) if you're accessing the API from your browser and are prompted for a username and password. You can obtain an API key from https://platform.openai.com/account/api-keys.",
+        "type": "invalid_request_error",
+        "param": null,
+        "code": null
+    }
+}
+
+[2026-09-30 12:14:41] INFO - vlmeval.api.base: RetCode: 401
+Answer: Failed to obtain answer via API.
+Log: {
+    "error": {
+        "message": "You didn't provide an API key. You need to provide your API key in an Authorization header using Bearer auth (i.e. Authorization: Bearer YOUR_KEY), or as the password field (with blank username) if you're accessing the API from your browser and are prompted for a username and password. You can obtain an API key from https://platform.openai.com/account/api-keys.",
+        "type": "invalid_request_error",
+        "param": null,
+        "code": null
+    }
+}
+
+[2026-09-30 12:14:42] ERROR - vlmeval.api.gpt: <class 'KeyError'>: 'choices'
+[2026-09-30 12:14:42] ERROR - vlmeval.api.gpt: {
+    "error": {
+        "message": "You didn't provide an API key. You need to provide your API key in an Authorization header using Bearer auth (i.e. Authorization: Bearer YOUR_KEY), or as the password field (with blank username) if you're accessing the API from your browser and are prompted for a username and password. You can obtain an API key from https://platform.openai.com/account/api-keys.",
+        "type": "invalid_request_error",
+        "param": null,
+        "code": null
+    }
+}
+
+[2026-09-30 12:14:42] INFO - vlmeval.api.base: RetCode: 401
+Answer: Failed to obtain answer via API.
+Log: {
+    "error": {
+        "message": "You didn't provide an API key. You need to provide your API key in an Authorization header using Bearer auth (i.e. Authorization: Bearer YOUR_KEY), or as the password field (with blank username) if you're accessing the API from your browser and are prompted for a username and password. You can obtain an API key from https://platform.openai.com/account/api-keys.",
+        "type": "invalid_request_error",
+        "param": null,
+        "code": null
+    }
+}
+
+[2026-09-30 12:14:44] ERROR - vlmeval.api.gpt: <class 'KeyError'>: 'choices'
+[2026-09-30 12:14:44] ERROR - vlmeval.api.gpt: {
+    "error": {
+        "message": "You didn't provide an API key. You need to provide your API key in an Authorization header using Bearer auth (i.e. Authorization: Bearer YOUR_KEY), or as the password field (with blank username) if you're accessing the API from your browser and are prompted for a username and password. You can obtain an API key from https://platform.openai.com/account/api-keys.",
+        "type": "invalid_request_error",
+        "param": null,
+        "code": null
+    }
+}
+
+[2026-09-30 12:14:44] INFO - vlmeval.api.base: RetCode: 401
+Answer: Failed to obtain answer via API.
+Log: {
+    "error": {
+        "message": "You didn't provide an API key. You need to provide your API key in an Authorization header using Bearer auth (i.e. Authorization: Bearer YOUR_KEY), or as the password field (with blank username) if you're accessing the API from your browser and are prompted for a username and password. You can obtain an API key from https://platform.openai.com/account/api-keys.",
+        "type": "invalid_request_error",
+        "param": null,
+        "code": null
+    }
+}
+
+[2026-09-30 12:14:45] ERROR - vlmeval.api.gpt: <class 'KeyError'>: 'choices'
+[2026-09-30 12:14:45] ERROR - vlmeval.api.gpt: {
+    "error": {
+        "message": "You didn't provide an API key. You need to provide your API key in an Authorization header using Bearer auth (i.e. Authorization: Bearer YOUR_KEY), or as the password field (with blank username) if you're accessing the API from your browser and are prompted for a username and password. You can obtain an API key from https://platform.openai.com/account/api-keys.",
+        "type": "invalid_request_error",
+        "param": null,
+        "code": null
+    }
+}
+
+[2026-09-30 12:14:45] INFO - vlmeval.api.base: RetCode: 401
+Answer: Failed to obtain answer via API.
+Log: {
+    "error": {
+        "message": "You didn't provide an API key. You need to provide your API key in an Authorization header using Bearer auth (i.e. Authorization: Bearer YOUR_KEY), or as the password field (with blank username) if you're accessing the API from your browser and are prompted for a username and password. You can obtain an API key from https://platform.openai.com/account/api-keys.",
+        "type": "invalid_request_error",
+        "param": null,
+        "code": null
+    }
+}
+
+[2026-09-30 12:14:46] ERROR - vlmeval.api.gpt: <class 'KeyError'>: 'choices'
+[2026-09-30 12:14:46] ERROR - vlmeval.api.gpt: {
+    "error": {
+        "message": "You didn't provide an API key. You need to provide your API key in an Authorization header using Bearer auth (i.e. Authorization: Bearer YOUR_KEY), or as the password field (with blank username) if you're accessing the API from your browser and are prompted for a username and password. You can obtain an API key from https://platform.openai.com/account/api-keys.",
+        "type": "invalid_request_error",
+        "param": null,
+        "code": null
+    }
+}
+
+[2026-09-30 12:14:46] INFO - vlmeval.api.base: RetCode: 401
+Answer: Failed to obtain answer via API.
+Log: {
+    "error": {
+        "message": "You didn't provide an API key. You need to provide your API key in an Authorization header using Bearer auth (i.e. Authorization: Bearer YOUR_KEY), or as the password field (with blank username) if you're accessing the API from your browser and are prompted for a username and password. You can obtain an API key from https://platform.openai.com/account/api-keys.",
+        "type": "invalid_request_error",
+        "param": null,
+        "code": null
+    }
+}
+
+[2026-09-30 12:14:48] ERROR - vlmeval.api.gpt: <class 'KeyError'>: 'choices'
+[2026-09-30 12:14:48] ERROR - vlmeval.api.gpt: {
+    "error": {
+        "message": "You didn't provide an API key. You need to provide your API key in an Authorization header using Bearer auth (i.e. Authorization: Bearer YOUR_KEY), or as the password field (with blank username) if you're accessing the API from your browser and are prompted for a username and password. You can obtain an API key from https://platform.openai.com/account/api-keys.",
+        "type": "invalid_request_error",
+        "param": null,
+        "code": null
+    }
+}
+
+[2026-09-30 12:14:48] INFO - vlmeval.api.base: RetCode: 401
+Answer: Failed to obtain answer via API.
+Log: {
+    "error": {
+        "message": "You didn't provide an API key. You need to provide your API key in an Authorization header using Bearer auth (i.e. Authorization: Bearer YOUR_KEY), or as the password field (with blank username) if you're accessing the API from your browser and are prompted for a username and password. You can obtain an API key from https://platform.openai.com/account/api-keys.",
+        "type": "invalid_request_error",
+        "param": null,
+        "code": null
+    }
+}
+
+[2026-09-30 12:14:49] ERROR - vlmeval.api.gpt: <class 'KeyError'>: 'choices'
+[2026-09-30 12:14:49] ERROR - vlmeval.api.gpt: {
+    "error": {
+        "message": "You didn't provide an API key. You need to provide your API key in an Authorization header using Bearer auth (i.e. Authorization: Bearer YOUR_KEY), or as the password field (with blank username) if you're accessing the API from your browser and are prompted for a username and password. You can obtain an API key from https://platform.openai.com/account/api-keys.",
+        "type": "invalid_request_error",
+        "param": null,
+        "code": null
+    }
+}
+
+[2026-09-30 12:14:49] INFO - vlmeval.api.base: RetCode: 401
+Answer: Failed to obtain answer via API.
+Log: {
+    "error": {
+        "message": "You didn't provide an API key. You need to provide your API key in an Authorization header using Bearer auth (i.e. Authorization: Bearer YOUR_KEY), or as the password field (with blank username) if you're accessing the API from your browser and are prompted for a username and password. You can obtain an API key from https://platform.openai.com/account/api-keys.",
+        "type": "invalid_request_error",
+        "param": null,
+        "code": null
+    }
+}
+
+[2026-09-30 12:14:51] ERROR - vlmeval.api.gpt: <class 'KeyError'>: 'choices'
+[2026-09-30 12:14:51] ERROR - vlmeval.api.gpt: {
+    "error": {
+        "message": "You didn't provide an API key. You need to provide your API key in an Authorization header using Bearer auth (i.e. Authorization: Bearer YOUR_KEY), or as the password field (with blank username) if you're accessing the API from your browser and are prompted for a username and password. You can obtain an API key from https://platform.openai.com/account/api-keys.",
+        "type": "invalid_request_error",
+        "param": null,
+        "code": null
+    }
+}
+
+[2026-09-30 12:14:51] INFO - vlmeval.api.base: RetCode: 401
+Answer: Failed to obtain answer via API.
+Log: {
+    "error": {
+        "message": "You didn't provide an API key. You need to provide your API key in an Authorization header using Bearer auth (i.e. Authorization: Bearer YOUR_KEY), or as the password field (with blank username) if you're accessing the API from your browser and are prompted for a username and password. You can obtain an API key from https://platform.openai.com/account/api-keys.",
+        "type": "invalid_request_error",
+        "param": null,
+        "code": null
+    }
+}
+
+[2026-09-30 12:14:52] ERROR - vlmeval.api.gpt: <class 'KeyError'>: 'choices'
+[2026-09-30 12:14:52] ERROR - vlmeval.api.gpt: {
+    "error": {
+        "message": "You didn't provide an API key. You need to provide your API key in an Authorization header using Bearer auth (i.e. Authorization: Bearer YOUR_KEY), or as the password field (with blank username) if you're accessing the API from your browser and are prompted for a username and password. You can obtain an API key from https://platform.openai.com/account/api-keys.",
+        "type": "invalid_request_error",
+        "param": null,
+        "code": null
+    }
+}
+
+[2026-09-30 12:14:52] INFO - vlmeval.api.base: RetCode: 401
+Answer: Failed to obtain answer via API.
+Log: {
+    "error": {
+        "message": "You didn't provide an API key. You need to provide your API key in an Authorization header using Bearer auth (i.e. Authorization: Bearer YOUR_KEY), or as the password field (with blank username) if you're accessing the API from your browser and are prompted for a username and password. You can obtain an API key from https://platform.openai.com/account/api-keys.",
+        "type": "invalid_request_error",
+        "param": null,
+        "code": null
+    }
+}
+
+[2026-09-30 12:14:53] ERROR - vlmeval.api.gpt: <class 'KeyError'>: 'choices'
+[2026-09-30 12:14:53] ERROR - vlmeval.api.gpt: {
+    "error": {
+        "message": "You didn't provide an API key. You need to provide your API key in an Authorization header using Bearer auth (i.e. Authorization: Bearer YOUR_KEY), or as the password field (with blank username) if you're accessing the API from your browser and are prompted for a username and password. You can obtain an API key from https://platform.openai.com/account/api-keys.",
+        "type": "invalid_request_error",
+        "param": null,
+        "code": null
+    }
+}
+
+[2026-09-30 12:14:53] INFO - vlmeval.api.base: RetCode: 401
+Answer: Failed to obtain answer via API.
+Log: {
+    "error": {
+        "message": "You didn't provide an API key. You need to provide your API key in an Authorization header using Bearer auth (i.e. Authorization: Bearer YOUR_KEY), or as the password field (with blank username) if you're accessing the API from your browser and are prompted for a username and password. You can obtain an API key from https://platform.openai.com/account/api-keys.",
+        "type": "invalid_request_error",
+        "param": null,
+        "code": null
+    }
+}
+
+[2026-09-30 12:14:54] ERROR - vlmeval.api.gpt: <class 'KeyError'>: 'choices'
+[2026-09-30 12:14:54] ERROR - vlmeval.api.gpt: {
+    "error": {
+        "message": "You didn't provide an API key. You need to provide your API key in an Authorization header using Bearer auth (i.e. Authorization: Bearer YOUR_KEY), or as the password field (with blank username) if you're accessing the API from your browser and are prompted for a username and password. You can obtain an API key from https://platform.openai.com/account/api-keys.",
+        "type": "invalid_request_error",
+        "param": null,
+        "code": null
+    }
+}
+
+[2026-09-30 12:14:54] INFO - vlmeval.api.base: RetCode: 401
+Answer: Failed to obtain answer via API.
+Log: {
+    "error": {
+        "message": "You didn't provide an API key. You need to provide your API key in an Authorization header using Bearer auth (i.e. Authorization: Bearer YOUR_KEY), or as the password field (with blank username) if you're accessing the API from your browser and are prompted for a username and password. You can obtain an API key from https://platform.openai.com/account/api-keys.",
+        "type": "invalid_request_error",
+        "param": null,
+        "code": null
+    }
+}
+
+[2026-09-30 12:14:55] ERROR - vlmeval.api.gpt: <class 'KeyError'>: 'choices'
+[2026-09-30 12:14:55] ERROR - vlmeval.api.gpt: {
+    "error": {
+        "message": "You didn't provide an API key. You need to provide your API key in an Authorization header using Bearer auth (i.e. Authorization: Bearer YOUR_KEY), or as the password field (with blank username) if you're accessing the API from your browser and are prompted for a username and password. You can obtain an API key from https://platform.openai.com/account/api-keys.",
+        "type": "invalid_request_error",
+        "param": null,
+        "code": null
+    }
+}
+
+[2026-09-30 12:14:55] INFO - vlmeval.api.base: RetCode: 401
+Answer: Failed to obtain answer via API.
+Log: {
+    "error": {
+        "message": "You didn't provide an API key. You need to provide your API key in an Authorization header using Bearer auth (i.e. Authorization: Bearer YOUR_KEY), or as the password field (with blank username) if you're accessing the API from your browser and are prompted for a username and password. You can obtain an API key from https://platform.openai.com/account/api-keys.",
+        "type": "invalid_request_error",
+        "param": null,
+        "code": null
+    }
+}
+
+[2026-09-30 12:14:57] ERROR - vlmeval.api.gpt: <class 'KeyError'>: 'choices'
+[2026-09-30 12:14:57] ERROR - vlmeval.api.gpt: {
+    "error": {
+        "message": "You didn't provide an API key. You need to provide your API key in an Authorization header using Bearer auth (i.e. Authorization: Bearer YOUR_KEY), or as the password field (with blank username) if you're accessing the API from your browser and are prompted for a username and password. You can obtain an API key from https://platform.openai.com/account/api-keys.",
+        "type": "invalid_request_error",
+        "param": null,
+        "code": null
+    }
+}
+
+[2026-09-30 12:14:57] INFO - vlmeval.api.base: RetCode: 401
+Answer: Failed to obtain answer via API.
+Log: {
+    "error": {
+        "message": "You didn't provide an API key. You need to provide your API key in an Authorization header using Bearer auth (i.e. Authorization: Bearer YOUR_KEY), or as the password field (with blank username) if you're accessing the API from your browser and are prompted for a username and password. You can obtain an API key from https://platform.openai.com/account/api-keys.",
+        "type": "invalid_request_error",
+        "param": null,
+        "code": null
+    }
+}
+
+[2026-09-30 12:14:58] ERROR - vlmeval.api.gpt: <class 'KeyError'>: 'choices'
+[2026-09-30 12:14:58] ERROR - vlmeval.api.gpt: {
+    "error": {
+        "message": "You didn't provide an API key. You need to provide your API key in an Authorization header using Bearer auth (i.e. Authorization: Bearer YOUR_KEY), or as the password field (with blank username) if you're accessing the API from your browser and are prompted for a username and password. You can obtain an API key from https://platform.openai.com/account/api-keys.",
+        "type": "invalid_request_error",
+        "param": null,
+        "code": null
+    }
+}
+
+[2026-09-30 12:14:58] INFO - vlmeval.api.base: RetCode: 401
+Answer: Failed to obtain answer via API.
+Log: {
+    "error": {
+        "message": "You didn't provide an API key. You need to provide your API key in an Authorization header using Bearer auth (i.e. Authorization: Bearer YOUR_KEY), or as the password field (with blank username) if you're accessing the API from your browser and are prompted for a username and password. You can obtain an API key from https://platform.openai.com/account/api-keys.",
+        "type": "invalid_request_error",
+        "param": null,
+        "code": null
+    }
+}
+
+[2026-09-30 12:14:59] ERROR - vlmeval.api.gpt: <class 'KeyError'>: 'choices'
+[2026-09-30 12:14:59] ERROR - vlmeval.api.gpt: {
+    "error": {
+        "message": "You didn't provide an API key. You need to provide your API key in an Authorization header using Bearer auth (i.e. Authorization: Bearer YOUR_KEY), or as the password field (with blank username) if you're accessing the API from your browser and are prompted for a username and password. You can obtain an API key from https://platform.openai.com/account/api-keys.",
+        "type": "invalid_request_error",
+        "param": null,
+        "code": null
+    }
+}
+
+[2026-09-30 12:14:59] INFO - vlmeval.api.base: RetCode: 401
+Answer: Failed to obtain answer via API.
+Log: {
+    "error": {
+        "message": "You didn't provide an API key. You need to provide your API key in an Authorization header using Bearer auth (i.e. Authorization: Bearer YOUR_KEY), or as the password field (with blank username) if you're accessing the API from your browser and are prompted for a username and password. You can obtain an API key from https://platform.openai.com/account/api-keys.",
+        "type": "invalid_request_error",
+        "param": null,
+        "code": null
+    }
+}
+
+[2026-09-30 12:15:00] ERROR - vlmeval.api.gpt: <class 'KeyError'>: 'choices'
+[2026-09-30 12:15:00] ERROR - vlmeval.api.gpt: {
+    "error": {
+        "message": "You didn't provide an API key. You need to provide your API key in an Authorization header using Bearer auth (i.e. Authorization: Bearer YOUR_KEY), or as the password field (with blank username) if you're accessing the API from your browser and are prompted for a username and password. You can obtain an API key from https://platform.openai.com/account/api-keys.",
+        "type": "invalid_request_error",
+        "param": null,
+        "code": null
+    }
+}
+
+[2026-09-30 12:15:00] INFO - vlmeval.api.base: RetCode: 401
+Answer: Failed to obtain answer via API.
+Log: {
+    "error": {
+        "message": "You didn't provide an API key. You need to provide your API key in an Authorization header using Bearer auth (i.e. Authorization: Bearer YOUR_KEY), or as the password field (with blank username) if you're accessing the API from your browser and are prompted for a username and password. You can obtain an API key from https://platform.openai.com/account/api-keys.",
+        "type": "invalid_request_error",
+        "param": null,
+        "code": null
+    }
+}
+
+[2026-09-30 12:15:01] ERROR - vlmeval.api.gpt: <class 'KeyError'>: 'choices'
+[2026-09-30 12:15:01] ERROR - vlmeval.api.gpt: {
+    "error": {
+        "message": "You didn't provide an API key. You need to provide your API key in an Authorization header using Bearer auth (i.e. Authorization: Bearer YOUR_KEY), or as the password field (with blank username) if you're accessing the API from your browser and are prompted for a username and password. You can obtain an API key from https://platform.openai.com/account/api-keys.",
+        "type": "invalid_request_error",
+        "param": null,
+        "code": null
+    }
+}
+
+[2026-09-30 12:15:01] INFO - vlmeval.api.base: RetCode: 401
+Answer: Failed to obtain answer via API.
+Log: {
+    "error": {
+        "message": "You didn't provide an API key. You need to provide your API key in an Authorization header using Bearer auth (i.e. Authorization: Bearer YOUR_KEY), or as the password field (with blank username) if you're accessing the API from your browser and are prompted for a username and password. You can obtain an API key from https://platform.openai.com/account/api-keys.",
+        "type": "invalid_request_error",
+        "param": null,
+        "code": null
+    }
+}
+
+[2026-09-30 12:15:03] ERROR - vlmeval.api.gpt: <class 'KeyError'>: 'choices'
+[2026-09-30 12:15:03] ERROR - vlmeval.api.gpt: {
+    "error": {
+        "message": "You didn't provide an API key. You need to provide your API key in an Authorization header using Bearer auth (i.e. Authorization: Bearer YOUR_KEY), or as the password field (with blank username) if you're accessing the API from your browser and are prompted for a username and password. You can obtain an API key from https://platform.openai.com/account/api-keys.",
+        "type": "invalid_request_error",
+        "param": null,
+        "code": null
+    }
+}
+
+[2026-09-30 12:15:03] INFO - vlmeval.api.base: RetCode: 401
+Answer: Failed to obtain answer via API.
+Log: {
+    "error": {
+        "message": "You didn't provide an API key. You need to provide your API key in an Authorization header using Bearer auth (i.e. Authorization: Bearer YOUR_KEY), or as the password field (with blank username) if you're accessing the API from your browser and are prompted for a username and password. You can obtain an API key from https://platform.openai.com/account/api-keys.",
+        "type": "invalid_request_error",
+        "param": null,
+        "code": null
+    }
+}
+
+[2026-09-30 12:15:04] ERROR - vlmeval.api.gpt: <class 'KeyError'>: 'choices'
+[2026-09-30 12:15:04] ERROR - vlmeval.api.gpt: {
+    "error": {
+        "message": "You didn't provide an API key. You need to provide your API key in an Authorization header using Bearer auth (i.e. Authorization: Bearer YOUR_KEY), or as the password field (with blank username) if you're accessing the API from your browser and are prompted for a username and password. You can obtain an API key from https://platform.openai.com/account/api-keys.",
+        "type": "invalid_request_error",
+        "param": null,
+        "code": null
+    }
+}
+
+[2026-09-30 12:15:04] INFO - vlmeval.api.base: RetCode: 401
+Answer: Failed to obtain answer via API.
+Log: {
+    "error": {
+        "message": "You didn't provide an API key. You need to provide your API key in an Authorization header using Bearer auth (i.e. Authorization: Bearer YOUR_KEY), or as the password field (with blank username) if you're accessing the API from your browser and are prompted for a username and password. You can obtain an API key from https://platform.openai.com/account/api-keys.",
+        "type": "invalid_request_error",
+        "param": null,
+        "code": null
+    }
+}
+
+[2026-09-30 12:15:05] ERROR - vlmeval.api.gpt: <class 'KeyError'>: 'choices'
+[2026-09-30 12:15:05] ERROR - vlmeval.api.gpt: {
+    "error": {
+        "message": "You didn't provide an API key. You need to provide your API key in an Authorization header using Bearer auth (i.e. Authorization: Bearer YOUR_KEY), or as the password field (with blank username) if you're accessing the API from your browser and are prompted for a username and password. You can obtain an API key from https://platform.openai.com/account/api-keys.",
+        "type": "invalid_request_error",
+        "param": null,
+        "code": null
+    }
+}
+
+[2026-09-30 12:15:05] INFO - vlmeval.api.base: RetCode: 401
+Answer: Failed to obtain answer via API.
+Log: {
+    "error": {
+        "message": "You didn't provide an API key. You need to provide your API key in an Authorization header using Bearer auth (i.e. Authorization: Bearer YOUR_KEY), or as the password field (with blank username) if you're accessing the API from your browser and are prompted for a username and password. You can obtain an API key from https://platform.openai.com/account/api-keys.",
+        "type": "invalid_request_error",
+        "param": null,
+        "code": null
+    }
+}
+
+[2026-09-30 12:15:06] ERROR - vlmeval.api.gpt: <class 'KeyError'>: 'choices'
+[2026-09-30 12:15:06] ERROR - vlmeval.api.gpt: {
+    "error": {
+        "message": "You didn't provide an API key. You need to provide your API key in an Authorization header using Bearer auth (i.e. Authorization: Bearer YOUR_KEY), or as the password field (with blank username) if you're accessing the API from your browser and are prompted for a username and password. You can obtain an API key from https://platform.openai.com/account/api-keys.",
+        "type": "invalid_request_error",
+        "param": null,
+        "code": null
+    }
+}
+
+[2026-09-30 12:15:06] INFO - vlmeval.api.base: RetCode: 401
+Answer: Failed to obtain answer via API.
+Log: {
+    "error": {
+        "message": "You didn't provide an API key. You need to provide your API key in an Authorization header using Bearer auth (i.e. Authorization: Bearer YOUR_KEY), or as the password field (with blank username) if you're accessing the API from your browser and are prompted for a username and password. You can obtain an API key from https://platform.openai.com/account/api-keys.",
+        "type": "invalid_request_error",
+        "param": null,
+        "code": null
+    }
+}
+
+[2026-09-30 12:15:08] ERROR - vlmeval.api.gpt: <class 'KeyError'>: 'choices'
+[2026-09-30 12:15:08] ERROR - vlmeval.api.gpt: {
+    "error": {
+        "message": "You didn't provide an API key. You need to provide your API key in an Authorization header using Bearer auth (i.e. Authorization: Bearer YOUR_KEY), or as the password field (with blank username) if you're accessing the API from your browser and are prompted for a username and password. You can obtain an API key from https://platform.openai.com/account/api-keys.",
+        "type": "invalid_request_error",
+        "param": null,
+        "code": null
+    }
+}
+
+[2026-09-30 12:15:08] INFO - vlmeval.api.base: RetCode: 401
+Answer: Failed to obtain answer via API.
+Log: {
+    "error": {
+        "message": "You didn't provide an API key. You need to provide your API key in an Authorization header using Bearer auth (i.e. Authorization: Bearer YOUR_KEY), or as the password field (with blank username) if you're accessing the API from your browser and are prompted for a username and password. You can obtain an API key from https://platform.openai.com/account/api-keys.",
+        "type": "invalid_request_error",
+        "param": null,
+        "code": null
+    }
+}
+
+[2026-09-30 12:15:09] ERROR - vlmeval.api.gpt: <class 'KeyError'>: 'choices'
+[2026-09-30 12:15:09] ERROR - vlmeval.api.gpt: {
+    "error": {
+        "message": "You didn't provide an API key. You need to provide your API key in an Authorization header using Bearer auth (i.e. Authorization: Bearer YOUR_KEY), or as the password field (with blank username) if you're accessing the API from your browser and are prompted for a username and password. You can obtain an API key from https://platform.openai.com/account/api-keys.",
+        "type": "invalid_request_error",
+        "param": null,
+        "code": null
+    }
+}
+
+[2026-09-30 12:15:09] INFO - vlmeval.api.base: RetCode: 401
+Answer: Failed to obtain answer via API.
+Log: {
+    "error": {
+        "message": "You didn't provide an API key. You need to provide your API key in an Authorization header using Bearer auth (i.e. Authorization: Bearer YOUR_KEY), or as the password field (with blank username) if you're accessing the API from your browser and are prompted for a username and password. You can obtain an API key from https://platform.openai.com/account/api-keys.",
+        "type": "invalid_request_error",
+        "param": null,
+        "code": null
+    }
+}
+
+[2026-09-30 12:15:09] ERROR - vlmeval.api.gpt: <class 'KeyError'>: 'choices'
+[2026-09-30 12:15:09] ERROR - vlmeval.api.gpt: {
+    "error": {
+        "message": "You didn't provide an API key. You need to provide your API key in an Authorization header using Bearer auth (i.e. Authorization: Bearer YOUR_KEY), or as the password field (with blank username) if you're accessing the API from your browser and are prompted for a username and password. You can obtain an API key from https://platform.openai.com/account/api-keys.",
+        "type": "invalid_request_error",
+        "param": null,
+        "code": null
+    }
+}
+
+[2026-09-30 12:15:09] INFO - vlmeval.api.base: RetCode: 401
+Answer: Failed to obtain answer via API.
+Log: {
+    "error": {
+        "message": "You didn't provide an API key. You need to provide your API key in an Authorization header using Bearer auth (i.e. Authorization: Bearer YOUR_KEY), or as the password field (with blank username) if you're accessing the API from your browser and are prompted for a username and password. You can obtain an API key from https://platform.openai.com/account/api-keys.",
+        "type": "invalid_request_error",
+        "param": null,
+        "code": null
+    }
+}
+
+[2026-09-30 12:15:10] ERROR - vlmeval.api.gpt: <class 'KeyError'>: 'choices'
+[2026-09-30 12:15:10] ERROR - vlmeval.api.gpt: {
+    "error": {
+        "message": "You didn't provide an API key. You need to provide your API key in an Authorization header using Bearer auth (i.e. Authorization: Bearer YOUR_KEY), or as the password field (with blank username) if you're accessing the API from your browser and are prompted for a username and password. You can obtain an API key from https://platform.openai.com/account/api-keys.",
+        "type": "invalid_request_error",
+        "param": null,
+        "code": null
+    }
+}
+
+[2026-09-30 12:15:10] INFO - vlmeval.api.base: RetCode: 401
+Answer: Failed to obtain answer via API.
+Log: {
+    "error": {
+        "message": "You didn't provide an API key. You need to provide your API key in an Authorization header using Bearer auth (i.e. Authorization: Bearer YOUR_KEY), or as the password field (with blank username) if you're accessing the API from your browser and are prompted for a username and password. You can obtain an API key from https://platform.openai.com/account/api-keys.",
+        "type": "invalid_request_error",
+        "param": null,
+        "code": null
+    }
+}
+
+[2026-09-30 12:15:14] ERROR - vlmeval.__main__: Model Qwen3-VL-4B-Instruct x Dataset SEEDBench2 (SEEDBench2) combination failed: Ran out of input, skipping this combination.
+Traceback (most recent call last):
+  File "/scratch/merc0606/VLMEvalKit/run.py", line 992, in run_local_mode
+    eval_results = dataset.evaluate(result_file, **judge_kwargs)
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/scratch/merc0606/VLMEvalKit/vlmeval/dataset/image_mcq.py", line 252, in evaluate
+    return self.evaluate_heuristic(eval_file, **judge_kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/scratch/merc0606/VLMEvalKit/vlmeval/dataset/image_mcq.py", line 308, in evaluate_heuristic
+    data = mcq_vanilla_eval(model, data, meta, nproc, result_file, self.dataset_name)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/scratch/merc0606/VLMEvalKit/vlmeval/dataset/utils/multiple_choice.py", line 478, in mcq_vanilla_eval
+    result = load(result_file)
+             ^^^^^^^^^^^^^^^^^
+  File "/scratch/merc0606/VLMEvalKit/vlmeval/smp/file.py", line 295, in load
+    return handlers[suffix](f)
+           ^^^^^^^^^^^^^^^^^^^
+  File "/scratch/merc0606/VLMEvalKit/vlmeval/smp/file.py", line 255, in load_pkl
+    return pickle.load(open(pth, 'rb'))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+EOFError: Ran out of input
+[2026-09-30 12:15:17] INFO - vlmeval.__main__: Run Summary Report:
+[2026-09-30 12:15:17] INFO - vlmeval.__main__: 
+benchmark    infer_fail_rate    judge_fail_rate        primary_metric    primary_metric_value    skip_reason    eval_error
+-----------  -----------------  ---------------------  ----------------  ----------------------  -------------  ----------------
+SEEDBench2   0.00% (0/24371)    100.00% (24371/24371)  -                 -                       -              Ran out of input
+Copied any available SEEDBench2 outputs to /scratch/merc0606/fine-tuning-ELVIS/results/seedbench_base
+=== Eval completed (iter 4). Chain done. ===

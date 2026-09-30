@@ -75,7 +75,7 @@ fi
 
 # --- Chain to next iteration if not done ---
 CHAIN_ITER=${CHAIN_ITER:-1}
-CHAIN_MAX=${CHAIN_MAX:-10}
+CHAIN_MAX=${CHAIN_MAX:-15}
 
 if [ $RC -eq 0 ]; then
     echo "=== Eval completed (iter $CHAIN_ITER). Chain done. ==="

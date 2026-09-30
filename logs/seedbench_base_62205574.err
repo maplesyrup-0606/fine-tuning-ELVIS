@@ -2776,3 +2776,103 @@ Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF
 Rendering prompts: 100%|██████████| 1/1 [00:00<00:00,  1.07it/s][ARendering prompts: 100%|██████████| 1/1 [00:00<00:00,  1.07it/s]
 
 Processed prompts:   0%|          | 0/1 [00:00<?, ?it/s, est. speed input: 0.00 toks/s, output: 0.00 toks/s][A
+Processed prompts: 100%|██████████| 1/1 [18:23<00:00, 1103.43s/it, est. speed input: 14.86 toks/s, output: 14.84 toks/s][A
+Processed prompts: 100%|██████████| 1/1 [18:23<00:00, 1103.43s/it, est. speed input: 14.86 toks/s, output: 14.84 toks/s][AProcessed prompts: 100%|██████████| 1/1 [18:23<00:00, 1103.46s/it, est. speed input: 14.86 toks/s, output: 14.84 toks/s]
+Infer Qwen3-VL-4B-Instruct/SEEDBench2, Rank 0/1:  18%|█▊        | 434/2421 [2:48:31<187:48:25, 340.26s/it]
+Rendering prompts:   0%|          | 0/1 [00:00<?, ?it/s][A
+Rendering prompts: 100%|██████████| 1/1 [00:04<00:00,  4.95s/it][ARendering prompts: 100%|██████████| 1/1 [00:04<00:00,  4.95s/it]
+
+Processed prompts:   0%|          | 0/1 [00:00<?, ?it/s, est. speed input: 0.00 toks/s, output: 0.00 toks/s][A
+Processed prompts: 100%|██████████| 1/1 [00:29<00:00, 29.69s/it, est. speed input: 552.96 toks/s, output: 0.44 toks/s][A
+Processed prompts: 100%|██████████| 1/1 [00:29<00:00, 29.69s/it, est. speed input: 552.96 toks/s, output: 0.44 toks/s][AProcessed prompts: 100%|██████████| 1/1 [00:29<00:00, 29.69s/it, est. speed input: 552.96 toks/s, output: 0.44 toks/s]
+Infer Qwen3-VL-4B-Instruct/SEEDBench2, Rank 0/1:  18%|█▊        | 435/2421 [2:49:07<137:12:07, 248.70s/it]
+Rendering prompts:   0%|          | 0/1 [00:00<?, ?it/s][A
+Rendering prompts: 100%|██████████| 1/1 [00:00<00:00,  2.28it/s][ARendering prompts: 100%|██████████| 1/1 [00:00<00:00,  2.28it/s]
+
+Processed prompts:   0%|          | 0/1 [00:00<?, ?it/s, est. speed input: 0.00 toks/s, output: 0.00 toks/s][A
+Processed prompts: 100%|██████████| 1/1 [00:05<00:00,  5.95s/it, est. speed input: 1198.65 toks/s, output: 1.68 toks/s][A
+Processed prompts: 100%|██████████| 1/1 [00:05<00:00,  5.95s/it, est. speed input: 1198.65 toks/s, output: 1.68 toks/s][AProcessed prompts: 100%|██████████| 1/1 [00:05<00:00,  5.95s/it, est. speed input: 1198.65 toks/s, output: 1.68 toks/s]
+Infer Qwen3-VL-4B-Instruct/SEEDBench2, Rank 0/1:  18%|█▊        | 436/2421 [2:49:13<97:05:32, 176.09s/it] 
+Rendering prompts:   0%|          | 0/1 [00:00<?, ?it/s][ARendering prompts: 100%|██████████| 1/1 [00:00<00:00, 53.68it/s]
+
+Processed prompts:   0%|          | 0/1 [00:00<?, ?it/s, est. speed input: 0.00 toks/s, output: 0.00 toks/s][A
+Processed prompts: 100%|██████████| 1/1 [00:32<00:00, 32.02s/it, est. speed input: 222.79 toks/s, output: 38.42 toks/s][A
+Processed prompts: 100%|██████████| 1/1 [00:32<00:00, 32.02s/it, est. speed input: 222.79 toks/s, output: 38.42 toks/s][AProcessed prompts: 100%|██████████| 1/1 [00:32<00:00, 32.02s/it, est. speed input: 222.79 toks/s, output: 38.42 toks/s]
+Infer Qwen3-VL-4B-Instruct/SEEDBench2, Rank 0/1:  18%|█▊        | 437/2421 [2:49:46<73:16:57, 132.97s/it]
+Rendering prompts:   0%|          | 0/1 [00:00<?, ?it/s][A
+Rendering prompts: 100%|██████████| 1/1 [00:00<00:00,  9.50it/s][ARendering prompts: 100%|██████████| 1/1 [00:00<00:00,  9.48it/s]
+
+Processed prompts:   0%|          | 0/1 [00:00<?, ?it/s, est. speed input: 0.00 toks/s, output: 0.00 toks/s][A
+Processed prompts: 100%|██████████| 1/1 [00:01<00:00,  1.51s/it, est. speed input: 2187.25 toks/s, output: 3.30 toks/s][A
+Processed prompts: 100%|██████████| 1/1 [00:01<00:00,  1.51s/it, est. speed input: 2187.25 toks/s, output: 3.30 toks/s][AProcessed prompts: 100%|██████████| 1/1 [00:01<00:00,  1.51s/it, est. speed input: 2187.25 toks/s, output: 3.30 toks/s]
+Infer Qwen3-VL-4B-Instruct/SEEDBench2, Rank 0/1:  18%|█▊        | 438/2421 [2:49:47<51:35:36, 93.66s/it] 
+Rendering prompts:   0%|          | 0/1 [00:00<?, ?it/s][A
+Rendering prompts: 100%|██████████| 1/1 [00:00<00:00,  1.03it/s][ARendering prompts: 100%|██████████| 1/1 [00:00<00:00,  1.03it/s]
+
+Processed prompts:   0%|          | 0/1 [00:00<?, ?it/s, est. speed input: 0.00 toks/s, output: 0.00 toks/s][A
+Processed prompts: 100%|██████████| 1/1 [00:27<00:00, 27.86s/it, est. speed input: 588.43 toks/s, output: 0.22 toks/s][A
+Processed prompts: 100%|██████████| 1/1 [00:27<00:00, 27.86s/it, est. speed input: 588.43 toks/s, output: 0.22 toks/s][AProcessed prompts: 100%|██████████| 1/1 [00:27<00:00, 27.86s/it, est. speed input: 588.43 toks/s, output: 0.22 toks/s]
+Infer Qwen3-VL-4B-Instruct/SEEDBench2, Rank 0/1:  18%|█▊        | 439/2421 [2:50:17<40:55:23, 74.33s/it]
+Rendering prompts:   0%|          | 0/1 [00:00<?, ?it/s][ARendering prompts: 100%|██████████| 1/1 [00:00<00:00, 25.61it/s]
+
+Processed prompts:   0%|          | 0/1 [00:00<?, ?it/s, est. speed input: 0.00 toks/s, output: 0.00 toks/s][A
+Processed prompts: 100%|██████████| 1/1 [00:00<00:00,  2.41it/s, est. speed input: 39586.53 toks/s, output: 14.48 toks/s][A
+Processed prompts: 100%|██████████| 1/1 [00:00<00:00,  2.41it/s, est. speed input: 39586.53 toks/s, output: 14.48 toks/s][AProcessed prompts: 100%|██████████| 1/1 [00:00<00:00,  2.41it/s, est. speed input: 39586.53 toks/s, output: 14.48 toks/s]
+Infer Qwen3-VL-4B-Instruct/SEEDBench2, Rank 0/1:  18%|█▊        | 440/2421 [2:50:18<28:46:31, 52.29s/it]
+Rendering prompts:   0%|          | 0/1 [00:00<?, ?it/s][A
+Rendering prompts: 100%|██████████| 1/1 [00:00<00:00,  2.99it/s][ARendering prompts: 100%|██████████| 1/1 [00:00<00:00,  2.99it/s]
+
+Processed prompts:   0%|          | 0/1 [00:00<?, ?it/s, est. speed input: 0.00 toks/s, output: 0.00 toks/s][A
+Processed prompts: 100%|██████████| 1/1 [00:05<00:00,  5.87s/it, est. speed input: 1211.43 toks/s, output: 0.85 toks/s][A
+Processed prompts: 100%|██████████| 1/1 [00:05<00:00,  5.87s/it, est. speed input: 1211.43 toks/s, output: 0.85 toks/s][AProcessed prompts: 100%|██████████| 1/1 [00:05<00:00,  5.87s/it, est. speed input: 1211.43 toks/s, output: 0.85 toks/s]
+Infer Qwen3-VL-4B-Instruct/SEEDBench2, Rank 0/1:  18%|█▊        | 441/2421 [2:50:24<21:15:04, 38.64s/it]
+Rendering prompts:   0%|          | 0/1 [00:00<?, ?it/s][A
+Rendering prompts: 100%|██████████| 1/1 [00:00<00:00,  2.49it/s][ARendering prompts: 100%|██████████| 1/1 [00:00<00:00,  2.49it/s]
+
+Processed prompts:   0%|          | 0/1 [00:00<?, ?it/s, est. speed input: 0.00 toks/s, output: 0.00 toks/s][A
+Processed prompts: 100%|██████████| 1/1 [00:05<00:00,  5.82s/it, est. speed input: 1222.32 toks/s, output: 0.86 toks/s][A
+Processed prompts: 100%|██████████| 1/1 [00:05<00:00,  5.82s/it, est. speed input: 1222.32 toks/s, output: 0.86 toks/s][AProcessed prompts: 100%|██████████| 1/1 [00:05<00:00,  5.82s/it, est. speed input: 1222.32 toks/s, output: 0.86 toks/s]
+Infer Qwen3-VL-4B-Instruct/SEEDBench2, Rank 0/1:  18%|█▊        | 442/2421 [2:50:31<15:57:55, 29.04s/it]
+Rendering prompts:   0%|          | 0/1 [00:00<?, ?it/s][ARendering prompts: 100%|██████████| 1/1 [00:00<00:00, 55.72it/s]
+
+Processed prompts:   0%|          | 0/1 [00:00<?, ?it/s, est. speed input: 0.00 toks/s, output: 0.00 toks/s][A
+Processed prompts: 100%|██████████| 1/1 [00:00<00:00,  5.31it/s, est. speed input: 37775.23 toks/s, output: 31.87 toks/s][A
+Processed prompts: 100%|██████████| 1/1 [00:00<00:00,  5.31it/s, est. speed input: 37775.23 toks/s, output: 31.87 toks/s][AProcessed prompts: 100%|██████████| 1/1 [00:00<00:00,  5.30it/s, est. speed input: 37775.23 toks/s, output: 31.87 toks/s]
+Infer Qwen3-VL-4B-Instruct/SEEDBench2, Rank 0/1:  18%|█▊        | 443/2421 [2:50:32<11:16:14, 20.51s/it]
+Rendering prompts:   0%|          | 0/1 [00:00<?, ?it/s][A
+Rendering prompts: 100%|██████████| 1/1 [00:00<00:00,  3.00it/s][ARendering prompts: 100%|██████████| 1/1 [00:00<00:00,  3.00it/s]
+
+Processed prompts:   0%|          | 0/1 [00:00<?, ?it/s, est. speed input: 0.00 toks/s, output: 0.00 toks/s][A
+Processed prompts: 100%|██████████| 1/1 [00:05<00:00,  5.97s/it, est. speed input: 1193.29 toks/s, output: 1.84 toks/s][A
+Processed prompts: 100%|██████████| 1/1 [00:05<00:00,  5.97s/it, est. speed input: 1193.29 toks/s, output: 1.84 toks/s][AProcessed prompts: 100%|██████████| 1/1 [00:05<00:00,  5.97s/it, est. speed input: 1193.29 toks/s, output: 1.84 toks/s]
+Infer Qwen3-VL-4B-Instruct/SEEDBench2, Rank 0/1:  18%|█▊        | 444/2421 [2:50:38<8:58:32, 16.34s/it] 
+Rendering prompts:   0%|          | 0/1 [00:00<?, ?it/s][ARendering prompts: 100%|██████████| 1/1 [00:00<00:00, 79.94it/s]
+
+Processed prompts:   0%|          | 0/1 [00:00<?, ?it/s, est. speed input: 0.00 toks/s, output: 0.00 toks/s][A
+Processed prompts: 100%|██████████| 1/1 [00:00<00:00,  7.22it/s, est. speed input: 51330.35 toks/s, output: 28.89 toks/s][A
+Processed prompts: 100%|██████████| 1/1 [00:00<00:00,  7.22it/s, est. speed input: 51330.35 toks/s, output: 28.89 toks/s][AProcessed prompts: 100%|██████████| 1/1 [00:00<00:00,  7.20it/s, est. speed input: 51330.35 toks/s, output: 28.89 toks/s]
+Infer Qwen3-VL-4B-Instruct/SEEDBench2, Rank 0/1:  18%|█▊        | 445/2421 [2:50:39<6:21:04, 11.57s/it]
+Rendering prompts:   0%|          | 0/1 [00:00<?, ?it/s][A
+Rendering prompts: 100%|██████████| 1/1 [00:00<00:00,  3.00it/s][ARendering prompts: 100%|██████████| 1/1 [00:00<00:00,  3.00it/s]
+
+Processed prompts:   0%|          | 0/1 [00:00<?, ?it/s, est. speed input: 0.00 toks/s, output: 0.00 toks/s][A
+Processed prompts: 100%|██████████| 1/1 [00:06<00:00,  6.16s/it, est. speed input: 1159.72 toks/s, output: 2.92 toks/s][A
+Processed prompts: 100%|██████████| 1/1 [00:06<00:00,  6.16s/it, est. speed input: 1159.72 toks/s, output: 2.92 toks/s][AProcessed prompts: 100%|██████████| 1/1 [00:06<00:00,  6.16s/it, est. speed input: 1159.72 toks/s, output: 2.92 toks/s]
+Infer Qwen3-VL-4B-Instruct/SEEDBench2, Rank 0/1:  18%|█▊        | 446/2421 [2:50:45<5:33:11, 10.12s/it]
+Rendering prompts:   0%|          | 0/1 [00:00<?, ?it/s][A
+Rendering prompts: 100%|██████████| 1/1 [00:00<00:00,  2.44it/s][ARendering prompts: 100%|██████████| 1/1 [00:00<00:00,  2.44it/s]
+
+Processed prompts:   0%|          | 0/1 [00:00<?, ?it/s, est. speed input: 0.00 toks/s, output: 0.00 toks/s][A
+Processed prompts: 100%|██████████| 1/1 [00:05<00:00,  5.84s/it, est. speed input: 1218.10 toks/s, output: 1.03 toks/s][A
+Processed prompts: 100%|██████████| 1/1 [00:05<00:00,  5.84s/it, est. speed input: 1218.10 toks/s, output: 1.03 toks/s][AProcessed prompts: 100%|██████████| 1/1 [00:05<00:00,  5.84s/it, est. speed input: 1218.10 toks/s, output: 1.03 toks/s]
+Infer Qwen3-VL-4B-Instruct/SEEDBench2, Rank 0/1:  18%|█▊        | 447/2421 [2:50:52<4:59:04,  9.09s/it]
+Rendering prompts:   0%|          | 0/1 [00:00<?, ?it/s][A
+Rendering prompts: 100%|██████████| 1/1 [00:00<00:00,  1.05it/s][ARendering prompts: 100%|██████████| 1/1 [00:00<00:00,  1.05it/s]
+
+Processed prompts:   0%|          | 0/1 [00:00<?, ?it/s, est. speed input: 0.00 toks/s, output: 0.00 toks/s][A
+Processed prompts: 100%|██████████| 1/1 [00:35<00:00, 35.83s/it, est. speed input: 457.44 toks/s, output: 4.94 toks/s][A
+Processed prompts: 100%|██████████| 1/1 [00:35<00:00, 35.83s/it, est. speed input: 457.44 toks/s, output: 4.94 toks/s][AProcessed prompts: 100%|██████████| 1/1 [00:35<00:00, 35.83s/it, est. speed input: 457.44 toks/s, output: 4.94 toks/s]
+Infer Qwen3-VL-4B-Instruct/SEEDBench2, Rank 0/1:  19%|█▊        | 448/2421 [2:51:29<9:37:05, 17.55s/it]
+Rendering prompts:   0%|          | 0/1 [00:00<?, ?it/s][ARendering prompts: 100%|██████████| 1/1 [00:00<00:00, 26.54it/s]
+
+Processed prompts:   0%|          | 0/1 [00:00<?, ?it/s, est. speed input: 0.00 toks/s, output: 0.00 toks/s][Asbatch: NOTE: Your memory request of 32768.0M was likely submitted as 32.0G. Please note that Slurm interprets memory requests denominated in G as multiples of 1024M, not 1000M.

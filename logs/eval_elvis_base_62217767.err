@@ -1,0 +1,7 @@
+Traceback (most recent call last):
+  File "/scratch/merc0606/fine-tuning-ELVIS/scripts/eval_elvis.py", line 129, in <module>
+    main()
+  File "/scratch/merc0606/fine-tuning-ELVIS/scripts/eval_elvis.py", line 89, in main
+    ret = _run_qwen_baseline(
+          ^^^^^^^^^^^^^^^^^^^
+TypeError: _run_qwen_baseline() got an unexpected keyword argument 'adapter_path'

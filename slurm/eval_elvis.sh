@@ -1,6 +1,6 @@
 #!/bin/bash
 #SBATCH --account=def-lsigal
-#SBATCH --time=03:00:00
+#SBATCH --time=6:00:00
 #SBATCH --gpus=nvidia_h100_80gb_hbm3_3g.40gb:1
 #SBATCH --cpus-per-task=6
 #SBATCH --mem=32G
