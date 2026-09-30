@@ -77,14 +77,26 @@ def main():
 
     adapter_path = args.checkpoint if args.variant != "base" else None
 
+    # Bucket every run into <variant>/<version-tag>/<checkpoint-name>/ so
+    # multiple checkpoints of the same variant don't overwrite each other.
+    # For --variant base (no adapter) we substitute a wall-clock timestamp.
+    if adapter_path:
+        ckpt_path = Path(adapter_path)
+        run_key = Path(args.variant) / ckpt_path.parent.name / ckpt_path.name
+    else:
+        run_key = Path(args.variant) / datetime.now().strftime("%Y%m%d-%H%M%S")
+    run_dir = Path(args.output_dir) / run_key
+    run_dir.mkdir(parents=True, exist_ok=True)
+
     results = {}
     for principle in args.principles:
         data_path = os.path.join(elvis_data, principle)
-        principle_out = Path(args.output_dir) / args.variant / principle
+        principle_out = run_dir / principle
         principle_out.mkdir(parents=True, exist_ok=True)
         print(f"\n{'='*60}")
         print(f"Evaluating variant={args.variant} principle={principle}")
         print(f"Checkpoint: {adapter_path or '(base model, no adapter)'}")
+        print(f"Run dir:    {run_dir}")
         print(f"{'='*60}")
         ret = _run_qwen_baseline(
             model_id=model_id,
@@ -105,8 +117,7 @@ def main():
         acc, f1 = ret
         results[principle] = {"accuracy": acc, "f1": f1}
 
-    summary_path = Path(args.output_dir) / args.variant / "summary.json"
-    summary_path.parent.mkdir(parents=True, exist_ok=True)
+    summary_path = run_dir / "summary.json"
     with open(summary_path, "w") as f:
         json.dump({
             "variant": args.variant,
