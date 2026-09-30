@@ -1,0 +1,624 @@
+/scratch/merc0606/venv/elvis/lib/python3.11/site-packages/huggingface_hub/constants.py:298: FutureWarning: The `HF_HUB_ENABLE_HF_TRANSFER` environment variable is deprecated as 'hf_transfer' is not used anymore. Please use `HF_XET_HIGH_PERFORMANCE` instead to enable high performance transfer with Xet. Visit https://huggingface.co/docs/huggingface_hub/package_reference/environment_variables#hfxethighperformance for more details.
+  warnings.warn(
+/scratch/merc0606/venv/elvis/lib/python3.11/site-packages/huggingface_hub/constants.py:298: FutureWarning: The `HF_HUB_ENABLE_HF_TRANSFER` environment variable is deprecated as 'hf_transfer' is not used anymore. Please use `HF_XET_HIGH_PERFORMANCE` instead to enable high performance transfer with Xet. Visit https://huggingface.co/docs/huggingface_hub/package_reference/environment_variables#hfxethighperformance for more details.
+  warnings.warn(
+[INFO:swift] Successfully registered `/scratch/merc0606/venv/elvis/lib/python3.11/site-packages/swift/dataset/data/dataset_info.json`.
+[INFO:swift] rank: -1, local_rank: -1, world_size: 1, local_world_size: 1
+[INFO:swift] Downloading the model from ModelScope Hub, model_id: Qwen/Qwen3-VL-4B-Instruct
+2026-09-29 18:53:23,443 | INFO    | modelscope_hub.download | Downloading 13 files from Qwen/Qwen3-VL-4B-Instruct@master
+Downloading:   0%|          | 0/13 [00:00<?, ?file/s]Downloading: 100%|██████████| 13/13 [00:00<00:00, 216.56file/s]
+[INFO:swift] Loading the model using model_dir: /home/merc0606/.cache/modelscope/models/Qwen--Qwen3-VL-4B-Instruct/snapshots/master
+[transformers] `torch_dtype` is deprecated! Use `dtype` instead!
+[INFO:swift] Setting args.lazy_tokenize: True
+[INFO:swift] Setting args.dataloader_num_workers: 1
+[transformers] warmup_ratio is deprecated and will be removed in v5.2. Use `warmup_steps` instead.
+[INFO:swift] output_dir: /scratch/merc0606/fine-tuning-ELVIS/results/checkpoints/projector/v2-20260929-185323
+[INFO:swift] args: SftArguments(
+acc_strategy=token,
+accelerator_config={'dispatch_batches': False},
+adalora_beta1=0.85,
+adalora_beta2=0.85,
+adalora_deltaT=1,
+adalora_init_r=12,
+adalora_orth_reg_weight=0.5,
+adalora_target_r=8,
+adalora_tfinal=0,
+adalora_tinit=0,
+adam_beta1=0.9,
+adam_beta2=0.95,
+adam_epsilon=1e-08,
+adapter_act=gelu,
+adapter_length=128,
+adapters=[],
+add_non_thinking_prefix=True,
+add_version=True,
+agent_template=None,
+aligner_lr=None,
+attn_impl=None,
+auto_find_batch_size=False,
+average_tokens_across_devices=True,
+batch_eval_metrics=False,
+bf16=True,
+bf16_full_eval=False,
+bnb_4bit_compute_dtype=torch.bfloat16,
+bnb_4bit_quant_storage=None,
+bnb_4bit_quant_type=nf4,
+bnb_4bit_use_double_quant=True,
+boft_block_num=0,
+boft_block_size=4,
+boft_dropout=0.0,
+boft_n_butterfly_factor=1,
+cached_dataset=[],
+cached_val_dataset=[],
+callbacks=[],
+check_model=True,
+columns={},
+create_checkpoint_symlink=False,
+custom_dataset_info=[],
+custom_register_path=[],
+data_seed=42,
+dataloader_drop_last=False,
+dataloader_multiprocessing_context=None,
+dataloader_num_workers=None,
+dataloader_persistent_workers=True,
+dataloader_pin_memory=True,
+dataloader_prefetch_factor=None,
+dataset=['data/continuity/train.jsonl'],
+dataset_num_proc=1,
+dataset_shuffle=True,
+ddp_backend=None,
+ddp_broadcast_buffers=None,
+ddp_bucket_cap_mb=None,
+ddp_find_unused_parameters=None,
+ddp_static_graph=None,
+ddp_timeout=18000000,
+debug=None,
+deepspeed=None,
+deepspeed_autotp_size=None,
+device_groups=None,
+device_map=None,
+disable_auto_column_mapping=False,
+disable_ignore_empty_think=False,
+disable_tqdm=None,
+do_eval=False,
+do_predict=False,
+do_train=False,
+download_mode=reuse_dataset_if_exists,
+ds3_gather_for_generation=True,
+early_stop_interval=None,
+enable_channel_loss=False,
+enable_dft_loss=False,
+enable_jit_checkpoint=False,
+enable_npu_model_patch=True,
+enable_thinking=None,
+eval_accumulation_steps=None,
+eval_dataset=[],
+eval_dataset_args=None,
+eval_delay=0,
+eval_do_concat_batches=True,
+eval_generation_config=None,
+eval_limit=None,
+eval_metric=None,
+eval_on_start=False,
+eval_steps=None,
+eval_strategy=no,
+eval_use_evalscope=False,
+eval_use_gather_object=False,
+experts_impl=None,
+external_plugins=[],
+extra_eval_args=None,
+fourier_n_frequency=2000,
+fourier_scaling=300.0,
+fp16=False,
+fp16_full_eval=False,
+freeze_aligner=False,
+freeze_llm=True,
+freeze_parameters=[],
+freeze_parameters_ratio=0.0,
+freeze_parameters_regex=None,
+freeze_vit=True,
+fsdp=[],
+fsdp_config=None,
+full_determinism=False,
+galore_cos_threshold=0.4,
+galore_gamma_proj=2,
+galore_optim_per_parameter=False,
+galore_proj_bits=4,
+galore_proj_group_size=256,
+galore_proj_quant=False,
+galore_proj_type=std,
+galore_quantization=False,
+galore_queue_size=5,
+galore_rank=128,
+galore_scale=1.0,
+galore_target_modules=None,
+galore_update_proj_gap=50,
+galore_with_embedding=False,
+generation_config=None,
+generation_max_length=None,
+generation_num_beams=None,
+gradient_accumulation_steps=8,
+gradient_checkpointing=True,
+gradient_checkpointing_kwargs=None,
+greater_is_better=False,
+group_by_length=False,
+hqq_axis=None,
+hub_always_push=False,
+hub_model_id=None,
+hub_private_repo=None,
+hub_revision=None,
+hub_strategy=every_save,
+hub_token=<HUB_TOKEN>,
+ignore_args_error=False,
+ignore_data_skip=False,
+include_for_metrics=[],
+include_num_input_tokens_seen=False,
+init_strategy=None,
+init_weights=True,
+interleave_prob=None,
+is_binary_loss_scale=None,
+label_names=None,
+label_smoothing_factor=0.0,
+lazy_tokenize=True,
+learning_rate=5e-05,
+length_column_name=length,
+liger_kernel_config=None,
+lisa_activated_layers=0,
+lisa_step_interval=20,
+llamapro_num_groups=None,
+llamapro_num_new_blocks=4,
+load_args=False,
+load_best_model_at_end=False,
+load_data_args=False,
+load_from_cache_file=False,
+local_rank=-1,
+local_repo_path=None,
+log_level=passive,
+log_level_replica=warning,
+log_on_each_node=True,
+logging_dir=/scratch/merc0606/fine-tuning-ELVIS/results/checkpoints/projector/v2-20260929-185323/runs,
+logging_first_step=True,
+logging_nan_inf_filter=True,
+logging_steps=5,
+logging_strategy=steps,
+logprobs=False,
+lora_alpha=8.0,
+lora_bias=none,
+lora_dropout=0.0,
+lora_dtype=None,
+lora_ga_batch_size=2,
+lora_ga_direction=ArB2r,
+lora_ga_iters=2,
+lora_ga_max_length=1024,
+lora_ga_scale=stable,
+lora_ga_stable_gamma=16,
+lora_rank=4,
+lorap_lr_ratio=None,
+loss_scale=default,
+loss_type=None,
+lr_scheduler_kwargs=None,
+lr_scheduler_type=cosine,
+max_epochs=None,
+max_grad_norm=1.0,
+max_length=262144,
+max_memory={},
+max_model_len=None,
+max_new_tokens=64,
+max_pixels=50176,
+max_shard_size=5GB,
+max_steps=-1,
+metric_for_best_model=loss,
+model=Qwen/Qwen3-VL-4B-Instruct,
+model_author=None,
+model_kwargs={},
+model_name=None,
+model_revision=None,
+model_type=qwen3_vl,
+modules_to_save=[],
+mrl_dims=None,
+neftune_noise_alpha=None,
+new_special_tokens=[],
+norm_bbox=None,
+num_beams=1,
+num_labels=None,
+num_train_epochs=3.0,
+optim=adamw_torch_fused,
+optim_args=None,
+optim_target_modules=None,
+optimizer=None,
+output_dir=/scratch/merc0606/fine-tuning-ELVIS/results/checkpoints/projector/v2-20260929-185323,
+packing=False,
+packing_length=None,
+packing_num_proc=1,
+packing_strategy=binpack,
+padding_free=False,
+padding_side=right,
+parallelism_config=None,
+per_device_eval_batch_size=1,
+per_device_train_batch_size=4,
+predict_with_generate=False,
+prediction_loss_only=False,
+preserve_thinking=None,
+problem_type=None,
+project=huggingface,
+push_to_hub=False,
+quant_bits=None,
+quant_method=None,
+ray_exp_name=None,
+reft_args=None,
+reft_intervention_type=LoreftIntervention,
+reft_layer_key=None,
+reft_layers=None,
+reft_rank=4,
+remove_unused_columns=True,
+repetition_penalty=None,
+report_to=['wandb'],
+response_prefix=None,
+restore_callback_states_from_checkpoint=False,
+resume_from_checkpoint=None,
+resume_only_model=False,
+rope_scaling=None,
+router_aux_loss_coef=0.0,
+run_name=/scratch/merc0606/fine-tuning-ELVIS/results/checkpoints/projector/v2-20260929-185323,
+safe_serialization=True,
+save_on_each_node=False,
+save_only_model=False,
+save_steps=500,
+save_strategy=epoch,
+save_total_limit=3,
+seed=42,
+sequence_parallel_size=1,
+shuffle_buffer_size=1000,
+skip_memory_metrics=True,
+sortish_sampler=False,
+split_dataset_ratio=0.0,
+stop_words=[],
+stopping_strategy=first_exhausted,
+stream=False,
+streaming=False,
+strict=False,
+structured_outputs_regex=None,
+swanlab_email_language=zh,
+swanlab_exp_name=None,
+swanlab_mode=cloud,
+swanlab_notification_method=None,
+swanlab_project=ms-swift,
+swanlab_receiver_email=None,
+swanlab_secret=None,
+swanlab_sender_email=None,
+swanlab_smtp_port=None,
+swanlab_smtp_server=None,
+swanlab_token=<SWANLAB_TOKEN>,
+swanlab_webhook_url=None,
+swanlab_workspace=None,
+system=None,
+target_modules=['all-linear'],
+target_parameters=None,
+target_regex=None,
+task_type=causal_lm,
+temperature=0.0,
+template=qwen3_vl,
+template_backend=swift,
+tf32=None,
+top_k=None,
+top_logprobs=None,
+top_p=None,
+torch_compile=False,
+torch_compile_backend=None,
+torch_compile_mode=None,
+torch_dtype=torch.bfloat16,
+torch_empty_cache_steps=None,
+trackio_bucket_id=None,
+trackio_space_id=None,
+trackio_static_space_id=None,
+train_dataloader_shuffle=True,
+train_sampling_strategy=random,
+trainable_parameters=[],
+trainable_parameters_regex=None,
+truncation_strategy=delete,
+tuner_backend=peft,
+tuner_type=lora,
+use_cache=False,
+use_chat_template=True,
+use_cpu=False,
+use_dora=False,
+use_flash_ckpt=False,
+use_galore=False,
+use_hf=False,
+use_liger_kernel=False,
+use_logits_to_keep=None,
+use_ray=False,
+use_rslora=False,
+use_swift_lora=False,
+val_dataset=[],
+val_dataset_shuffle=False,
+vera_d_initial=0.1,
+vera_dropout=0.0,
+vera_projection_prng_key=0,
+vera_rank=256,
+vit_gradient_checkpointing=True,
+vit_lr=None,
+warmup_ratio=0.03,
+warmup_steps=0,
+weight_decay=0.1,
+zero_hpz_partition_size=None,
+)
+[INFO:swift] Global seed set to 42
+[INFO:swift] Downloading the model from ModelScope Hub, model_id: Qwen/Qwen3-VL-4B-Instruct
+2026-09-29 18:53:25,367 | INFO    | modelscope_hub.download | Downloading 15 files from Qwen/Qwen3-VL-4B-Instruct@master
+Downloading:   0%|          | 0/15 [00:00<?, ?file/s]Downloading:  93%|█████████▎| 14/15 [00:02<00:00,  4.68file/s]Downloading: 100%|██████████| 15/15 [00:06<00:00,  1.78file/s]Downloading: 100%|██████████| 15/15 [00:06<00:00,  2.15file/s]
+[INFO:swift] Loading the model using model_dir: /home/merc0606/.cache/modelscope/models/Qwen--Qwen3-VL-4B-Instruct/snapshots/master
+[INFO:swift] Setting max_ratio: 200. You can adjust this hyperparameter through the environment variable: `MAX_RATIO`.
+[INFO:swift] Setting frame_factor: 2. You can adjust this hyperparameter through the environment variable: `FRAME_FACTOR`.
+[INFO:swift] Setting fps: 2.0. You can adjust this hyperparameter through the environment variable: `FPS`.
+[INFO:swift] Setting fps_min_frames: 4. You can adjust this hyperparameter through the environment variable: `FPS_MIN_FRAMES`.
+[INFO:swift] Setting fps_max_frames: 768. You can adjust this hyperparameter through the environment variable: `FPS_MAX_FRAMES`.
+[INFO:swift] Setting image_max_token_num: 16384. You can adjust this hyperparameter through the environment variable: `IMAGE_MAX_TOKEN_NUM`.
+[INFO:swift] Setting image_min_token_num: 4. You can adjust this hyperparameter through the environment variable: `IMAGE_MIN_TOKEN_NUM`.
+[INFO:swift] Setting spatial_merge_size: 2. You can adjust this hyperparameter through the environment variable: `SPATIAL_MERGE_SIZE`.
+[INFO:swift] Setting video_max_token_num: 768. You can adjust this hyperparameter through the environment variable: `VIDEO_MAX_TOKEN_NUM`.
+[INFO:swift] Setting video_min_token_num: 128. You can adjust this hyperparameter through the environment variable: `VIDEO_MIN_TOKEN_NUM`.
+[INFO:swift] model_kwargs: {'device_map': 'cuda:0', 'dtype': torch.bfloat16}
+Loading weights:   0%|          | 0/713 [00:00<?, ?it/s]Loading weights:   0%|          | 1/713 [00:00<02:29,  4.76it/s]Loading weights:   2%|▏         | 16/713 [00:00<00:12, 57.93it/s]Loading weights:   4%|▍         | 30/713 [00:00<00:07, 85.76it/s]Loading weights:   6%|▌         | 42/713 [00:00<00:07, 93.88it/s]Loading weights:   7%|▋         | 53/713 [00:00<00:06, 98.74it/s]Loading weights:   9%|▉         | 64/713 [00:00<00:06, 101.96it/s]Loading weights:  11%|█         | 75/713 [00:00<00:06, 104.37it/s]Loading weights:  12%|█▏        | 88/713 [00:00<00:05, 108.97it/s]Loading weights:  14%|█▍        | 100/713 [00:01<00:05, 111.65it/s]Loading weights:  16%|█▌        | 113/713 [00:01<00:05, 109.46it/s]Loading weights:  18%|█▊        | 125/713 [00:01<00:05, 104.72it/s]Loading weights:  19%|█▉        | 137/713 [00:01<00:05, 102.21it/s]Loading weights:  21%|██        | 148/713 [00:01<00:05, 104.09it/s]Loading weights:  23%|██▎       | 162/713 [00:01<00:04, 113.42it/s]Loading weights:  24%|██▍       | 174/713 [00:01<00:04, 112.15it/s]Loading weights:  26%|██▌       | 187/713 [00:01<00:04, 113.91it/s]Loading weights:  28%|██▊       | 199/713 [00:01<00:04, 114.84it/s]Loading weights:  30%|██▉       | 211/713 [00:02<00:04, 108.74it/s]Loading weights:  31%|███       | 222/713 [00:02<00:04, 109.07it/s]Loading weights:  33%|███▎      | 235/713 [00:02<00:04, 108.04it/s]Loading weights:  35%|███▍      | 247/713 [00:02<00:04, 104.59it/s]Loading weights:  37%|███▋      | 261/713 [00:02<00:03, 113.97it/s]Loading weights:  38%|███▊      | 273/713 [00:02<00:04, 109.75it/s]Loading weights:  40%|████      | 287/713 [00:02<00:03, 117.77it/s]Loading weights:  42%|████▏     | 300/713 [00:02<00:03, 107.10it/s]Loading weights:  44%|████▍     | 313/713 [00:03<00:03, 106.69it/s]Loading weights:  46%|████▌     | 327/713 [00:03<00:03, 111.90it/s]Loading weights:  48%|████▊     | 341/713 [00:03<00:03, 116.69it/s]Loading weights:  50%|████▉     | 353/713 [00:03<00:03, 116.98it/s]Loading weights:  51%|█████     | 365/713 [00:03<00:03, 110.90it/s]Loading weights:  53%|█████▎    | 378/713 [00:03<00:03, 109.23it/s]Loading weights:  55%|█████▍    | 390/713 [00:03<00:03, 105.29it/s]Loading weights:  65%|██████▌   | 466/713 [00:03<00:00, 275.74it/s]Loading weights:  79%|███████▉  | 562/713 [00:03<00:00, 457.65it/s]Loading weights:  92%|█████████▏| 657/713 [00:04<00:00, 588.15it/s]Loading weights: 100%|██████████| 713/713 [00:04<00:00, 171.42it/s]
+[INFO:swift] model_info: ModelInfo(model_type='qwen3_vl', model_dir='/home/merc0606/.cache/modelscope/models/Qwen--Qwen3-VL-4B-Instruct/snapshots/master', torch_dtype=torch.bfloat16, max_model_len=262144, quant_method=None, quant_bits=None, rope_scaling=None, is_moe_model=False, is_multimodal=True, config=Qwen3VLConfig {
+  "architectures": [
+    "Qwen3VLForConditionalGeneration"
+  ],
+  "dtype": "bfloat16",
+  "hidden_size": 2560,
+  "image_token_id": 151655,
+  "model_type": "qwen3_vl",
+  "text_config": {
+    "attention_bias": false,
+    "attention_dropout": 0.0,
+    "bos_token_id": 151643,
+    "dtype": "bfloat16",
+    "eos_token_id": 151645,
+    "head_dim": 128,
+    "hidden_act": "silu",
+    "hidden_size": 2560,
+    "initializer_range": 0.02,
+    "intermediate_size": 9728,
+    "max_position_embeddings": 262144,
+    "model_type": "qwen3_vl_text",
+    "num_attention_heads": 32,
+    "num_hidden_layers": 36,
+    "num_key_value_heads": 8,
+    "pad_token_id": null,
+    "rms_norm_eps": 1e-06,
+    "rope_parameters": {
+      "mrope_interleaved": true,
+      "mrope_section": [
+        24,
+        20,
+        20
+      ],
+      "rope_theta": 5000000,
+      "rope_type": "default"
+    },
+    "tie_word_embeddings": true,
+    "use_cache": true,
+    "vocab_size": 151936
+  },
+  "tie_word_embeddings": true,
+  "transformers_version": "5.12.1",
+  "video_token_id": 151656,
+  "vision_config": {
+    "deepstack_visual_indexes": [
+      5,
+      11,
+      17
+    ],
+    "depth": 24,
+    "dtype": "bfloat16",
+    "hidden_act": "gelu_pytorch_tanh",
+    "hidden_size": 1024,
+    "in_channels": 3,
+    "initializer_range": 0.02,
+    "intermediate_size": 4096,
+    "model_type": "qwen3_vl_vision",
+    "num_heads": 16,
+    "num_position_embeddings": 2304,
+    "out_hidden_size": 2560,
+    "patch_size": 16,
+    "spatial_merge_size": 2,
+    "temporal_patch_size": 2
+  },
+  "vision_end_token_id": 151653,
+  "vision_start_token_id": 151652
+}
+, task_type='causal_lm', num_labels=None)
+[INFO:swift] model.generation_config: GenerationConfig {
+  "bos_token_id": 151643,
+  "do_sample": false,
+  "eos_token_id": [
+    151645,
+    151643
+  ],
+  "length_penalty": 1.0,
+  "max_new_tokens": 64,
+  "num_beams": 1,
+  "pad_token_id": 151643,
+  "repetition_penalty": 1.0,
+  "temperature": 1.0,
+  "top_k": 50,
+  "top_p": 1.0
+}
+
+[INFO:swift] default_system: None
+[INFO:swift] max_length: 262144
+[INFO:swift] response_prefix: None
+[INFO:swift] agent_template: hermes
+[INFO:swift] norm_bbox: norm1000
+[INFO:swift] Setting ROOT_IMAGE_DIR: None. You can adjust this hyperparameter through the environment variable: `ROOT_IMAGE_DIR`.
+[INFO:swift] Setting QWENVL_BBOX_FORMAT: legacy. You can adjust this hyperparameter through the environment variable: `QWENVL_BBOX_FORMAT`.
+[INFO:swift] Start time of running main: 2026-09-29 18:53:38.267531
+[INFO:swift] swift.__version__: 4.5.3
+Map (num_proc=1): 100%|██████████| 5184/5184 [00:00<?, ? examples/s]Map (num_proc=1): 6184 examples [00:00, 8369.21 examples/s]         Map (num_proc=1): 10368 examples [00:00, 26218.11 examples/s]Map (num_proc=1): 10368 examples [00:00, 16328.61 examples/s]
+[INFO:swift] train_dataset: Dataset({
+    features: ['messages', 'images', 'dataset'],
+    num_rows: 5184
+})
+[INFO:swift] val_dataset: None
+[INFO:swift] [INPUT_IDS] [151644, 872, 198, 151652, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151653, 16429, 279, 2701, 32711, 5601, 25, 576, 5912, 84955, 279, 43903, 10295, 320, 3896, 220, 18, 5335, 8, 504, 279, 50857, 10295, 320, 4259, 220, 18, 5335, 8, 374, 3118, 389, 279, 53899, 3145, 17508, 315, 3070, 21319, 34494, 334, 1959, 11689, 11, 279, 30854, 315, 279, 3738, 7912, 311, 44393, 264, 10876, 11, 8433, 1815, 476, 34682, 4221, 264, 8500, 315, 5424, 11, 1496, 421, 279, 5424, 5577, 525, 537, 21893, 8433, 382, 12, 3070, 35490, 10295, 320, 14228, 220, 16, 11, 220, 17, 11, 220, 18, 32295, 25, 576, 27197, 20816, 304, 1817, 2168, 525, 27802, 304, 264, 1616, 429, 13230, 264, 19259, 11, 35512, 1815, 476, 34682, 13, 576, 20816, 4994, 311, 387, 7218, 3156, 264, 3175, 11, 55787, 1555, 476, 15655, 1959, 369, 2867, 11, 264, 8500, 315, 30994, 476, 13, 3228, 1437, 419, 2168, 438, 43903, 476, 50857, 13, 8278, 4226, 448, 6785, 476, 8225, 13, 151645, 198, 151644, 77091, 198, 30487, 151645, 198]
+[INFO:swift] [INPUT] <|im_start|>user
+<|vision_start|>[151655 * 49]<|vision_end|>Using the following reasoning rules: The rule distinguishing the Positive examples (first 3 images) from the Negative examples (last 3 images) is based on the Gestalt principle of **continuity** — specifically, the tendency of the human eye to perceive a smooth, connected path or trajectory among a sequence of elements, even if the elements themselves are not physically connected.
+
+- **Positive examples (Images 1, 2, 3)**: The colored shapes in each image are arranged in a way that suggests a continuous, flowing path or trajectory. The shapes appear to be moving along a single, coherent line or curve — for instance, a sequence of dots or. Classify this image as Positive or Negative. Only answer with positive or negative.<|im_end|>
+<|im_start|>assistant
+positive<|im_end|>
+
+[INFO:swift] [LABELS_IDS] [-100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, 30487, 151645, 198]
+[INFO:swift] [LABELS] [-100 * 210]positive<|im_end|>
+
+[INFO:swift] The SftArguments will be saved in: /scratch/merc0606/fine-tuning-ELVIS/results/checkpoints/projector/v2-20260929-185323/args.json
+[INFO:swift] lora_config: LoraConfig(task_type='CAUSAL_LM', peft_type=<PeftType.LORA: 'LORA'>, auto_mapping=None, peft_version='0.19.1', base_model_name_or_path='/home/merc0606/.cache/modelscope/models/Qwen--Qwen3-VL-4B-Instruct/snapshots/master', revision=None, inference_mode=False, r=4, target_modules='^(model\\.visual\\.merger(?=\\.).*\\.(linear_fc2|linear_fc1)|model\\.visual\\.deepstack_merger_list(?=\\.).*\\.(linear_fc2|linear_fc1))$', exclude_modules=None, lora_alpha=8.0, lora_dropout=0.0, fan_in_fan_out=False, bias='none', use_rslora=False, modules_to_save=[], init_lora_weights=True, layers_to_transform=None, layers_pattern=None, rank_pattern={}, alpha_pattern={}, megatron_config=None, megatron_core='megatron.core', trainable_token_indices=None, loftq_config={}, eva_config=None, corda_config=None, lora_ga_config=None, use_dora=False, alora_invocation_tokens=None, use_qalora=False, qalora_group_size=16, layer_replication=None, runtime_config=LoraRuntimeConfig(ephemeral_gpu_offload=False), lora_bias=False, target_parameters=None, use_bdlora=None, arrow_config=None, ensure_weight_tying=False, lora_dtype=None, lorap_lr_ratio=None, lorap_emb_lr=1e-06)
+[INFO:swift] model: PeftModelForCausalLM(
+  (base_model): LoraModel(
+    (model): Qwen3VLForConditionalGeneration(
+      (model): Qwen3VLModel(
+        (visual): Qwen3VLVisionModel(
+          (patch_embed): Qwen3VLVisionPatchEmbed(
+            (proj): Conv3d(3, 1024, kernel_size=(2, 16, 16), stride=(2, 16, 16))
+          )
+          (pos_embed): Embedding(2304, 1024)
+          (rotary_pos_emb): Qwen3VLVisionRotaryEmbedding()
+          (blocks): ModuleList(
+            (0-23): 24 x Qwen3VLVisionBlock(
+              (norm1): LayerNorm((1024,), eps=1e-06, elementwise_affine=True)
+              (norm2): LayerNorm((1024,), eps=1e-06, elementwise_affine=True)
+              (attn): Qwen3VLVisionAttention(
+                (qkv): Linear(in_features=1024, out_features=3072, bias=True)
+                (proj): Linear(in_features=1024, out_features=1024, bias=True)
+              )
+              (mlp): Qwen3VLVisionMLP(
+                (linear_fc1): Linear(in_features=1024, out_features=4096, bias=True)
+                (linear_fc2): Linear(in_features=4096, out_features=1024, bias=True)
+                (act_fn): GELUTanh()
+              )
+            )
+          )
+          (merger): Qwen3VLVisionPatchMerger(
+            (norm): LayerNorm((1024,), eps=1e-06, elementwise_affine=True)
+            (linear_fc1): lora.Linear(
+              (base_layer): Linear(in_features=4096, out_features=4096, bias=True)
+              (lora_dropout): ModuleDict(
+                (default): Identity()
+              )
+              (lora_A): ModuleDict(
+                (default): Linear(in_features=4096, out_features=4, bias=False)
+              )
+              (lora_B): ModuleDict(
+                (default): Linear(in_features=4, out_features=4096, bias=False)
+              )
+              (lora_embedding_A): ParameterDict()
+              (lora_embedding_B): ParameterDict()
+              (lora_magnitude_vector): ModuleDict()
+            )
+            (act_fn): GELU(approximate='none')
+            (linear_fc2): lora.Linear(
+              (base_layer): Linear(in_features=4096, out_features=2560, bias=True)
+              (lora_dropout): ModuleDict(
+                (default): Identity()
+              )
+              (lora_A): ModuleDict(
+                (default): Linear(in_features=4096, out_features=4, bias=False)
+              )
+              (lora_B): ModuleDict(
+                (default): Linear(in_features=4, out_features=2560, bias=False)
+              )
+              (lora_embedding_A): ParameterDict()
+              (lora_embedding_B): ParameterDict()
+              (lora_magnitude_vector): ModuleDict()
+            )
+          )
+          (deepstack_merger_list): ModuleList(
+            (0-2): 3 x Qwen3VLVisionPatchMerger(
+              (norm): LayerNorm((4096,), eps=1e-06, elementwise_affine=True)
+              (linear_fc1): lora.Linear(
+                (base_layer): Linear(in_features=4096, out_features=4096, bias=True)
+                (lora_dropout): ModuleDict(
+                  (default): Identity()
+                )
+                (lora_A): ModuleDict(
+                  (default): Linear(in_features=4096, out_features=4, bias=False)
+                )
+                (lora_B): ModuleDict(
+                  (default): Linear(in_features=4, out_features=4096, bias=False)
+                )
+                (lora_embedding_A): ParameterDict()
+                (lora_embedding_B): ParameterDict()
+                (lora_magnitude_vector): ModuleDict()
+              )
+              (act_fn): GELU(approximate='none')
+              (linear_fc2): lora.Linear(
+                (base_layer): Linear(in_features=4096, out_features=2560, bias=True)
+                (lora_dropout): ModuleDict(
+                  (default): Identity()
+                )
+                (lora_A): ModuleDict(
+                  (default): Linear(in_features=4096, out_features=4, bias=False)
+                )
+                (lora_B): ModuleDict(
+                  (default): Linear(in_features=4, out_features=2560, bias=False)
+                )
+                (lora_embedding_A): ParameterDict()
+                (lora_embedding_B): ParameterDict()
+                (lora_magnitude_vector): ModuleDict()
+              )
+            )
+          )
+        )
+        (language_model): Qwen3VLTextModel(
+          (embed_tokens): Embedding(151936, 2560)
+          (layers): ModuleList(
+            (0-35): 36 x Qwen3VLTextDecoderLayer(
+              (self_attn): Qwen3VLTextAttention(
+                (q_proj): Linear(in_features=2560, out_features=4096, bias=False)
+                (k_proj): Linear(in_features=2560, out_features=1024, bias=False)
+                (v_proj): Linear(in_features=2560, out_features=1024, bias=False)
+                (o_proj): Linear(in_features=4096, out_features=2560, bias=False)
+                (q_norm): Qwen3VLTextRMSNorm((128,), eps=1e-06)
+                (k_norm): Qwen3VLTextRMSNorm((128,), eps=1e-06)
+              )
+              (mlp): Qwen3VLTextMLP(
+                (gate_proj): Linear(in_features=2560, out_features=9728, bias=False)
+                (up_proj): Linear(in_features=2560, out_features=9728, bias=False)
+                (down_proj): Linear(in_features=9728, out_features=2560, bias=False)
+                (act_fn): SiLUActivation()
+              )
+              (input_layernorm): Qwen3VLTextRMSNorm((2560,), eps=1e-06)
+              (post_attention_layernorm): Qwen3VLTextRMSNorm((2560,), eps=1e-06)
+            )
+          )
+          (norm): Qwen3VLTextRMSNorm((2560,), eps=1e-06)
+          (rotary_emb): Qwen3VLTextRotaryEmbedding()
+        )
+      )
+      (lm_head): Linear(in_features=2560, out_features=151936, bias=False)
+    )
+  )
+)
+[INFO:swift] model_parameter_info: PeftModelForCausalLM: 4438.0534M Params (0.2376M Trainable [0.0054%]), 0.0001M Buffers.
+[INFO:swift] use_reentrant: True
+[INFO:swift] The logging file will be saved in: /scratch/merc0606/fine-tuning-ELVIS/results/checkpoints/projector/v2-20260929-185323/logging.jsonl
+[INFO:swift] Successfully registered post_encode hook: ['PeftModelForCausalLM'].
+[transformers] The tokenizer has new PAD/BOS/EOS tokens that differ from the model config and generation config. The model config and generation config were aligned accordingly, being updated with the tokenizer's values. Updated tokens: {'eos_token_id': 151645, 'bos_token_id': None, 'pad_token_id': 151643}.
+wandb: WARNING The `run_name` is currently set to the same value as `TrainingArguments.output_dir`. If this was not intended, please specify a different run name by setting the `TrainingArguments.run_name` parameter.
+wandb: [wandb.login()] Loaded credentials for https://api.wandb.ai from /home/merc0606/.netrc.
+wandb: Currently logged in as: mercurymcindoe (mercurymcindoe-university-of-british-columbia) to https://api.wandb.ai. Use `wandb login --relogin` to force relogin
+wandb: Tracking run with wandb version 0.24.0
+wandb: Run data is saved locally in /scratch/merc0606/fine-tuning-ELVIS/wandb/run-20260929_185344-dhnnt8qs
+wandb: Run `wandb offline` to turn off syncing.
+wandb: Syncing run /scratch/merc0606/fine-tuning-ELVIS/results/checkpoints/projector/v2-20260929-185323
+wandb: ⭐️ View project at https://wandb.ai/mercurymcindoe-university-of-british-columbia/Qwen3-VL-4B-fine-tuning-continuity
+wandb: 🚀 View run at https://wandb.ai/mercurymcindoe-university-of-british-columbia/Qwen3-VL-4B-fine-tuning-continuity/runs/dhnnt8qs
+Train:   0%|          | 0/486 [00:00<?, ?it/s][INFO:swift] use_logits_to_keep: True
+Train:   0%|          | 1/486 [00:19<2:36:39, 19.38s/it]                                                        Train:   0%|          | 1/486 [00:19<2:36:39, 19.38s/it]Train:   0%|          | 1/486 [00:19<2:36:39, 19.38s/it]Train:   0%|          | 2/486 [00:21<1:13:12,  9.08s/it]Train:   1%|          | 3/486 [00:23<46:17,  5.75s/it]  Train:   1%|          | 4/486 [00:24<33:38,  4.19s/it]Train:   1%|          | 5/486 [00:26<26:32,  3.31s/it]                                                      Train:   1%|          | 5/486 [00:26<26:32,  3.31s/it]Train:   1%|          | 5/486 [00:26<26:32,  3.31s/it]Train:   1%|          | 6/486 [00:28<22:21,  2.79s/it]Train:   1%|▏         | 7/486 [00:30<19:40,  2.46s/it]Train:   2%|▏         | 8/486 [00:31<17:52,  2.24s/it]Train:   2%|▏         | 9/486 [00:33<16:44,  2.11s/it]Train:   2%|▏         | 10/486 [00:35<15:57,  2.01s/it]                                                       Train:   2%|▏         | 10/486 [00:35<15:57,  2.01s/it]Train:   2%|▏         | 10/486 [00:35<15:57,  2.01s/it]Train:   2%|▏         | 11/486 [00:37<15:22,  1.94s/it]Train:   2%|▏         | 12/486 [00:39<15:02,  1.90s/it]Train:   3%|▎         | 13/486 [00:40<14:50,  1.88s/it]Train:   3%|▎         | 14/486 [00:42<14:35,  1.86s/it]Train:   3%|▎         | 15/486 [00:44<14:23,  1.83s/it]                                                       Train:   3%|▎         | 15/486 [00:44<14:23,  1.83s/it]Train:   3%|▎         | 15/486 [00:44<14:23,  1.83s/it]Train:   3%|▎         | 16/486 [00:46<14:17,  1.83s/it]Train:   3%|▎         | 17/486 [00:48<14:08,  1.81s/it]Train:   4%|▎         | 18/486 [00:49<14:06,  1.81s/it]Train:   4%|▍         | 19/486 [00:51<14:01,  1.80s/it]Train:   4%|▍         | 20/486 [00:53<13:55,  1.79s/it]                                                       Train:   4%|▍         | 20/486 [00:53<13:55,  1.79s/it]Train:   4%|▍         | 20/486 [00:53<13:55,  1.79s/it]Train:   4%|▍         | 21/486 [00:55<13:48,  1.78s/it]Train:   5%|▍         | 22/486 [00:57<13:49,  1.79s/it]Train:   5%|▍         | 23/486 [00:58<13:49,  1.79s/it]Train:   5%|▍         | 24/486 [01:00<13:42,  1.78s/it]Train:   5%|▌         | 25/486 [01:02<13:41,  1.78s/it]                                                       Train:   5%|▌         | 25/486 [01:02<13:41,  1.78s/it]Train:   5%|▌         | 25/486 [01:02<13:41,  1.78s/it]Train:   5%|▌         | 26/486 [01:04<13:34,  1.77s/it]Train:   6%|▌         | 27/486 [01:05<13:36,  1.78s/it]Train:   6%|▌         | 28/486 [01:07<13:35,  1.78s/it]Train:   6%|▌         | 29/486 [01:09<13:36,  1.79s/it]Train:   6%|▌         | 30/486 [01:11<13:35,  1.79s/it]                                                       Train:   6%|▌         | 30/486 [01:11<13:35,  1.79s/it]Train:   6%|▌         | 30/486 [01:11<13:35,  1.79s/it]Train:   6%|▋         | 31/486 [01:13<13:35,  1.79s/it]Train:   7%|▋         | 32/486 [01:14<13:33,  1.79s/it]Train:   7%|▋         | 33/486 [01:16<13:26,  1.78s/it]Train:   7%|▋         | 34/486 [01:18<13:28,  1.79s/it]Train:   7%|▋         | 35/486 [01:20<13:27,  1.79s/it]                                                       Train:   7%|▋         | 35/486 [01:20<13:27,  1.79s/it]Train:   7%|▋         | 35/486 [01:20<13:27,  1.79s/it]Train:   7%|▋         | 36/486 [01:22<13:23,  1.78s/it]Train:   8%|▊         | 37/486 [01:23<13:24,  1.79s/it]Train:   8%|▊         | 38/486 [01:25<13:24,  1.80s/it]Train:   8%|▊         | 39/486 [01:27<13:25,  1.80s/it]Train:   8%|▊         | 40/486 [01:29<13:18,  1.79s/it]                                                       Train:   8%|▊         | 40/486 [01:29<13:18,  1.79s/it]Train:   8%|▊         | 40/486 [01:29<13:18,  1.79s/it]Train:   8%|▊         | 41/486 [01:30<13:13,  1.78s/it]Train:   9%|▊         | 42/486 [01:32<13:14,  1.79s/it]Train:   9%|▉         | 43/486 [01:34<13:19,  1.80s/it]Train:   9%|▉         | 44/486 [01:36<13:14,  1.80s/it]Train:   9%|▉         | 45/486 [01:38<13:12,  1.80s/it]                                                       Train:   9%|▉         | 45/486 [01:38<13:12,  1.80s/it]Train:   9%|▉         | 45/486 [01:38<13:12,  1.80s/it]Train:   9%|▉         | 46/486 [01:39<13:06,  1.79s/it]Train:  10%|▉         | 47/486 [01:41<13:04,  1.79s/it]Train:  10%|▉         | 48/486 [01:43<12:58,  1.78s/it]Train:  10%|█         | 49/486 [01:45<12:58,  1.78s/it]Train:  10%|█         | 50/486 [01:47<12:55,  1.78s/it]                                                       Train:  10%|█         | 50/486 [01:47<12:55,  1.78s/it]Train:  10%|█         | 50/486 [01:47<12:55,  1.78s/it]Train:  10%|█         | 51/486 [01:48<12:52,  1.78s/it]Train:  11%|█         | 52/486 [01:50<12:49,  1.77s/it]Train:  11%|█         | 53/486 [01:52<12:47,  1.77s/it]Train:  11%|█         | 54/486 [01:54<12:45,  1.77s/it]Train:  11%|█▏        | 55/486 [01:55<12:40,  1.76s/it]                                                       Train:  11%|█▏        | 55/486 [01:55<12:40,  1.76s/it]Train:  11%|█▏        | 55/486 [01:55<12:40,  1.76s/it]Train:  12%|█▏        | 56/486 [01:57<12:37,  1.76s/it]Train:  12%|█▏        | 57/486 [01:59<12:39,  1.77s/it]Train:  12%|█▏        | 58/486 [02:01<12:35,  1.77s/it]Train:  12%|█▏        | 59/486 [02:02<12:34,  1.77s/it]Train:  12%|█▏        | 60/486 [02:04<12:34,  1.77s/it]                                                       Train:  12%|█▏        | 60/486 [02:04<12:34,  1.77s/it]Train:  12%|█▏        | 60/486 [02:04<12:34,  1.77s/it]Train:  13%|█▎        | 61/486 [02:06<12:35,  1.78s/it]Train:  13%|█▎        | 62/486 [02:08<12:36,  1.78s/it]Train:  13%|█▎        | 63/486 [02:10<12:40,  1.80s/it]Train:  13%|█▎        | 64/486 [02:11<12:41,  1.80s/it]Train:  13%|█▎        | 65/486 [02:13<12:39,  1.80s/it]                                                       Train:  13%|█▎        | 65/486 [02:13<12:39,  1.80s/it]Train:  13%|█▎        | 65/486 [02:13<12:39,  1.80s/it]Train:  14%|█▎        | 66/486 [02:15<12:39,  1.81s/it]Train:  14%|█▍        | 67/486 [02:17<12:38,  1.81s/it]Train:  14%|█▍        | 68/486 [02:19<12:32,  1.80s/it]Train:  14%|█▍        | 69/486 [02:20<12:25,  1.79s/it]Train:  14%|█▍        | 70/486 [02:22<12:20,  1.78s/it]                                                       Train:  14%|█▍        | 70/486 [02:22<12:20,  1.78s/it]Train:  14%|█▍        | 70/486 [02:22<12:20,  1.78s/it]Train:  15%|█▍        | 71/486 [02:24<12:18,  1.78s/it]Train:  15%|█▍        | 72/486 [02:26<12:18,  1.78s/it]Train:  15%|█▌        | 73/486 [02:28<12:13,  1.78s/it]Train:  15%|█▌        | 74/486 [02:29<12:11,  1.78s/it]Train:  15%|█▌        | 75/486 [02:31<12:10,  1.78s/it]                                                       Train:  15%|█▌        | 75/486 [02:31<12:10,  1.78s/it]Train:  15%|█▌        | 75/486 [02:31<12:10,  1.78s/it]Train:  16%|█▌        | 76/486 [02:33<12:09,  1.78s/it]Train:  16%|█▌        | 77/486 [02:35<12:06,  1.78s/it]Train:  16%|█▌        | 78/486 [02:36<12:08,  1.78s/it]Train:  16%|█▋        | 79/486 [02:38<12:08,  1.79s/it]Train:  16%|█▋        | 80/486 [02:40<12:07,  1.79s/it]                                                       Train:  16%|█▋        | 80/486 [02:40<12:07,  1.79s/it]Train:  16%|█▋        | 80/486 [02:40<12:07,  1.79s/it]Train:  17%|█▋        | 81/486 [02:42<12:17,  1.82s/it]Train:  17%|█▋        | 82/486 [02:44<12:14,  1.82s/it]Train:  17%|█▋        | 83/486 [02:46<12:22,  1.84s/it]Train:  17%|█▋        | 84/486 [02:47<12:17,  1.83s/it]Train:  17%|█▋        | 85/486 [02:49<12:11,  1.82s/it]                                                       Train:  17%|█▋        | 85/486 [02:49<12:11,  1.82s/it]Train:  17%|█▋        | 85/486 [02:49<12:11,  1.82s/it]Train:  18%|█▊        | 86/486 [02:51<12:04,  1.81s/it]Train:  18%|█▊        | 87/486 [02:53<11:59,  1.80s/it]Train:  18%|█▊        | 88/486 [02:55<11:53,  1.79s/it]Train:  18%|█▊        | 89/486 [02:56<11:49,  1.79s/it]Train:  19%|█▊        | 90/486 [02:58<11:51,  1.80s/it]                                                       Train:  19%|█▊        | 90/486 [02:58<11:51,  1.80s/it]Train:  19%|█▊        | 90/486 [02:58<11:51,  1.80s/it]Train:  19%|█▊        | 91/486 [03:00<11:52,  1.80s/it]Train:  19%|█▉        | 92/486 [03:02<11:49,  1.80s/it]Train:  19%|█▉        | 93/486 [03:04<11:53,  1.82s/it]Train:  19%|█▉        | 94/486 [03:05<11:46,  1.80s/it]Train:  20%|█▉        | 95/486 [03:07<11:45,  1.80s/it]                                                       Train:  20%|█▉        | 95/486 [03:07<11:45,  1.80s/it]Train:  20%|█▉        | 95/486 [03:07<11:45,  1.80s/it]Train:  20%|█▉        | 96/486 [03:09<11:49,  1.82s/it]Train:  20%|█▉        | 97/486 [03:11<12:08,  1.87s/it]Train:  20%|██        | 98/486 [03:13<12:08,  1.88s/it]Train:  20%|██        | 99/486 [03:15<11:56,  1.85s/it]Train:  21%|██        | 100/486 [03:17<11:47,  1.83s/it]                                                        Train:  21%|██        | 100/486 [03:17<11:47,  1.83s/it]Train:  21%|██        | 100/486 [03:17<11:47,  1.83s/it]Train:  21%|██        | 101/486 [03:18<11:40,  1.82s/it]Train:  21%|██        | 102/486 [03:20<11:36,  1.81s/it]Train:  21%|██        | 103/486 [03:22<11:32,  1.81s/it]Train:  21%|██▏       | 104/486 [03:24<11:29,  1.80s/it]Train:  22%|██▏       | 105/486 [03:26<11:25,  1.80s/it]                                                        Train:  22%|██▏       | 105/486 [03:26<11:25,  1.80s/it]Train:  22%|██▏       | 105/486 [03:26<11:25,  1.80s/it]Train:  22%|██▏       | 106/486 [03:27<11:24,  1.80s/it]Train:  22%|██▏       | 107/486 [03:29<11:21,  1.80s/it]Train:  22%|██▏       | 108/486 [03:31<11:20,  1.80s/it]Train:  22%|██▏       | 109/486 [03:33<11:14,  1.79s/it]Train:  23%|██▎       | 110/486 [03:35<11:13,  1.79s/it]                                                        Train:  23%|██▎       | 110/486 [03:35<11:13,  1.79s/it]Train:  23%|██▎       | 110/486 [03:35<11:13,  1.79s/it]Train:  23%|██▎       | 111/486 [03:36<11:13,  1.80s/it]Train:  23%|██▎       | 112/486 [03:38<11:12,  1.80s/it]Train:  23%|██▎       | 113/486 [03:40<11:17,  1.82s/it]Train:  23%|██▎       | 114/486 [03:42<11:13,  1.81s/it]Train:  24%|██▎       | 115/486 [03:44<11:08,  1.80s/it]                                                        Train:  24%|██▎       | 115/486 [03:44<11:08,  1.80s/it]Train:  24%|██▎       | 115/486 [03:44<11:08,  1.80s/it]Train:  24%|██▍       | 116/486 [03:45<11:05,  1.80s/it]Train:  24%|██▍       | 117/486 [03:47<11:05,  1.80s/it]Train:  24%|██▍       | 118/486 [03:49<11:02,  1.80s/it]Train:  24%|██▍       | 119/486 [03:51<11:01,  1.80s/it]Train:  25%|██▍       | 120/486 [03:53<10:55,  1.79s/it]                                                        Train:  25%|██▍       | 120/486 [03:53<10:55,  1.79s/it]Train:  25%|██▍       | 120/486 [03:53<10:55,  1.79s/it]Train:  25%|██▍       | 121/486 [03:54<10:53,  1.79s/it]Train:  25%|██▌       | 122/486 [03:56<10:51,  1.79s/it]Train:  25%|██▌       | 123/486 [03:58<10:52,  1.80s/it]Train:  26%|██▌       | 124/486 [04:00<10:49,  1.79s/it]Train:  26%|██▌       | 125/486 [04:01<10:47,  1.79s/it]                                                        Train:  26%|██▌       | 125/486 [04:02<10:47,  1.79s/it]Train:  26%|██▌       | 125/486 [04:02<10:47,  1.79s/it]Train:  26%|██▌       | 126/486 [04:04<11:21,  1.89s/it]Train:  26%|██▌       | 127/486 [04:05<11:14,  1.88s/it]Train:  26%|██▋       | 128/486 [04:07<11:03,  1.85s/it]Train:  27%|██▋       | 129/486 [04:09<11:02,  1.86s/it]Train:  27%|██▋       | 130/486 [04:11<10:55,  1.84s/it]                                                        Train:  27%|██▋       | 130/486 [04:11<10:55,  1.84s/it]Train:  27%|██▋       | 130/486 [04:11<10:55,  1.84s/it]Train:  27%|██▋       | 131/486 [04:13<10:50,  1.83s/it]Train:  27%|██▋       | 132/486 [04:15<10:44,  1.82s/it]Train:  27%|██▋       | 133/486 [04:16<10:39,  1.81s/it]Train:  28%|██▊       | 134/486 [04:18<10:37,  1.81s/it]Train:  28%|██▊       | 135/486 [04:20<10:31,  1.80s/it]                                                        Train:  28%|██▊       | 135/486 [04:20<10:31,  1.80s/it]Train:  28%|██▊       | 135/486 [04:20<10:31,  1.80s/it]Train:  28%|██▊       | 136/486 [04:22<10:25,  1.79s/it]Train:  28%|██▊       | 137/486 [04:23<10:23,  1.79s/it]Train:  28%|██▊       | 138/486 [04:25<10:22,  1.79s/it]Train:  29%|██▊       | 139/486 [04:27<10:20,  1.79s/it]Train:  29%|██▉       | 140/486 [04:29<10:16,  1.78s/it]                                                        Train:  29%|██▉       | 140/486 [04:29<10:16,  1.78s/it]Train:  29%|██▉       | 140/486 [04:29<10:16,  1.78s/it]Train:  29%|██▉       | 141/486 [04:31<10:18,  1.79s/it]Train:  29%|██▉       | 142/486 [04:32<10:13,  1.78s/it]Train:  29%|██▉       | 143/486 [04:34<10:09,  1.78s/it]Train:  30%|██▉       | 144/486 [04:36<10:09,  1.78s/it]Train:  30%|██▉       | 145/486 [04:38<10:10,  1.79s/it]                                                        Train:  30%|██▉       | 145/486 [04:38<10:10,  1.79s/it]Train:  30%|██▉       | 145/486 [04:38<10:10,  1.79s/it]Train:  30%|███       | 146/486 [04:40<10:05,  1.78s/it]Train:  30%|███       | 147/486 [04:41<10:04,  1.78s/it]Train:  30%|███       | 148/486 [04:43<10:02,  1.78s/it]Train:  31%|███       | 149/486 [04:45<10:01,  1.78s/it]Train:  31%|███       | 150/486 [04:47<10:03,  1.79s/it]                                                        Train:  31%|███       | 150/486 [04:47<10:03,  1.79s/it]Train:  31%|███       | 150/486 [04:47<10:03,  1.79s/it]Train:  31%|███       | 151/486 [04:48<10:01,  1.80s/it]Train:  31%|███▏      | 152/486 [04:50<09:58,  1.79s/it]Train:  31%|███▏      | 153/486 [04:52<09:57,  1.79s/it]Train:  32%|███▏      | 154/486 [04:54<09:55,  1.79s/it]Train:  32%|███▏      | 155/486 [04:56<09:56,  1.80s/it]                                                        Train:  32%|███▏      | 155/486 [04:56<09:56,  1.80s/it]Train:  32%|███▏      | 155/486 [04:56<09:56,  1.80s/it]Train:  32%|███▏      | 156/486 [04:57<09:54,  1.80s/it]Train:  32%|███▏      | 157/486 [04:59<09:53,  1.81s/it]Train:  33%|███▎      | 158/486 [05:01<09:47,  1.79s/it]Train:  33%|███▎      | 159/486 [05:03<09:44,  1.79s/it]Train:  33%|███▎      | 160/486 [05:05<09:42,  1.79s/it]                                                        Train:  33%|███▎      | 160/486 [05:05<09:42,  1.79s/it]Train:  33%|███▎      | 160/486 [05:05<09:42,  1.79s/it]Train:  33%|███▎      | 161/486 [05:06<09:41,  1.79s/it]Train:  33%|███▎      | 162/486 [05:08<09:39,  1.79s/it][INFO:swift] Saving model checkpoint to /scratch/merc0606/fine-tuning-ELVIS/results/checkpoints/projector/v2-20260929-185323/checkpoint-162
+Train:  34%|███▎      | 163/486 [05:10<10:07,  1.88s/it]Train:  34%|███▎      | 164/486 [05:12<09:56,  1.85s/it]Train:  34%|███▍      | 165/486 [05:14<09:50,  1.84s/it]                                                        Train:  34%|███▍      | 165/486 [05:14<09:50,  1.84s/it]Train:  34%|███▍      | 165/486 [05:14<09:50,  1.84s/it]Train:  34%|███▍      | 166/486 [05:16<09:38,  1.81s/it]Train:  34%|███▍      | 167/486 [05:17<09:31,  1.79s/it]Train:  35%|███▍      | 168/486 [05:19<09:27,  1.78s/it]Train:  35%|███▍      | 169/486 [05:21<09:26,  1.79s/it]Train:  35%|███▍      | 170/486 [05:23<09:22,  1.78s/it]                                                        Train:  35%|███▍      | 170/486 [05:23<09:22,  1.78s/it]Train:  35%|███▍      | 170/486 [05:23<09:22,  1.78s/it]Train:  35%|███▌      | 171/486 [05:24<09:17,  1.77s/it]Train:  35%|███▌      | 172/486 [05:26<09:17,  1.77s/it]Train:  36%|███▌      | 173/486 [05:28<09:15,  1.77s/it]Train:  36%|███▌      | 174/486 [05:30<09:11,  1.77s/it]Train:  36%|███▌      | 175/486 [05:32<09:11,  1.77s/it]                                                        Train:  36%|███▌      | 175/486 [05:32<09:11,  1.77s/it]Train:  36%|███▌      | 175/486 [05:32<09:11,  1.77s/it]Train:  36%|███▌      | 176/486 [05:33<09:09,  1.77s/it]Train:  36%|███▋      | 177/486 [05:35<09:08,  1.77s/it]Train:  37%|███▋      | 178/486 [05:37<09:05,  1.77s/it]Train:  37%|███▋      | 179/486 [05:39<09:01,  1.76s/it]Train:  37%|███▋      | 180/486 [05:40<08:59,  1.76s/it]                                                        Train:  37%|███▋      | 180/486 [05:40<08:59,  1.76s/it]Train:  37%|███▋      | 180/486 [05:40<08:59,  1.76s/it]Train:  37%|███▋      | 181/486 [05:42<09:03,  1.78s/it]Train:  37%|███▋      | 182/486 [05:44<09:02,  1.78s/it]Train:  38%|███▊      | 183/486 [05:46<08:56,  1.77s/it]Train:  38%|███▊      | 184/486 [05:48<08:56,  1.78s/it]Train:  38%|███▊      | 185/486 [05:49<08:53,  1.77s/it]                                                        Train:  38%|███▊      | 185/486 [05:49<08:53,  1.77s/it]Train:  38%|███▊      | 185/486 [05:49<08:53,  1.77s/it]Train:  38%|███▊      | 186/486 [05:51<08:53,  1.78s/it]Train:  38%|███▊      | 187/486 [05:53<08:48,  1.77s/it]Train:  39%|███▊      | 188/486 [05:55<08:46,  1.77s/it]Train:  39%|███▉      | 189/486 [05:56<08:45,  1.77s/it]Train:  39%|███▉      | 190/486 [05:58<08:43,  1.77s/it]                                                        Train:  39%|███▉      | 190/486 [05:58<08:43,  1.77s/it]Train:  39%|███▉      | 190/486 [05:58<08:43,  1.77s/it]Train:  39%|███▉      | 191/486 [06:00<08:41,  1.77s/it]Train:  40%|███▉      | 192/486 [06:02<08:37,  1.76s/it]Train:  40%|███▉      | 193/486 [06:03<08:33,  1.75s/it]Train:  40%|███▉      | 194/486 [06:05<08:31,  1.75s/it]Train:  40%|████      | 195/486 [06:07<08:38,  1.78s/it]                                                        Train:  40%|████      | 195/486 [06:07<08:38,  1.78s/it]Train:  40%|████      | 195/486 [06:07<08:38,  1.78s/it]Train:  40%|████      | 196/486 [06:09<08:40,  1.79s/it]Train:  41%|████      | 197/486 [06:11<08:39,  1.80s/it]Train:  41%|████      | 198/486 [06:13<08:47,  1.83s/it]Train:  41%|████      | 199/486 [06:14<08:41,  1.82s/it]Train:  41%|████      | 200/486 [06:16<08:38,  1.81s/it]                                                        Train:  41%|████      | 200/486 [06:16<08:38,  1.81s/it]Train:  41%|████      | 200/486 [06:16<08:38,  1.81s/it]Train:  41%|████▏     | 201/486 [06:18<08:36,  1.81s/it]Train:  42%|████▏     | 202/486 [06:20<08:32,  1.80s/it]Train:  42%|████▏     | 203/486 [06:21<08:30,  1.81s/it]Train:  42%|████▏     | 204/486 [06:23<08:24,  1.79s/it]Train:  42%|████▏     | 205/486 [06:25<08:20,  1.78s/it]                                                        Train:  42%|████▏     | 205/486 [06:25<08:20,  1.78s/it]Train:  42%|████▏     | 205/486 [06:25<08:20,  1.78s/it]Train:  42%|████▏     | 206/486 [06:27<08:16,  1.77s/it]Train:  43%|████▎     | 207/486 [06:29<08:13,  1.77s/it]Train:  43%|████▎     | 208/486 [06:30<08:12,  1.77s/it]Train:  43%|████▎     | 209/486 [06:32<08:07,  1.76s/it]Train:  43%|████▎     | 210/486 [06:34<08:06,  1.76s/it]                                                        Train:  43%|████▎     | 210/486 [06:34<08:06,  1.76s/it]Train:  43%|████▎     | 210/486 [06:34<08:06,  1.76s/it]Train:  43%|████▎     | 211/486 [06:36<08:06,  1.77s/it]Train:  44%|████▎     | 212/486 [06:37<08:01,  1.76s/it]Train:  44%|████▍     | 213/486 [06:39<08:01,  1.76s/it]Train:  44%|████▍     | 214/486 [06:41<08:01,  1.77s/it]Train:  44%|████▍     | 215/486 [06:43<08:02,  1.78s/it]                                                        Train:  44%|████▍     | 215/486 [06:43<08:02,  1.78s/it]Train:  44%|████▍     | 215/486 [06:43<08:02,  1.78s/it]Train:  44%|████▍     | 216/486 [06:44<08:01,  1.78s/it]Train:  45%|████▍     | 217/486 [06:46<07:59,  1.78s/it]Train:  45%|████▍     | 218/486 [06:48<07:57,  1.78s/it]Train:  45%|████▌     | 219/486 [06:50<07:53,  1.77s/it]Train:  45%|████▌     | 220/486 [06:52<07:49,  1.77s/it]                                                        Train:  45%|████▌     | 220/486 [06:52<07:49,  1.77s/it]Train:  45%|████▌     | 220/486 [06:52<07:49,  1.77s/it]Train:  45%|████▌     | 221/486 [06:53<07:47,  1.77s/it]Train:  46%|████▌     | 222/486 [06:55<07:48,  1.77s/it]Train:  46%|████▌     | 223/486 [06:57<07:45,  1.77s/it]Train:  46%|████▌     | 224/486 [06:59<07:43,  1.77s/it]Train:  46%|████▋     | 225/486 [07:00<07:41,  1.77s/it]                                                        Train:  46%|████▋     | 225/486 [07:00<07:41,  1.77s/it]Train:  46%|████▋     | 225/486 [07:00<07:41,  1.77s/it]Train:  47%|████▋     | 226/486 [07:02<07:57,  1.84s/it]Train:  47%|████▋     | 227/486 [07:04<07:54,  1.83s/it]Train:  47%|████▋     | 228/486 [07:06<07:50,  1.83s/it]Train:  47%|████▋     | 229/486 [07:08<07:46,  1.82s/it]Train:  47%|████▋     | 230/486 [07:10<07:40,  1.80s/it]                                                        Train:  47%|████▋     | 230/486 [07:10<07:40,  1.80s/it]Train:  47%|████▋     | 230/486 [07:10<07:40,  1.80s/it]Train:  48%|████▊     | 231/486 [07:11<07:37,  1.79s/it]Train:  48%|████▊     | 232/486 [07:13<07:33,  1.79s/it]Train:  48%|████▊     | 233/486 [07:15<07:30,  1.78s/it]Train:  48%|████▊     | 234/486 [07:17<07:25,  1.77s/it]Train:  48%|████▊     | 235/486 [07:18<07:23,  1.77s/it]                                                        Train:  48%|████▊     | 235/486 [07:18<07:23,  1.77s/it]Train:  48%|████▊     | 235/486 [07:18<07:23,  1.77s/it]Train:  49%|████▊     | 236/486 [07:20<07:21,  1.76s/it]Train:  49%|████▉     | 237/486 [07:22<07:18,  1.76s/it]Train:  49%|████▉     | 238/486 [07:24<07:17,  1.76s/it]Train:  49%|████▉     | 239/486 [07:25<07:18,  1.78s/it]Train:  49%|████▉     | 240/486 [07:27<07:15,  1.77s/it]                                                        Train:  49%|████▉     | 240/486 [07:27<07:15,  1.77s/it]Train:  49%|████▉     | 240/486 [07:27<07:15,  1.77s/it]Train:  50%|████▉     | 241/486 [07:29<07:14,  1.77s/it]Train:  50%|████▉     | 242/486 [07:31<07:13,  1.78s/it]Train:  50%|█████     | 243/486 [07:33<07:11,  1.78s/it]Train:  50%|█████     | 244/486 [07:34<07:07,  1.77s/it]Train:  50%|█████     | 245/486 [07:36<07:05,  1.77s/it]                                                        Train:  50%|█████     | 245/486 [07:36<07:05,  1.77s/it]Train:  50%|█████     | 245/486 [07:36<07:05,  1.77s/it]Train:  51%|█████     | 246/486 [07:38<07:10,  1.79s/it]Train:  51%|█████     | 247/486 [07:40<07:06,  1.79s/it]Train:  51%|█████     | 248/486 [07:42<07:06,  1.79s/it]Train:  51%|█████     | 249/486 [07:43<07:02,  1.78s/it]Train:  51%|█████▏    | 250/486 [07:45<07:00,  1.78s/it]                                                        Train:  51%|█████▏    | 250/486 [07:45<07:00,  1.78s/it]Train:  51%|█████▏    | 250/486 [07:45<07:00,  1.78s/it]Train:  52%|█████▏    | 251/486 [07:47<06:58,  1.78s/it]Train:  52%|█████▏    | 252/486 [07:49<06:55,  1.78s/it]Train:  52%|█████▏    | 253/486 [07:50<06:53,  1.78s/it]Train:  52%|█████▏    | 254/486 [07:52<06:50,  1.77s/it]Train:  52%|█████▏    | 255/486 [07:54<06:50,  1.78s/it]                                                        Train:  52%|█████▏    | 255/486 [07:54<06:50,  1.78s/it]Train:  52%|█████▏    | 255/486 [07:54<06:50,  1.78s/it]Train:  53%|█████▎    | 256/486 [07:56<06:45,  1.76s/it]Train:  53%|█████▎    | 257/486 [07:57<06:42,  1.76s/it]Train:  53%|█████▎    | 258/486 [07:59<06:42,  1.77s/it]Train:  53%|█████▎    | 259/486 [08:01<06:39,  1.76s/it]Train:  53%|█████▎    | 260/486 [08:03<06:37,  1.76s/it]                                                        Train:  53%|█████▎    | 260/486 [08:03<06:37,  1.76s/it]Train:  53%|█████▎    | 260/486 [08:03<06:37,  1.76s/it]Train:  54%|█████▎    | 261/486 [08:04<06:37,  1.76s/it]Train:  54%|█████▍    | 262/486 [08:06<06:33,  1.75s/it]Train:  54%|█████▍    | 263/486 [08:08<06:32,  1.76s/it]Train:  54%|█████▍    | 264/486 [08:10<06:32,  1.77s/it]Train:  55%|█████▍    | 265/486 [08:12<06:36,  1.79s/it]                                                        Train:  55%|█████▍    | 265/486 [08:12<06:36,  1.79s/it]Train:  55%|█████▍    | 265/486 [08:12<06:36,  1.79s/it]Train:  55%|█████▍    | 266/486 [08:13<06:31,  1.78s/it]Train:  55%|█████▍    | 267/486 [08:15<06:34,  1.80s/it]Train:  55%|█████▌    | 268/486 [08:17<06:31,  1.79s/it]Train:  55%|█████▌    | 269/486 [08:19<06:27,  1.78s/it]Train:  56%|█████▌    | 270/486 [08:21<06:25,  1.78s/it]                                                        Train:  56%|█████▌    | 270/486 [08:21<06:25,  1.78s/it]Train:  56%|█████▌    | 270/486 [08:21<06:25,  1.78s/it]Train:  56%|█████▌    | 271/486 [08:22<06:23,  1.79s/it]Train:  56%|█████▌    | 272/486 [08:24<06:21,  1.78s/it]Train:  56%|█████▌    | 273/486 [08:26<06:17,  1.77s/it]Train:  56%|█████▋    | 274/486 [08:28<06:15,  1.77s/it]Train:  57%|█████▋    | 275/486 [08:29<06:13,  1.77s/it]                                                        Train:  57%|█████▋    | 275/486 [08:29<06:13,  1.77s/it]Train:  57%|█████▋    | 275/486 [08:29<06:13,  1.77s/it]Train:  57%|█████▋    | 276/486 [08:31<06:12,  1.77s/it]Train:  57%|█████▋    | 277/486 [08:33<06:09,  1.77s/it]Train:  57%|█████▋    | 278/486 [08:35<06:08,  1.77s/it]Train:  57%|█████▋    | 279/486 [08:37<06:21,  1.84s/it]Train:  58%|█████▊    | 280/486 [08:39<06:22,  1.86s/it]                                                        Train:  58%|█████▊    | 280/486 [08:39<06:22,  1.86s/it]Train:  58%|█████▊    | 280/486 [08:39<06:22,  1.86s/it]Train:  58%|█████▊    | 281/486 [08:40<06:16,  1.84s/it]Train:  58%|█████▊    | 282/486 [08:42<06:11,  1.82s/it]Train:  58%|█████▊    | 283/486 [08:44<06:07,  1.81s/it]Train:  58%|█████▊    | 284/486 [08:46<06:05,  1.81s/it]Train:  59%|█████▊    | 285/486 [08:48<06:03,  1.81s/it]                                                        Train:  59%|█████▊    | 285/486 [08:48<06:03,  1.81s/it]Train:  59%|█████▊    | 285/486 [08:48<06:03,  1.81s/it]Train:  59%|█████▉    | 286/486 [08:49<05:59,  1.80s/it]Train:  59%|█████▉    | 287/486 [08:51<05:57,  1.80s/it]Train:  59%|█████▉    | 288/486 [08:53<05:52,  1.78s/it]Train:  59%|█████▉    | 289/486 [08:55<05:50,  1.78s/it]Train:  60%|█████▉    | 290/486 [08:56<05:48,  1.78s/it]                                                        Train:  60%|█████▉    | 290/486 [08:56<05:48,  1.78s/it]Train:  60%|█████▉    | 290/486 [08:56<05:48,  1.78s/it]Train:  60%|█████▉    | 291/486 [08:58<05:46,  1.78s/it]Train:  60%|██████    | 292/486 [09:00<05:44,  1.78s/it]Train:  60%|██████    | 293/486 [09:02<05:41,  1.77s/it]Train:  60%|██████    | 294/486 [09:03<05:39,  1.77s/it]Train:  61%|██████    | 295/486 [09:05<05:36,  1.76s/it]                                                        Train:  61%|██████    | 295/486 [09:05<05:36,  1.76s/it]Train:  61%|██████    | 295/486 [09:05<05:36,  1.76s/it]Train:  61%|██████    | 296/486 [09:07<05:34,  1.76s/it]Train:  61%|██████    | 297/486 [09:09<05:33,  1.77s/it]Train:  61%|██████▏   | 298/486 [09:11<05:45,  1.84s/it]Train:  62%|██████▏   | 299/486 [09:13<05:39,  1.81s/it]Train:  62%|██████▏   | 300/486 [09:14<05:34,  1.80s/it]                                                        Train:  62%|██████▏   | 300/486 [09:14<05:34,  1.80s/it]Train:  62%|██████▏   | 300/486 [09:14<05:34,  1.80s/it]Train:  62%|██████▏   | 301/486 [09:16<05:32,  1.80s/it]Train:  62%|██████▏   | 302/486 [09:18<05:31,  1.80s/it]Train:  62%|██████▏   | 303/486 [09:20<05:28,  1.79s/it]Train:  63%|██████▎   | 304/486 [09:23<06:24,  2.11s/it]Train:  63%|██████▎   | 305/486 [09:24<06:04,  2.01s/it]                                                        Train:  63%|██████▎   | 305/486 [09:24<06:04,  2.01s/it]Train:  63%|██████▎   | 305/486 [09:24<06:04,  2.01s/it]Train:  63%|██████▎   | 306/486 [09:26<05:49,  1.94s/it]Train:  63%|██████▎   | 307/486 [09:28<05:38,  1.89s/it]Train:  63%|██████▎   | 308/486 [09:30<05:27,  1.84s/it]Train:  64%|██████▎   | 309/486 [09:31<05:21,  1.82s/it]Train:  64%|██████▍   | 310/486 [09:33<05:17,  1.80s/it]                                                        Train:  64%|██████▍   | 310/486 [09:33<05:17,  1.80s/it]Train:  64%|██████▍   | 310/486 [09:33<05:17,  1.80s/it]Train:  64%|██████▍   | 311/486 [09:35<05:14,  1.80s/it]Train:  64%|██████▍   | 312/486 [09:37<05:12,  1.80s/it]Train:  64%|██████▍   | 313/486 [09:39<05:11,  1.80s/it]Train:  65%|██████▍   | 314/486 [09:40<05:07,  1.79s/it]Train:  65%|██████▍   | 315/486 [09:42<05:05,  1.79s/it]                                                        Train:  65%|██████▍   | 315/486 [09:42<05:05,  1.79s/it]Train:  65%|██████▍   | 315/486 [09:42<05:05,  1.79s/it]Train:  65%|██████▌   | 316/486 [09:44<05:02,  1.78s/it]Train:  65%|██████▌   | 317/486 [09:46<05:00,  1.78s/it]Train:  65%|██████▌   | 318/486 [09:47<04:58,  1.78s/it]Train:  66%|██████▌   | 319/486 [09:49<04:56,  1.77s/it]Train:  66%|██████▌   | 320/486 [09:51<04:53,  1.77s/it]                                                        Train:  66%|██████▌   | 320/486 [09:51<04:53,  1.77s/it]Train:  66%|██████▌   | 320/486 [09:51<04:53,  1.77s/it]Train:  66%|██████▌   | 321/486 [09:53<04:50,  1.76s/it]Train:  66%|██████▋   | 322/486 [09:54<04:49,  1.76s/it]Train:  66%|██████▋   | 323/486 [09:56<04:47,  1.77s/it]Train:  67%|██████▋   | 324/486 [09:58<04:45,  1.76s/it][INFO:swift] Saving model checkpoint to /scratch/merc0606/fine-tuning-ELVIS/results/checkpoints/projector/v2-20260929-185323/checkpoint-324
+Train:  67%|██████▋   | 325/486 [10:00<04:49,  1.80s/it]                                                        Train:  67%|██████▋   | 325/486 [10:00<04:49,  1.80s/it]Train:  67%|██████▋   | 325/486 [10:00<04:49,  1.80s/it]Train:  67%|██████▋   | 326/486 [10:02<04:47,  1.80s/it]Train:  67%|██████▋   | 327/486 [10:03<04:42,  1.78s/it]Train:  67%|██████▋   | 328/486 [10:05<04:40,  1.78s/it]Train:  68%|██████▊   | 329/486 [10:07<04:38,  1.78s/it]Train:  68%|██████▊   | 330/486 [10:09<04:39,  1.79s/it]                                                        Train:  68%|██████▊   | 330/486 [10:09<04:39,  1.79s/it]Train:  68%|██████▊   | 330/486 [10:09<04:39,  1.79s/it]Train:  68%|██████▊   | 331/486 [10:11<04:38,  1.79s/it]Train:  68%|██████▊   | 332/486 [10:12<04:34,  1.78s/it]Train:  69%|██████▊   | 333/486 [10:14<04:32,  1.78s/it]Train:  69%|██████▊   | 334/486 [10:16<04:28,  1.77s/it]Train:  69%|██████▉   | 335/486 [10:18<04:26,  1.76s/it]                                                        Train:  69%|██████▉   | 335/486 [10:18<04:26,  1.76s/it]Train:  69%|██████▉   | 335/486 [10:18<04:26,  1.76s/it]Train:  69%|██████▉   | 336/486 [10:19<04:26,  1.77s/it]Train:  69%|██████▉   | 337/486 [10:21<04:22,  1.76s/it]Train:  70%|██████▉   | 338/486 [10:23<04:20,  1.76s/it]Train:  70%|██████▉   | 339/486 [10:25<04:38,  1.89s/it]Train:  70%|██████▉   | 340/486 [10:27<04:31,  1.86s/it]                                                        Train:  70%|██████▉   | 340/486 [10:27<04:31,  1.86s/it]Train:  70%|██████▉   | 340/486 [10:27<04:31,  1.86s/it]Train:  70%|███████   | 341/486 [10:29<04:24,  1.83s/it]Train:  70%|███████   | 342/486 [10:30<04:21,  1.82s/it]Train:  71%|███████   | 343/486 [10:32<04:17,  1.80s/it]Train:  71%|███████   | 344/486 [10:34<04:14,  1.79s/it]Train:  71%|███████   | 345/486 [10:36<04:11,  1.79s/it]                                                        Train:  71%|███████   | 345/486 [10:36<04:11,  1.79s/it]Train:  71%|███████   | 345/486 [10:36<04:11,  1.79s/it]Train:  71%|███████   | 346/486 [10:37<04:09,  1.78s/it]Train:  71%|███████▏  | 347/486 [10:39<04:08,  1.79s/it]Train:  72%|███████▏  | 348/486 [10:41<04:06,  1.78s/it]Train:  72%|███████▏  | 349/486 [10:43<04:03,  1.78s/it]Train:  72%|███████▏  | 350/486 [10:45<04:02,  1.78s/it]                                                        Train:  72%|███████▏  | 350/486 [10:45<04:02,  1.78s/it]Train:  72%|███████▏  | 350/486 [10:45<04:02,  1.78s/it]Train:  72%|███████▏  | 351/486 [10:46<03:59,  1.77s/it]Train:  72%|███████▏  | 352/486 [10:48<03:57,  1.78s/it]Train:  73%|███████▎  | 353/486 [10:50<03:56,  1.78s/it]Train:  73%|███████▎  | 354/486 [10:52<03:53,  1.77s/it]Train:  73%|███████▎  | 355/486 [10:53<03:52,  1.78s/it]                                                        Train:  73%|███████▎  | 355/486 [10:53<03:52,  1.78s/it]Train:  73%|███████▎  | 355/486 [10:53<03:52,  1.78s/it]Train:  73%|███████▎  | 356/486 [10:55<03:50,  1.78s/it]Train:  73%|███████▎  | 357/486 [10:57<03:48,  1.77s/it]Train:  74%|███████▎  | 358/486 [10:59<03:46,  1.77s/it]Train:  74%|███████▍  | 359/486 [11:01<03:45,  1.77s/it]Train:  74%|███████▍  | 360/486 [11:02<03:43,  1.78s/it]                                                        Train:  74%|███████▍  | 360/486 [11:02<03:43,  1.78s/it]Train:  74%|███████▍  | 360/486 [11:02<03:43,  1.78s/it]Train:  74%|███████▍  | 361/486 [11:04<03:41,  1.77s/it]Train:  74%|███████▍  | 362/486 [11:06<03:40,  1.78s/it]Train:  75%|███████▍  | 363/486 [11:08<03:38,  1.78s/it]Train:  75%|███████▍  | 364/486 [11:09<03:39,  1.80s/it]Train:  75%|███████▌  | 365/486 [11:11<03:37,  1.80s/it]                                                        Train:  75%|███████▌  | 365/486 [11:11<03:37,  1.80s/it]Train:  75%|███████▌  | 365/486 [11:11<03:37,  1.80s/it]Train:  75%|███████▌  | 366/486 [11:13<03:35,  1.80s/it]Train:  76%|███████▌  | 367/486 [11:15<03:33,  1.79s/it]Train:  76%|███████▌  | 368/486 [11:17<03:30,  1.78s/it]Train:  76%|███████▌  | 369/486 [11:18<03:28,  1.78s/it]Train:  76%|███████▌  | 370/486 [11:20<03:25,  1.78s/it]                                                        Train:  76%|███████▌  | 370/486 [11:20<03:25,  1.78s/it]Train:  76%|███████▌  | 370/486 [11:20<03:25,  1.78s/it]Train:  76%|███████▋  | 371/486 [11:22<03:31,  1.84s/it]Train:  77%|███████▋  | 372/486 [11:24<03:27,  1.82s/it]Train:  77%|███████▋  | 373/486 [11:26<03:23,  1.80s/it]Train:  77%|███████▋  | 374/486 [11:27<03:20,  1.79s/it]Train:  77%|███████▋  | 375/486 [11:29<03:17,  1.78s/it]                                                        Train:  77%|███████▋  | 375/486 [11:29<03:17,  1.78s/it]Train:  77%|███████▋  | 375/486 [11:29<03:17,  1.78s/it]Train:  77%|███████▋  | 376/486 [11:31<03:15,  1.78s/it]Train:  78%|███████▊  | 377/486 [11:33<03:13,  1.78s/it]Train:  78%|███████▊  | 378/486 [11:34<03:10,  1.77s/it]Train:  78%|███████▊  | 379/486 [11:36<03:08,  1.76s/it]Train:  78%|███████▊  | 380/486 [11:38<03:08,  1.78s/it]                                                        Train:  78%|███████▊  | 380/486 [11:38<03:08,  1.78s/it]Train:  78%|███████▊  | 380/486 [11:38<03:08,  1.78s/it]Train:  78%|███████▊  | 381/486 [11:40<03:05,  1.77s/it]Train:  79%|███████▊  | 382/486 [11:42<03:04,  1.77s/it]Train:  79%|███████▉  | 383/486 [11:43<03:02,  1.77s/it]Train:  79%|███████▉  | 384/486 [11:45<02:59,  1.76s/it]Train:  79%|███████▉  | 385/486 [11:47<02:58,  1.76s/it]                                                        Train:  79%|███████▉  | 385/486 [11:47<02:58,  1.76s/it]Train:  79%|███████▉  | 385/486 [11:47<02:58,  1.76s/it]Train:  79%|███████▉  | 386/486 [11:49<02:56,  1.76s/it]Train:  80%|███████▉  | 387/486 [11:50<02:55,  1.77s/it]Train:  80%|███████▉  | 388/486 [11:52<02:55,  1.79s/it]Train:  80%|████████  | 389/486 [11:54<02:52,  1.77s/it]Train:  80%|████████  | 390/486 [11:56<02:49,  1.77s/it]                                                        Train:  80%|████████  | 390/486 [11:56<02:49,  1.77s/it]Train:  80%|████████  | 390/486 [11:56<02:49,  1.77s/it]Train:  80%|████████  | 391/486 [11:58<02:48,  1.77s/it]Train:  81%|████████  | 392/486 [11:59<02:45,  1.77s/it]Train:  81%|████████  | 393/486 [12:01<02:43,  1.76s/it]Train:  81%|████████  | 394/486 [12:03<02:41,  1.76s/it]Train:  81%|████████▏ | 395/486 [12:05<02:40,  1.76s/it]                                                        Train:  81%|████████▏ | 395/486 [12:05<02:40,  1.76s/it]Train:  81%|████████▏ | 395/486 [12:05<02:40,  1.76s/it]Train:  81%|████████▏ | 396/486 [12:06<02:38,  1.76s/it]Train:  82%|████████▏ | 397/486 [12:08<02:37,  1.77s/it]Train:  82%|████████▏ | 398/486 [12:10<02:36,  1.78s/it]Train:  82%|████████▏ | 399/486 [12:12<02:35,  1.78s/it]Train:  82%|████████▏ | 400/486 [12:14<02:34,  1.80s/it]                                                        Train:  82%|████████▏ | 400/486 [12:14<02:34,  1.80s/it]Train:  82%|████████▏ | 400/486 [12:14<02:34,  1.80s/it]Train:  83%|████████▎ | 401/486 [12:15<02:32,  1.80s/it]Train:  83%|████████▎ | 402/486 [12:17<02:31,  1.80s/it]Train:  83%|████████▎ | 403/486 [12:19<02:28,  1.79s/it]Train:  83%|████████▎ | 404/486 [12:21<02:26,  1.78s/it]Train:  83%|████████▎ | 405/486 [12:22<02:23,  1.77s/it]                                                        Train:  83%|████████▎ | 405/486 [12:22<02:23,  1.77s/it]Train:  83%|████████▎ | 405/486 [12:22<02:23,  1.77s/it]Train:  84%|████████▎ | 406/486 [12:24<02:21,  1.77s/it]Train:  84%|████████▎ | 407/486 [12:26<02:20,  1.78s/it]Train:  84%|████████▍ | 408/486 [12:28<02:18,  1.78s/it]Train:  84%|████████▍ | 409/486 [12:30<02:17,  1.78s/it]Train:  84%|████████▍ | 410/486 [12:31<02:16,  1.79s/it]                                                        Train:  84%|████████▍ | 410/486 [12:31<02:16,  1.79s/it]Train:  84%|████████▍ | 410/486 [12:31<02:16,  1.79s/it]Train:  85%|████████▍ | 411/486 [12:33<02:13,  1.78s/it]Train:  85%|████████▍ | 412/486 [12:35<02:11,  1.78s/it]Train:  85%|████████▍ | 413/486 [12:37<02:09,  1.77s/it]Train:  85%|████████▌ | 414/486 [12:38<02:07,  1.77s/it]Train:  85%|████████▌ | 415/486 [12:40<02:05,  1.77s/it]                                                        Train:  85%|████████▌ | 415/486 [12:40<02:05,  1.77s/it]Train:  85%|████████▌ | 415/486 [12:40<02:05,  1.77s/it]Train:  86%|████████▌ | 416/486 [12:42<02:03,  1.77s/it]Train:  86%|████████▌ | 417/486 [12:44<02:01,  1.76s/it]Train:  86%|████████▌ | 418/486 [12:45<02:00,  1.77s/it]Train:  86%|████████▌ | 419/486 [12:47<01:59,  1.78s/it]Train:  86%|████████▋ | 420/486 [12:49<01:57,  1.77s/it]                                                        Train:  86%|████████▋ | 420/486 [12:49<01:57,  1.77s/it]Train:  86%|████████▋ | 420/486 [12:49<01:57,  1.77s/it]Train:  87%|████████▋ | 421/486 [12:51<01:55,  1.77s/it]Train:  87%|████████▋ | 422/486 [12:53<01:53,  1.77s/it]Train:  87%|████████▋ | 423/486 [12:54<01:52,  1.78s/it]Train:  87%|████████▋ | 424/486 [12:56<01:49,  1.77s/it]Train:  87%|████████▋ | 425/486 [12:58<01:48,  1.78s/it]                                                        Train:  87%|████████▋ | 425/486 [12:58<01:48,  1.78s/it]Train:  87%|████████▋ | 425/486 [12:58<01:48,  1.78s/it]Train:  88%|████████▊ | 426/486 [13:00<01:46,  1.78s/it]Train:  88%|████████▊ | 427/486 [13:01<01:45,  1.78s/it]Train:  88%|████████▊ | 428/486 [13:03<01:43,  1.78s/it]Train:  88%|████████▊ | 429/486 [13:05<01:41,  1.79s/it]Train:  88%|████████▊ | 430/486 [13:07<01:45,  1.89s/it]                                                        Train:  88%|████████▊ | 430/486 [13:07<01:45,  1.89s/it]Train:  88%|████████▊ | 430/486 [13:07<01:45,  1.89s/it]Train:  89%|████████▊ | 431/486 [13:09<01:42,  1.86s/it]Train:  89%|████████▉ | 432/486 [13:11<01:39,  1.84s/it]Train:  89%|████████▉ | 433/486 [13:13<01:36,  1.81s/it]Train:  89%|████████▉ | 434/486 [13:14<01:33,  1.80s/it]Train:  90%|████████▉ | 435/486 [13:16<01:35,  1.88s/it]                                                        Train:  90%|████████▉ | 435/486 [13:16<01:35,  1.88s/it]Train:  90%|████████▉ | 435/486 [13:16<01:35,  1.88s/it]Train:  90%|████████▉ | 436/486 [13:18<01:32,  1.84s/it]Train:  90%|████████▉ | 437/486 [13:20<01:28,  1.81s/it]Train:  90%|█████████ | 438/486 [13:22<01:26,  1.80s/it]Train:  90%|█████████ | 439/486 [13:23<01:24,  1.79s/it]Train:  91%|█████████ | 440/486 [13:25<01:24,  1.84s/it]                                                        Train:  91%|█████████ | 440/486 [13:25<01:24,  1.84s/it]Train:  91%|█████████ | 440/486 [13:25<01:24,  1.84s/it]Train:  91%|█████████ | 441/486 [13:27<01:21,  1.82s/it]Train:  91%|█████████ | 442/486 [13:29<01:19,  1.81s/it]Train:  91%|█████████ | 443/486 [13:31<01:17,  1.80s/it]Train:  91%|█████████▏| 444/486 [13:32<01:14,  1.78s/it]Train:  92%|█████████▏| 445/486 [13:34<01:12,  1.77s/it]                                                        Train:  92%|█████████▏| 445/486 [13:34<01:12,  1.77s/it]Train:  92%|█████████▏| 445/486 [13:34<01:12,  1.77s/it]Train:  92%|█████████▏| 446/486 [13:37<01:24,  2.11s/it]Train:  92%|█████████▏| 447/486 [13:39<01:18,  2.02s/it]Train:  92%|█████████▏| 448/486 [13:41<01:13,  1.95s/it]Train:  92%|█████████▏| 449/486 [13:42<01:10,  1.89s/it]Train:  93%|█████████▎| 450/486 [13:44<01:06,  1.85s/it]                                                        Train:  93%|█████████▎| 450/486 [13:44<01:06,  1.85s/it]Train:  93%|█████████▎| 450/486 [13:44<01:06,  1.85s/it]Train:  93%|█████████▎| 451/486 [13:46<01:03,  1.82s/it]Train:  93%|█████████▎| 452/486 [13:48<01:01,  1.81s/it]Train:  93%|█████████▎| 453/486 [13:50<00:59,  1.80s/it]Train:  93%|█████████▎| 454/486 [13:51<00:57,  1.80s/it]Train:  94%|█████████▎| 455/486 [13:53<00:55,  1.80s/it]                                                        Train:  94%|█████████▎| 455/486 [13:53<00:55,  1.80s/it]Train:  94%|█████████▎| 455/486 [13:53<00:55,  1.80s/it]Train:  94%|█████████▍| 456/486 [13:55<00:53,  1.78s/it]Train:  94%|█████████▍| 457/486 [13:57<00:51,  1.78s/it]Train:  94%|█████████▍| 458/486 [13:58<00:49,  1.77s/it]Train:  94%|█████████▍| 459/486 [14:00<00:47,  1.77s/it]Train:  95%|█████████▍| 460/486 [14:02<00:46,  1.77s/it]                                                        Train:  95%|█████████▍| 460/486 [14:02<00:46,  1.77s/it]Train:  95%|█████████▍| 460/486 [14:02<00:46,  1.77s/it]Train:  95%|█████████▍| 461/486 [14:04<00:44,  1.78s/it]Train:  95%|█████████▌| 462/486 [14:06<00:42,  1.78s/it]Train:  95%|█████████▌| 463/486 [14:07<00:41,  1.78s/it]Train:  95%|█████████▌| 464/486 [14:09<00:39,  1.78s/it]Train:  96%|█████████▌| 465/486 [14:11<00:37,  1.78s/it]                                                        Train:  96%|█████████▌| 465/486 [14:11<00:37,  1.78s/it]Train:  96%|█████████▌| 465/486 [14:11<00:37,  1.78s/it]Train:  96%|█████████▌| 466/486 [14:13<00:35,  1.78s/it]Train:  96%|█████████▌| 467/486 [14:14<00:33,  1.77s/it]Train:  96%|█████████▋| 468/486 [14:16<00:32,  1.78s/it]Train:  97%|█████████▋| 469/486 [14:18<00:30,  1.77s/it]Train:  97%|█████████▋| 470/486 [14:20<00:28,  1.77s/it]                                                        Train:  97%|█████████▋| 470/486 [14:20<00:28,  1.77s/it]Train:  97%|█████████▋| 470/486 [14:20<00:28,  1.77s/it]Train:  97%|█████████▋| 471/486 [14:21<00:26,  1.77s/it]Train:  97%|█████████▋| 472/486 [14:23<00:24,  1.77s/it]Train:  97%|█████████▋| 473/486 [14:25<00:22,  1.76s/it]Train:  98%|█████████▊| 474/486 [14:27<00:21,  1.77s/it]Train:  98%|█████████▊| 475/486 [14:29<00:19,  1.77s/it]                                                        Train:  98%|█████████▊| 475/486 [14:29<00:19,  1.77s/it]Train:  98%|█████████▊| 475/486 [14:29<00:19,  1.77s/it]Train:  98%|█████████▊| 476/486 [14:30<00:17,  1.78s/it]Train:  98%|█████████▊| 477/486 [14:32<00:16,  1.78s/it]Train:  98%|█████████▊| 478/486 [14:34<00:14,  1.78s/it]Train:  99%|█████████▊| 479/486 [14:36<00:12,  1.79s/it]Train:  99%|█████████▉| 480/486 [14:38<00:10,  1.78s/it]                                                        Train:  99%|█████████▉| 480/486 [14:38<00:10,  1.78s/it]Train:  99%|█████████▉| 480/486 [14:38<00:10,  1.78s/it]Train:  99%|█████████▉| 481/486 [14:39<00:08,  1.78s/it]Train:  99%|█████████▉| 482/486 [14:41<00:07,  1.78s/it]Train:  99%|█████████▉| 483/486 [14:43<00:05,  1.78s/it]Train: 100%|█████████▉| 484/486 [14:45<00:03,  1.78s/it]Train: 100%|█████████▉| 485/486 [14:46<00:01,  1.78s/it]                                                        Train: 100%|█████████▉| 485/486 [14:46<00:01,  1.78s/it]Train: 100%|█████████▉| 485/486 [14:46<00:01,  1.78s/it]Train: 100%|██████████| 486/486 [14:48<00:00,  1.78s/it][INFO:swift] Saving model checkpoint to /scratch/merc0606/fine-tuning-ELVIS/results/checkpoints/projector/v2-20260929-185323/checkpoint-486
+[INFO:swift] Saving model checkpoint to /scratch/merc0606/fine-tuning-ELVIS/results/checkpoints/projector/v2-20260929-185323/checkpoint-486
+                                                        Train: 100%|██████████| 486/486 [14:48<00:00,  1.78s/it]Train: 100%|██████████| 486/486 [14:48<00:00,  1.78s/it]Train: 100%|██████████| 486/486 [14:48<00:00,  1.83s/it]
+[INFO:swift] last_model_checkpoint: /scratch/merc0606/fine-tuning-ELVIS/results/checkpoints/projector/v2-20260929-185323/checkpoint-486
+[INFO:swift] best_model_checkpoint: None
+[INFO:swift] End time of running main: 2026-09-29 19:08:45.122358

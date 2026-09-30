@@ -1,0 +1,36 @@
+=== Job 62193505 on fc10915 — variant=llm chain=1/1 ===
+Tue Sep 29 18:31:29 2026       
++-----------------------------------------------------------------------------------------+
+| NVIDIA-SMI 580.159.03             Driver Version: 580.159.03     CUDA Version: 13.0     |
++-----------------------------------------+------------------------+----------------------+
+| GPU  Name                 Persistence-M | Bus-Id          Disp.A | Volatile Uncorr. ECC |
+| Fan  Temp   Perf          Pwr:Usage/Cap |           Memory-Usage | GPU-Util  Compute M. |
+|                                         |                        |               MIG M. |
+|=========================================+========================+======================|
+|   0  NVIDIA H100 80GB HBM3          On  |   00000000:06:00.0 Off |                   On |
+| N/A   26C    P0            172W /  700W |    9113MiB /  81559MiB |     N/A      Default |
+|                                         |                        |              Enabled |
++-----------------------------------------+------------------------+----------------------+
+
++-----------------------------------------------------------------------------------------+
+| MIG devices:                                                                            |
++------------------+----------------------------------+-----------+-----------------------+
+| GPU  GI  CI  MIG |              Shared Memory-Usage |        Vol|        Shared         |
+|      ID  ID  Dev |                Shared BAR1-Usage | SM     Unc| CE ENC  DEC  OFA  JPG |
+|                  |                                  |        ECC|                       |
+|==================+==================================+===========+=======================|
+|  0    2   0   0  |              44MiB / 40448MiB    | 60      0 |  3   0    3    0    3 |
+|                  |               0MiB / 24740MiB    |           |                       |
++------------------+----------------------------------+-----------+-----------------------+
+
++-----------------------------------------------------------------------------------------+
+| Processes:                                                                              |
+|  GPU   GI   CI              PID   Type   Process name                        GPU Memory |
+|        ID   ID                                                               Usage      |
+|=========================================================================================|
+|  No running processes found                                                             |
++-----------------------------------------------------------------------------------------+
+cuda: True | NVIDIA H100 80GB HBM3 MIG 3g.40gb
+ms-swift: 4.5.3
+peft: 0.19.1
+run sh: `/scratch/merc0606/venv/elvis/bin/python /scratch/merc0606/venv/elvis/lib/python3.11/site-packages/swift/cli/sft.py --model Qwen/Qwen3-VL-4B-Instruct --torch_dtype bfloat16 --tuner_type lora --dataset data/continuity/train.jsonl --output_dir /scratch/merc0606/fine-tuning-ELVIS/results/checkpoints/llm --lora_rank 4 --lora_alpha 8 --lora_dropout 0.0 --target_modules all-linear --freeze_llm false --freeze_vit true --freeze_aligner true --num_train_epochs 3 --per_device_train_batch_size 4 --gradient_accumulation_steps 8 --learning_rate 5e-05 --lr_scheduler_type cosine --warmup_ratio 0.03 --save_strategy epoch --save_total_limit 3 --logging_steps 5 --gradient_checkpointing true --max_pixels 50176 --seed 42 --report_to wandb`

@@ -1,0 +1,716 @@
+/scratch/merc0606/venv/elvis/lib/python3.11/site-packages/huggingface_hub/constants.py:298: FutureWarning: The `HF_HUB_ENABLE_HF_TRANSFER` environment variable is deprecated as 'hf_transfer' is not used anymore. Please use `HF_XET_HIGH_PERFORMANCE` instead to enable high performance transfer with Xet. Visit https://huggingface.co/docs/huggingface_hub/package_reference/environment_variables#hfxethighperformance for more details.
+  warnings.warn(
+/scratch/merc0606/venv/elvis/lib/python3.11/site-packages/huggingface_hub/constants.py:298: FutureWarning: The `HF_HUB_ENABLE_HF_TRANSFER` environment variable is deprecated as 'hf_transfer' is not used anymore. Please use `HF_XET_HIGH_PERFORMANCE` instead to enable high performance transfer with Xet. Visit https://huggingface.co/docs/huggingface_hub/package_reference/environment_variables#hfxethighperformance for more details.
+  warnings.warn(
+[INFO:swift] Successfully registered `/scratch/merc0606/venv/elvis/lib/python3.11/site-packages/swift/dataset/data/dataset_info.json`.
+[INFO:swift] rank: -1, local_rank: -1, world_size: 1, local_world_size: 1
+[INFO:swift] Downloading the model from ModelScope Hub, model_id: Qwen/Qwen3-VL-4B-Instruct
+2026-09-29 18:44:41,291 | INFO    | modelscope_hub.download | Downloading 13 files from Qwen/Qwen3-VL-4B-Instruct@master
+Downloading:   0%|          | 0/13 [00:00<?, ?file/s]Downloading: 100%|██████████| 13/13 [00:00<00:00, 670.41file/s]
+[INFO:swift] Loading the model using model_dir: /home/merc0606/.cache/modelscope/models/Qwen--Qwen3-VL-4B-Instruct/snapshots/master
+[transformers] `torch_dtype` is deprecated! Use `dtype` instead!
+[INFO:swift] Setting args.lazy_tokenize: True
+[INFO:swift] Setting args.dataloader_num_workers: 1
+[transformers] warmup_ratio is deprecated and will be removed in v5.2. Use `warmup_steps` instead.
+[INFO:swift] output_dir: /scratch/merc0606/fine-tuning-ELVIS/results/checkpoints/both/v0-20260929-184441
+[INFO:swift] args: SftArguments(
+acc_strategy=token,
+accelerator_config={'dispatch_batches': False},
+adalora_beta1=0.85,
+adalora_beta2=0.85,
+adalora_deltaT=1,
+adalora_init_r=12,
+adalora_orth_reg_weight=0.5,
+adalora_target_r=8,
+adalora_tfinal=0,
+adalora_tinit=0,
+adam_beta1=0.9,
+adam_beta2=0.95,
+adam_epsilon=1e-08,
+adapter_act=gelu,
+adapter_length=128,
+adapters=[],
+add_non_thinking_prefix=True,
+add_version=True,
+agent_template=None,
+aligner_lr=None,
+attn_impl=None,
+auto_find_batch_size=False,
+average_tokens_across_devices=True,
+batch_eval_metrics=False,
+bf16=True,
+bf16_full_eval=False,
+bnb_4bit_compute_dtype=torch.bfloat16,
+bnb_4bit_quant_storage=None,
+bnb_4bit_quant_type=nf4,
+bnb_4bit_use_double_quant=True,
+boft_block_num=0,
+boft_block_size=4,
+boft_dropout=0.0,
+boft_n_butterfly_factor=1,
+cached_dataset=[],
+cached_val_dataset=[],
+callbacks=[],
+check_model=True,
+columns={},
+create_checkpoint_symlink=False,
+custom_dataset_info=[],
+custom_register_path=[],
+data_seed=42,
+dataloader_drop_last=False,
+dataloader_multiprocessing_context=None,
+dataloader_num_workers=None,
+dataloader_persistent_workers=True,
+dataloader_pin_memory=True,
+dataloader_prefetch_factor=None,
+dataset=['data/continuity/train.jsonl'],
+dataset_num_proc=1,
+dataset_shuffle=True,
+ddp_backend=None,
+ddp_broadcast_buffers=None,
+ddp_bucket_cap_mb=None,
+ddp_find_unused_parameters=None,
+ddp_static_graph=None,
+ddp_timeout=18000000,
+debug=None,
+deepspeed=None,
+deepspeed_autotp_size=None,
+device_groups=None,
+device_map=None,
+disable_auto_column_mapping=False,
+disable_ignore_empty_think=False,
+disable_tqdm=None,
+do_eval=False,
+do_predict=False,
+do_train=False,
+download_mode=reuse_dataset_if_exists,
+ds3_gather_for_generation=True,
+early_stop_interval=None,
+enable_channel_loss=False,
+enable_dft_loss=False,
+enable_jit_checkpoint=False,
+enable_npu_model_patch=True,
+enable_thinking=None,
+eval_accumulation_steps=None,
+eval_dataset=[],
+eval_dataset_args=None,
+eval_delay=0,
+eval_do_concat_batches=True,
+eval_generation_config=None,
+eval_limit=None,
+eval_metric=None,
+eval_on_start=False,
+eval_steps=None,
+eval_strategy=no,
+eval_use_evalscope=False,
+eval_use_gather_object=False,
+experts_impl=None,
+external_plugins=[],
+extra_eval_args=None,
+fourier_n_frequency=2000,
+fourier_scaling=300.0,
+fp16=False,
+fp16_full_eval=False,
+freeze_aligner=False,
+freeze_llm=False,
+freeze_parameters=[],
+freeze_parameters_ratio=0.0,
+freeze_parameters_regex=None,
+freeze_vit=True,
+fsdp=[],
+fsdp_config=None,
+full_determinism=False,
+galore_cos_threshold=0.4,
+galore_gamma_proj=2,
+galore_optim_per_parameter=False,
+galore_proj_bits=4,
+galore_proj_group_size=256,
+galore_proj_quant=False,
+galore_proj_type=std,
+galore_quantization=False,
+galore_queue_size=5,
+galore_rank=128,
+galore_scale=1.0,
+galore_target_modules=None,
+galore_update_proj_gap=50,
+galore_with_embedding=False,
+generation_config=None,
+generation_max_length=None,
+generation_num_beams=None,
+gradient_accumulation_steps=8,
+gradient_checkpointing=True,
+gradient_checkpointing_kwargs=None,
+greater_is_better=False,
+group_by_length=False,
+hqq_axis=None,
+hub_always_push=False,
+hub_model_id=None,
+hub_private_repo=None,
+hub_revision=None,
+hub_strategy=every_save,
+hub_token=<HUB_TOKEN>,
+ignore_args_error=False,
+ignore_data_skip=False,
+include_for_metrics=[],
+include_num_input_tokens_seen=False,
+init_strategy=None,
+init_weights=True,
+interleave_prob=None,
+is_binary_loss_scale=None,
+label_names=None,
+label_smoothing_factor=0.0,
+lazy_tokenize=True,
+learning_rate=5e-05,
+length_column_name=length,
+liger_kernel_config=None,
+lisa_activated_layers=0,
+lisa_step_interval=20,
+llamapro_num_groups=None,
+llamapro_num_new_blocks=4,
+load_args=False,
+load_best_model_at_end=False,
+load_data_args=False,
+load_from_cache_file=False,
+local_rank=-1,
+local_repo_path=None,
+log_level=passive,
+log_level_replica=warning,
+log_on_each_node=True,
+logging_dir=/scratch/merc0606/fine-tuning-ELVIS/results/checkpoints/both/v0-20260929-184441/runs,
+logging_first_step=True,
+logging_nan_inf_filter=True,
+logging_steps=5,
+logging_strategy=steps,
+logprobs=False,
+lora_alpha=8.0,
+lora_bias=none,
+lora_dropout=0.0,
+lora_dtype=None,
+lora_ga_batch_size=2,
+lora_ga_direction=ArB2r,
+lora_ga_iters=2,
+lora_ga_max_length=1024,
+lora_ga_scale=stable,
+lora_ga_stable_gamma=16,
+lora_rank=4,
+lorap_lr_ratio=None,
+loss_scale=default,
+loss_type=None,
+lr_scheduler_kwargs=None,
+lr_scheduler_type=cosine,
+max_epochs=None,
+max_grad_norm=1.0,
+max_length=262144,
+max_memory={},
+max_model_len=None,
+max_new_tokens=64,
+max_pixels=50176,
+max_shard_size=5GB,
+max_steps=-1,
+metric_for_best_model=loss,
+model=Qwen/Qwen3-VL-4B-Instruct,
+model_author=None,
+model_kwargs={},
+model_name=None,
+model_revision=None,
+model_type=qwen3_vl,
+modules_to_save=[],
+mrl_dims=None,
+neftune_noise_alpha=None,
+new_special_tokens=[],
+norm_bbox=None,
+num_beams=1,
+num_labels=None,
+num_train_epochs=3.0,
+optim=adamw_torch_fused,
+optim_args=None,
+optim_target_modules=None,
+optimizer=None,
+output_dir=/scratch/merc0606/fine-tuning-ELVIS/results/checkpoints/both/v0-20260929-184441,
+packing=False,
+packing_length=None,
+packing_num_proc=1,
+packing_strategy=binpack,
+padding_free=False,
+padding_side=right,
+parallelism_config=None,
+per_device_eval_batch_size=1,
+per_device_train_batch_size=4,
+predict_with_generate=False,
+prediction_loss_only=False,
+preserve_thinking=None,
+problem_type=None,
+project=huggingface,
+push_to_hub=False,
+quant_bits=None,
+quant_method=None,
+ray_exp_name=None,
+reft_args=None,
+reft_intervention_type=LoreftIntervention,
+reft_layer_key=None,
+reft_layers=None,
+reft_rank=4,
+remove_unused_columns=True,
+repetition_penalty=None,
+report_to=['wandb'],
+response_prefix=None,
+restore_callback_states_from_checkpoint=False,
+resume_from_checkpoint=None,
+resume_only_model=False,
+rope_scaling=None,
+router_aux_loss_coef=0.0,
+run_name=/scratch/merc0606/fine-tuning-ELVIS/results/checkpoints/both/v0-20260929-184441,
+safe_serialization=True,
+save_on_each_node=False,
+save_only_model=False,
+save_steps=500,
+save_strategy=epoch,
+save_total_limit=3,
+seed=42,
+sequence_parallel_size=1,
+shuffle_buffer_size=1000,
+skip_memory_metrics=True,
+sortish_sampler=False,
+split_dataset_ratio=0.0,
+stop_words=[],
+stopping_strategy=first_exhausted,
+stream=False,
+streaming=False,
+strict=False,
+structured_outputs_regex=None,
+swanlab_email_language=zh,
+swanlab_exp_name=None,
+swanlab_mode=cloud,
+swanlab_notification_method=None,
+swanlab_project=ms-swift,
+swanlab_receiver_email=None,
+swanlab_secret=None,
+swanlab_sender_email=None,
+swanlab_smtp_port=None,
+swanlab_smtp_server=None,
+swanlab_token=<SWANLAB_TOKEN>,
+swanlab_webhook_url=None,
+swanlab_workspace=None,
+system=None,
+target_modules=['all-linear'],
+target_parameters=None,
+target_regex=None,
+task_type=causal_lm,
+temperature=0.0,
+template=qwen3_vl,
+template_backend=swift,
+tf32=None,
+top_k=None,
+top_logprobs=None,
+top_p=None,
+torch_compile=False,
+torch_compile_backend=None,
+torch_compile_mode=None,
+torch_dtype=torch.bfloat16,
+torch_empty_cache_steps=None,
+trackio_bucket_id=None,
+trackio_space_id=None,
+trackio_static_space_id=None,
+train_dataloader_shuffle=True,
+train_sampling_strategy=random,
+trainable_parameters=[],
+trainable_parameters_regex=None,
+truncation_strategy=delete,
+tuner_backend=peft,
+tuner_type=lora,
+use_cache=False,
+use_chat_template=True,
+use_cpu=False,
+use_dora=False,
+use_flash_ckpt=False,
+use_galore=False,
+use_hf=False,
+use_liger_kernel=False,
+use_logits_to_keep=None,
+use_ray=False,
+use_rslora=False,
+use_swift_lora=False,
+val_dataset=[],
+val_dataset_shuffle=False,
+vera_d_initial=0.1,
+vera_dropout=0.0,
+vera_projection_prng_key=0,
+vera_rank=256,
+vit_gradient_checkpointing=True,
+vit_lr=None,
+warmup_ratio=0.03,
+warmup_steps=0,
+weight_decay=0.1,
+zero_hpz_partition_size=None,
+)
+[INFO:swift] Global seed set to 42
+[INFO:swift] Downloading the model from ModelScope Hub, model_id: Qwen/Qwen3-VL-4B-Instruct
+2026-09-29 18:44:44,843 | INFO    | modelscope_hub.download | Downloading 15 files from Qwen/Qwen3-VL-4B-Instruct@master
+Downloading:   0%|          | 0/15 [00:00<?, ?file/s]Downloading:  93%|█████████▎| 14/15 [00:02<00:00,  5.32file/s]Downloading: 100%|██████████| 15/15 [00:03<00:00,  4.31file/s]Downloading: 100%|██████████| 15/15 [00:03<00:00,  4.55file/s]
+[INFO:swift] Loading the model using model_dir: /home/merc0606/.cache/modelscope/models/Qwen--Qwen3-VL-4B-Instruct/snapshots/master
+[INFO:swift] Setting max_ratio: 200. You can adjust this hyperparameter through the environment variable: `MAX_RATIO`.
+[INFO:swift] Setting frame_factor: 2. You can adjust this hyperparameter through the environment variable: `FRAME_FACTOR`.
+[INFO:swift] Setting fps: 2.0. You can adjust this hyperparameter through the environment variable: `FPS`.
+[INFO:swift] Setting fps_min_frames: 4. You can adjust this hyperparameter through the environment variable: `FPS_MIN_FRAMES`.
+[INFO:swift] Setting fps_max_frames: 768. You can adjust this hyperparameter through the environment variable: `FPS_MAX_FRAMES`.
+[INFO:swift] Setting image_max_token_num: 16384. You can adjust this hyperparameter through the environment variable: `IMAGE_MAX_TOKEN_NUM`.
+[INFO:swift] Setting image_min_token_num: 4. You can adjust this hyperparameter through the environment variable: `IMAGE_MIN_TOKEN_NUM`.
+[INFO:swift] Setting spatial_merge_size: 2. You can adjust this hyperparameter through the environment variable: `SPATIAL_MERGE_SIZE`.
+[INFO:swift] Setting video_max_token_num: 768. You can adjust this hyperparameter through the environment variable: `VIDEO_MAX_TOKEN_NUM`.
+[INFO:swift] Setting video_min_token_num: 128. You can adjust this hyperparameter through the environment variable: `VIDEO_MIN_TOKEN_NUM`.
+[INFO:swift] model_kwargs: {'device_map': 'cuda:0', 'dtype': torch.bfloat16}
+Loading weights:   0%|          | 0/713 [00:00<?, ?it/s]Loading weights:   0%|          | 1/713 [00:00<01:13,  9.66it/s]Loading weights:   2%|▏         | 14/713 [00:00<00:09, 69.92it/s]Loading weights:   4%|▎         | 25/713 [00:00<00:08, 79.11it/s]Loading weights:   5%|▌         | 38/713 [00:00<00:07, 89.57it/s]Loading weights:   7%|▋         | 52/713 [00:00<00:06, 105.21it/s]Loading weights:   9%|▉         | 64/713 [00:00<00:06, 105.64it/s]Loading weights:  11%|█         | 77/713 [00:00<00:05, 110.98it/s]Loading weights:  12%|█▏        | 89/713 [00:00<00:05, 113.13it/s]Loading weights:  14%|█▍        | 102/713 [00:01<00:05, 110.67it/s]Loading weights:  16%|█▌        | 114/713 [00:01<00:05, 106.10it/s]Loading weights:  18%|█▊        | 126/713 [00:01<00:05, 102.98it/s]Loading weights:  20%|█▉        | 140/713 [00:01<00:05, 112.69it/s]Loading weights:  21%|██▏       | 152/713 [00:01<00:05, 111.92it/s]Loading weights:  23%|██▎       | 164/713 [00:01<00:04, 114.12it/s]Loading weights:  25%|██▍       | 176/713 [00:01<00:04, 112.85it/s]Loading weights:  26%|██▋       | 188/713 [00:01<00:04, 114.45it/s]Loading weights:  28%|██▊       | 201/713 [00:01<00:04, 111.44it/s]Loading weights:  30%|██▉       | 213/713 [00:02<00:04, 106.97it/s]Loading weights:  31%|███▏      | 224/713 [00:02<00:06, 81.47it/s] Loading weights:  33%|███▎      | 234/713 [00:02<00:05, 85.44it/s]Loading weights:  34%|███▍      | 244/713 [00:02<00:06, 73.24it/s]Loading weights:  35%|███▌      | 253/713 [00:02<00:07, 62.24it/s]Loading weights:  36%|███▋      | 260/713 [00:02<00:07, 58.28it/s]Loading weights:  37%|███▋      | 267/713 [00:03<00:07, 56.63it/s]Loading weights:  38%|███▊      | 273/713 [00:03<00:08, 49.91it/s]Loading weights:  39%|███▉      | 279/713 [00:03<00:09, 47.50it/s]Loading weights:  40%|████      | 286/713 [00:03<00:08, 49.10it/s]Loading weights:  41%|████      | 292/713 [00:03<00:08, 46.80it/s]Loading weights:  42%|████▏     | 298/713 [00:03<00:08, 49.35it/s]Loading weights:  43%|████▎     | 304/713 [00:03<00:10, 37.61it/s]Loading weights:  44%|████▍     | 312/713 [00:04<00:08, 44.60it/s]Loading weights:  45%|████▍     | 318/713 [00:04<00:08, 45.24it/s]Loading weights:  45%|████▌     | 323/713 [00:04<00:08, 44.55it/s]Loading weights:  46%|████▋     | 330/713 [00:04<00:07, 50.00it/s]Loading weights:  47%|████▋     | 336/713 [00:04<00:08, 46.08it/s]Loading weights:  48%|████▊     | 344/713 [00:04<00:07, 49.47it/s]Loading weights:  49%|████▉     | 350/713 [00:04<00:07, 50.00it/s]Loading weights:  50%|████▉     | 356/713 [00:05<00:07, 46.98it/s]Loading weights:  51%|█████     | 364/713 [00:05<00:06, 53.92it/s]Loading weights:  52%|█████▏    | 370/713 [00:05<00:07, 48.44it/s]Loading weights:  53%|█████▎    | 377/713 [00:05<00:06, 50.27it/s]Loading weights:  54%|█████▎    | 383/713 [00:05<00:07, 45.03it/s]Loading weights:  55%|█████▍    | 389/713 [00:05<00:06, 47.87it/s]Loading weights:  56%|█████▌    | 396/713 [00:05<00:05, 53.00it/s]Loading weights:  59%|█████▉    | 424/713 [00:05<00:02, 107.02it/s]Loading weights:  61%|██████    | 436/713 [00:06<00:06, 41.78it/s] Loading weights:  63%|██████▎   | 448/713 [00:06<00:05, 50.80it/s]Loading weights:  66%|██████▌   | 468/713 [00:06<00:03, 72.96it/s]Loading weights:  70%|██████▉   | 498/713 [00:06<00:01, 112.00it/s]Loading weights:  75%|███████▍  | 532/713 [00:07<00:01, 153.73it/s]Loading weights:  80%|███████▉  | 570/713 [00:07<00:00, 199.56it/s]Loading weights:  84%|████████▍ | 598/713 [00:07<00:00, 214.97it/s]Loading weights:  88%|████████▊ | 630/713 [00:07<00:00, 237.90it/s]Loading weights:  92%|█████████▏| 658/713 [00:07<00:00, 228.88it/s]Loading weights:  96%|█████████▋| 688/713 [00:07<00:00, 227.41it/s]Loading weights: 100%|██████████| 713/713 [00:07<00:00, 160.26it/s]Loading weights: 100%|██████████| 713/713 [00:07<00:00, 90.08it/s] 
+[INFO:swift] model_info: ModelInfo(model_type='qwen3_vl', model_dir='/home/merc0606/.cache/modelscope/models/Qwen--Qwen3-VL-4B-Instruct/snapshots/master', torch_dtype=torch.bfloat16, max_model_len=262144, quant_method=None, quant_bits=None, rope_scaling=None, is_moe_model=False, is_multimodal=True, config=Qwen3VLConfig {
+  "architectures": [
+    "Qwen3VLForConditionalGeneration"
+  ],
+  "dtype": "bfloat16",
+  "hidden_size": 2560,
+  "image_token_id": 151655,
+  "model_type": "qwen3_vl",
+  "text_config": {
+    "attention_bias": false,
+    "attention_dropout": 0.0,
+    "bos_token_id": 151643,
+    "dtype": "bfloat16",
+    "eos_token_id": 151645,
+    "head_dim": 128,
+    "hidden_act": "silu",
+    "hidden_size": 2560,
+    "initializer_range": 0.02,
+    "intermediate_size": 9728,
+    "max_position_embeddings": 262144,
+    "model_type": "qwen3_vl_text",
+    "num_attention_heads": 32,
+    "num_hidden_layers": 36,
+    "num_key_value_heads": 8,
+    "pad_token_id": null,
+    "rms_norm_eps": 1e-06,
+    "rope_parameters": {
+      "mrope_interleaved": true,
+      "mrope_section": [
+        24,
+        20,
+        20
+      ],
+      "rope_theta": 5000000,
+      "rope_type": "default"
+    },
+    "tie_word_embeddings": true,
+    "use_cache": true,
+    "vocab_size": 151936
+  },
+  "tie_word_embeddings": true,
+  "transformers_version": "5.12.1",
+  "video_token_id": 151656,
+  "vision_config": {
+    "deepstack_visual_indexes": [
+      5,
+      11,
+      17
+    ],
+    "depth": 24,
+    "dtype": "bfloat16",
+    "hidden_act": "gelu_pytorch_tanh",
+    "hidden_size": 1024,
+    "in_channels": 3,
+    "initializer_range": 0.02,
+    "intermediate_size": 4096,
+    "model_type": "qwen3_vl_vision",
+    "num_heads": 16,
+    "num_position_embeddings": 2304,
+    "out_hidden_size": 2560,
+    "patch_size": 16,
+    "spatial_merge_size": 2,
+    "temporal_patch_size": 2
+  },
+  "vision_end_token_id": 151653,
+  "vision_start_token_id": 151652
+}
+, task_type='causal_lm', num_labels=None)
+[INFO:swift] model.generation_config: GenerationConfig {
+  "bos_token_id": 151643,
+  "do_sample": false,
+  "eos_token_id": [
+    151645,
+    151643
+  ],
+  "length_penalty": 1.0,
+  "max_new_tokens": 64,
+  "num_beams": 1,
+  "pad_token_id": 151643,
+  "repetition_penalty": 1.0,
+  "temperature": 1.0,
+  "top_k": 50,
+  "top_p": 1.0
+}
+
+[INFO:swift] default_system: None
+[INFO:swift] max_length: 262144
+[INFO:swift] response_prefix: None
+[INFO:swift] agent_template: hermes
+[INFO:swift] norm_bbox: norm1000
+[INFO:swift] Setting ROOT_IMAGE_DIR: None. You can adjust this hyperparameter through the environment variable: `ROOT_IMAGE_DIR`.
+[INFO:swift] Setting QWENVL_BBOX_FORMAT: legacy. You can adjust this hyperparameter through the environment variable: `QWENVL_BBOX_FORMAT`.
+[INFO:swift] Start time of running main: 2026-09-29 18:44:57.312031
+[INFO:swift] swift.__version__: 4.5.3
+Map (num_proc=1): 100%|██████████| 5184/5184 [00:00<?, ? examples/s]Map (num_proc=1): 7184 examples [00:00, 17310.70 examples/s]        Map (num_proc=1): 10368 examples [00:00, 17344.31 examples/s]
+[INFO:swift] train_dataset: Dataset({
+    features: ['messages', 'images', 'dataset'],
+    num_rows: 5184
+})
+[INFO:swift] val_dataset: None
+[INFO:swift] [INPUT_IDS] [151644, 872, 198, 151652, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151655, 151653, 16429, 279, 2701, 32711, 5601, 25, 576, 5912, 84955, 279, 43903, 10295, 320, 3896, 220, 18, 5335, 8, 504, 279, 50857, 10295, 320, 4259, 220, 18, 5335, 8, 374, 3118, 389, 279, 53899, 3145, 17508, 315, 3070, 21319, 34494, 334, 1959, 11689, 11, 279, 30854, 315, 279, 3738, 7912, 311, 44393, 264, 10876, 11, 8433, 1815, 476, 34682, 4221, 264, 8500, 315, 5424, 11, 1496, 421, 279, 5424, 5577, 525, 537, 21893, 8433, 382, 12, 3070, 35490, 10295, 320, 14228, 220, 16, 11, 220, 17, 11, 220, 18, 32295, 25, 576, 27197, 20816, 304, 1817, 2168, 525, 27802, 304, 264, 1616, 429, 13230, 264, 19259, 11, 35512, 1815, 476, 34682, 13, 576, 20816, 4994, 311, 387, 7218, 3156, 264, 3175, 11, 55787, 1555, 476, 15655, 1959, 369, 2867, 11, 264, 8500, 315, 30994, 476, 13, 3228, 1437, 419, 2168, 438, 43903, 476, 50857, 13, 8278, 4226, 448, 6785, 476, 8225, 13, 151645, 198, 151644, 77091, 198, 30487, 151645, 198]
+[INFO:swift] [INPUT] <|im_start|>user
+<|vision_start|>[151655 * 49]<|vision_end|>Using the following reasoning rules: The rule distinguishing the Positive examples (first 3 images) from the Negative examples (last 3 images) is based on the Gestalt principle of **continuity** — specifically, the tendency of the human eye to perceive a smooth, connected path or trajectory among a sequence of elements, even if the elements themselves are not physically connected.
+
+- **Positive examples (Images 1, 2, 3)**: The colored shapes in each image are arranged in a way that suggests a continuous, flowing path or trajectory. The shapes appear to be moving along a single, coherent line or curve — for instance, a sequence of dots or. Classify this image as Positive or Negative. Only answer with positive or negative.<|im_end|>
+<|im_start|>assistant
+positive<|im_end|>
+
+[INFO:swift] [LABELS_IDS] [-100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, 30487, 151645, 198]
+[INFO:swift] [LABELS] [-100 * 210]positive<|im_end|>
+
+[INFO:swift] The SftArguments will be saved in: /scratch/merc0606/fine-tuning-ELVIS/results/checkpoints/both/v0-20260929-184441/args.json
+[INFO:swift] lora_config: LoraConfig(task_type='CAUSAL_LM', peft_type=<PeftType.LORA: 'LORA'>, auto_mapping=None, peft_version='0.19.1', base_model_name_or_path='/home/merc0606/.cache/modelscope/models/Qwen--Qwen3-VL-4B-Instruct/snapshots/master', revision=None, inference_mode=False, r=4, target_modules='^(model\\.language_model(?=\\.).*\\.(k_proj|v_proj|down_proj|gate_proj|o_proj|up_proj|q_proj)|model\\.visual\\.merger(?=\\.).*\\.(linear_fc1|linear_fc2)|model\\.visual\\.deepstack_merger_list(?=\\.).*\\.(linear_fc1|linear_fc2))$', exclude_modules=None, lora_alpha=8.0, lora_dropout=0.0, fan_in_fan_out=False, bias='none', use_rslora=False, modules_to_save=[], init_lora_weights=True, layers_to_transform=None, layers_pattern=None, rank_pattern={}, alpha_pattern={}, megatron_config=None, megatron_core='megatron.core', trainable_token_indices=None, loftq_config={}, eva_config=None, corda_config=None, lora_ga_config=None, use_dora=False, alora_invocation_tokens=None, use_qalora=False, qalora_group_size=16, layer_replication=None, runtime_config=LoraRuntimeConfig(ephemeral_gpu_offload=False), lora_bias=False, target_parameters=None, use_bdlora=None, arrow_config=None, ensure_weight_tying=False, lora_dtype=None, lorap_lr_ratio=None, lorap_emb_lr=1e-06)
+[INFO:swift] model: PeftModelForCausalLM(
+  (base_model): LoraModel(
+    (model): Qwen3VLForConditionalGeneration(
+      (model): Qwen3VLModel(
+        (visual): Qwen3VLVisionModel(
+          (patch_embed): Qwen3VLVisionPatchEmbed(
+            (proj): Conv3d(3, 1024, kernel_size=(2, 16, 16), stride=(2, 16, 16))
+          )
+          (pos_embed): Embedding(2304, 1024)
+          (rotary_pos_emb): Qwen3VLVisionRotaryEmbedding()
+          (blocks): ModuleList(
+            (0-23): 24 x Qwen3VLVisionBlock(
+              (norm1): LayerNorm((1024,), eps=1e-06, elementwise_affine=True)
+              (norm2): LayerNorm((1024,), eps=1e-06, elementwise_affine=True)
+              (attn): Qwen3VLVisionAttention(
+                (qkv): Linear(in_features=1024, out_features=3072, bias=True)
+                (proj): Linear(in_features=1024, out_features=1024, bias=True)
+              )
+              (mlp): Qwen3VLVisionMLP(
+                (linear_fc1): Linear(in_features=1024, out_features=4096, bias=True)
+                (linear_fc2): Linear(in_features=4096, out_features=1024, bias=True)
+                (act_fn): GELUTanh()
+              )
+            )
+          )
+          (merger): Qwen3VLVisionPatchMerger(
+            (norm): LayerNorm((1024,), eps=1e-06, elementwise_affine=True)
+            (linear_fc1): lora.Linear(
+              (base_layer): Linear(in_features=4096, out_features=4096, bias=True)
+              (lora_dropout): ModuleDict(
+                (default): Identity()
+              )
+              (lora_A): ModuleDict(
+                (default): Linear(in_features=4096, out_features=4, bias=False)
+              )
+              (lora_B): ModuleDict(
+                (default): Linear(in_features=4, out_features=4096, bias=False)
+              )
+              (lora_embedding_A): ParameterDict()
+              (lora_embedding_B): ParameterDict()
+              (lora_magnitude_vector): ModuleDict()
+            )
+            (act_fn): GELU(approximate='none')
+            (linear_fc2): lora.Linear(
+              (base_layer): Linear(in_features=4096, out_features=2560, bias=True)
+              (lora_dropout): ModuleDict(
+                (default): Identity()
+              )
+              (lora_A): ModuleDict(
+                (default): Linear(in_features=4096, out_features=4, bias=False)
+              )
+              (lora_B): ModuleDict(
+                (default): Linear(in_features=4, out_features=2560, bias=False)
+              )
+              (lora_embedding_A): ParameterDict()
+              (lora_embedding_B): ParameterDict()
+              (lora_magnitude_vector): ModuleDict()
+            )
+          )
+          (deepstack_merger_list): ModuleList(
+            (0-2): 3 x Qwen3VLVisionPatchMerger(
+              (norm): LayerNorm((4096,), eps=1e-06, elementwise_affine=True)
+              (linear_fc1): lora.Linear(
+                (base_layer): Linear(in_features=4096, out_features=4096, bias=True)
+                (lora_dropout): ModuleDict(
+                  (default): Identity()
+                )
+                (lora_A): ModuleDict(
+                  (default): Linear(in_features=4096, out_features=4, bias=False)
+                )
+                (lora_B): ModuleDict(
+                  (default): Linear(in_features=4, out_features=4096, bias=False)
+                )
+                (lora_embedding_A): ParameterDict()
+                (lora_embedding_B): ParameterDict()
+                (lora_magnitude_vector): ModuleDict()
+              )
+              (act_fn): GELU(approximate='none')
+              (linear_fc2): lora.Linear(
+                (base_layer): Linear(in_features=4096, out_features=2560, bias=True)
+                (lora_dropout): ModuleDict(
+                  (default): Identity()
+                )
+                (lora_A): ModuleDict(
+                  (default): Linear(in_features=4096, out_features=4, bias=False)
+                )
+                (lora_B): ModuleDict(
+                  (default): Linear(in_features=4, out_features=2560, bias=False)
+                )
+                (lora_embedding_A): ParameterDict()
+                (lora_embedding_B): ParameterDict()
+                (lora_magnitude_vector): ModuleDict()
+              )
+            )
+          )
+        )
+        (language_model): Qwen3VLTextModel(
+          (embed_tokens): Embedding(151936, 2560)
+          (layers): ModuleList(
+            (0-35): 36 x Qwen3VLTextDecoderLayer(
+              (self_attn): Qwen3VLTextAttention(
+                (q_proj): lora.Linear(
+                  (base_layer): Linear(in_features=2560, out_features=4096, bias=False)
+                  (lora_dropout): ModuleDict(
+                    (default): Identity()
+                  )
+                  (lora_A): ModuleDict(
+                    (default): Linear(in_features=2560, out_features=4, bias=False)
+                  )
+                  (lora_B): ModuleDict(
+                    (default): Linear(in_features=4, out_features=4096, bias=False)
+                  )
+                  (lora_embedding_A): ParameterDict()
+                  (lora_embedding_B): ParameterDict()
+                  (lora_magnitude_vector): ModuleDict()
+                )
+                (k_proj): lora.Linear(
+                  (base_layer): Linear(in_features=2560, out_features=1024, bias=False)
+                  (lora_dropout): ModuleDict(
+                    (default): Identity()
+                  )
+                  (lora_A): ModuleDict(
+                    (default): Linear(in_features=2560, out_features=4, bias=False)
+                  )
+                  (lora_B): ModuleDict(
+                    (default): Linear(in_features=4, out_features=1024, bias=False)
+                  )
+                  (lora_embedding_A): ParameterDict()
+                  (lora_embedding_B): ParameterDict()
+                  (lora_magnitude_vector): ModuleDict()
+                )
+                (v_proj): lora.Linear(
+                  (base_layer): Linear(in_features=2560, out_features=1024, bias=False)
+                  (lora_dropout): ModuleDict(
+                    (default): Identity()
+                  )
+                  (lora_A): ModuleDict(
+                    (default): Linear(in_features=2560, out_features=4, bias=False)
+                  )
+                  (lora_B): ModuleDict(
+                    (default): Linear(in_features=4, out_features=1024, bias=False)
+                  )
+                  (lora_embedding_A): ParameterDict()
+                  (lora_embedding_B): ParameterDict()
+                  (lora_magnitude_vector): ModuleDict()
+                )
+                (o_proj): lora.Linear(
+                  (base_layer): Linear(in_features=4096, out_features=2560, bias=False)
+                  (lora_dropout): ModuleDict(
+                    (default): Identity()
+                  )
+                  (lora_A): ModuleDict(
+                    (default): Linear(in_features=4096, out_features=4, bias=False)
+                  )
+                  (lora_B): ModuleDict(
+                    (default): Linear(in_features=4, out_features=2560, bias=False)
+                  )
+                  (lora_embedding_A): ParameterDict()
+                  (lora_embedding_B): ParameterDict()
+                  (lora_magnitude_vector): ModuleDict()
+                )
+                (q_norm): Qwen3VLTextRMSNorm((128,), eps=1e-06)
+                (k_norm): Qwen3VLTextRMSNorm((128,), eps=1e-06)
+              )
+              (mlp): Qwen3VLTextMLP(
+                (gate_proj): lora.Linear(
+                  (base_layer): Linear(in_features=2560, out_features=9728, bias=False)
+                  (lora_dropout): ModuleDict(
+                    (default): Identity()
+                  )
+                  (lora_A): ModuleDict(
+                    (default): Linear(in_features=2560, out_features=4, bias=False)
+                  )
+                  (lora_B): ModuleDict(
+                    (default): Linear(in_features=4, out_features=9728, bias=False)
+                  )
+                  (lora_embedding_A): ParameterDict()
+                  (lora_embedding_B): ParameterDict()
+                  (lora_magnitude_vector): ModuleDict()
+                )
+                (up_proj): lora.Linear(
+                  (base_layer): Linear(in_features=2560, out_features=9728, bias=False)
+                  (lora_dropout): ModuleDict(
+                    (default): Identity()
+                  )
+                  (lora_A): ModuleDict(
+                    (default): Linear(in_features=2560, out_features=4, bias=False)
+                  )
+                  (lora_B): ModuleDict(
+                    (default): Linear(in_features=4, out_features=9728, bias=False)
+                  )
+                  (lora_embedding_A): ParameterDict()
+                  (lora_embedding_B): ParameterDict()
+                  (lora_magnitude_vector): ModuleDict()
+                )
+                (down_proj): lora.Linear(
+                  (base_layer): Linear(in_features=9728, out_features=2560, bias=False)
+                  (lora_dropout): ModuleDict(
+                    (default): Identity()
+                  )
+                  (lora_A): ModuleDict(
+                    (default): Linear(in_features=9728, out_features=4, bias=False)
+                  )
+                  (lora_B): ModuleDict(
+                    (default): Linear(in_features=4, out_features=2560, bias=False)
+                  )
+                  (lora_embedding_A): ParameterDict()
+                  (lora_embedding_B): ParameterDict()
+                  (lora_magnitude_vector): ModuleDict()
+                )
+                (act_fn): SiLUActivation()
+              )
+              (input_layernorm): Qwen3VLTextRMSNorm((2560,), eps=1e-06)
+              (post_attention_layernorm): Qwen3VLTextRMSNorm((2560,), eps=1e-06)
+            )
+          )
+          (norm): Qwen3VLTextRMSNorm((2560,), eps=1e-06)
+          (rotary_emb): Qwen3VLTextRotaryEmbedding()
+        )
+      )
+      (lm_head): Linear(in_features=2560, out_features=151936, bias=False)
+    )
+  )
+)
+[INFO:swift] model_parameter_info: PeftModelForCausalLM: 4446.3109M Params (8.4951M Trainable [0.1911%]), 0.0001M Buffers.
+[INFO:swift] use_reentrant: True
+[INFO:swift] The logging file will be saved in: /scratch/merc0606/fine-tuning-ELVIS/results/checkpoints/both/v0-20260929-184441/logging.jsonl
+[INFO:swift] Successfully registered post_encode hook: ['PeftModelForCausalLM'].
+[transformers] The tokenizer has new PAD/BOS/EOS tokens that differ from the model config and generation config. The model config and generation config were aligned accordingly, being updated with the tokenizer's values. Updated tokens: {'eos_token_id': 151645, 'bos_token_id': None, 'pad_token_id': 151643}.
+wandb: WARNING The `run_name` is currently set to the same value as `TrainingArguments.output_dir`. If this was not intended, please specify a different run name by setting the `TrainingArguments.run_name` parameter.
+wandb: [wandb.login()] Loaded credentials for https://api.wandb.ai from /home/merc0606/.netrc.
+wandb: Currently logged in as: mercurymcindoe (mercurymcindoe-university-of-british-columbia) to https://api.wandb.ai. Use `wandb login --relogin` to force relogin
+wandb: setting up run lq7b3o4p
+wandb: Tracking run with wandb version 0.24.0
+wandb: Run data is saved locally in /scratch/merc0606/fine-tuning-ELVIS/wandb/run-20260929_184500-lq7b3o4p
+wandb: Run `wandb offline` to turn off syncing.
+wandb: Syncing run /scratch/merc0606/fine-tuning-ELVIS/results/checkpoints/both/v0-20260929-184441
+wandb: ⭐️ View project at https://wandb.ai/mercurymcindoe-university-of-british-columbia/Qwen3-VL-4B-fine-tuning-continuity
+wandb: 🚀 View run at https://wandb.ai/mercurymcindoe-university-of-british-columbia/Qwen3-VL-4B-fine-tuning-continuity/runs/lq7b3o4p
+Train:   0%|          | 0/486 [00:00<?, ?it/s][INFO:swift] use_logits_to_keep: True
+Train:   0%|          | 1/486 [00:04<33:21,  4.13s/it]                                                      Train:   0%|          | 1/486 [00:04<33:21,  4.13s/it]Train:   0%|          | 1/486 [00:04<33:21,  4.13s/it]Train:   0%|          | 2/486 [00:06<25:30,  3.16s/it]Train:   1%|          | 3/486 [00:09<22:49,  2.84s/it]Train:   1%|          | 4/486 [00:11<21:32,  2.68s/it]Train:   1%|          | 5/486 [00:13<20:44,  2.59s/it]                                                      Train:   1%|          | 5/486 [00:13<20:44,  2.59s/it]Train:   1%|          | 5/486 [00:13<20:44,  2.59s/it]Train:   1%|          | 6/486 [00:16<20:20,  2.54s/it]Train:   1%|▏         | 7/486 [00:18<20:01,  2.51s/it]Train:   2%|▏         | 8/486 [00:21<19:47,  2.48s/it]Train:   2%|▏         | 9/486 [00:23<19:43,  2.48s/it]Train:   2%|▏         | 10/486 [00:26<19:36,  2.47s/it]                                                       Train:   2%|▏         | 10/486 [00:26<19:36,  2.47s/it]Train:   2%|▏         | 10/486 [00:26<19:36,  2.47s/it]Train:   2%|▏         | 11/486 [00:28<19:33,  2.47s/it]Train:   2%|▏         | 12/486 [00:31<19:37,  2.48s/it]Train:   3%|▎         | 13/486 [00:33<19:33,  2.48s/it]Train:   3%|▎         | 14/486 [00:36<19:27,  2.47s/it]Train:   3%|▎         | 15/486 [00:38<19:23,  2.47s/it]                                                       Train:   3%|▎         | 15/486 [00:38<19:23,  2.47s/it]Train:   3%|▎         | 15/486 [00:38<19:23,  2.47s/it]Train:   3%|▎         | 16/486 [00:41<19:21,  2.47s/it][2026-09-29T18:45:43.419] error: *** JOB 62195299 ON fc10915 CANCELLED AT 2026-09-29T18:45:43 DUE to SIGNAL Terminated ***
