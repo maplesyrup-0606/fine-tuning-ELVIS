@@ -91,11 +91,22 @@ wandb:
   project: Qwen3-VL-4B-fine-tuning-continuity
 
 evaluation:
+  # In-distribution: did fine-tuning learn the target task?
   per_epoch:
     - name: elvis_continuity_test
       method: mode_1_baseline  # ELVIS._run_qwen_baseline, unchanged
       data_split: test
 
+  # Negative-transfer check: did fine-tuning on continuity damage the
+  # model's ability on the other 4 Gestalt principles? Runs Mode 1 on
+  # each variant's best checkpoint (as selected by continuity accuracy).
+  # Same evaluator as ELVIS's own baseline, apples-to-apples.
+  sibling_principles:
+    method: mode_1_baseline
+    principles: [proximity, similarity, closure, symmetry]
+    scope: best_checkpoint_per_variant
+
+  # General-vision transfer: does Gestalt improvement generalize?
   final:
     - name: elvis_continuity_test
       method: mode_1_baseline
@@ -106,7 +117,8 @@ evaluation:
 
   baseline_reference:
     continuity_mode1_base: 0.5976  # from ELVIS results/continuity/baseline/20260630
-    seed_bench_2_base: null  # TBD — run before fine-tuning
+    seed_bench_2_base: null        # TBD — SEED-Bench-2 chained baseline in progress
+    sibling_mode1_base: null       # TBD — populate via `sbatch -J base slurm/eval_elvis.sh base ""`
 
 paths:
   elvis_root_env: ELVIS_ROOT
