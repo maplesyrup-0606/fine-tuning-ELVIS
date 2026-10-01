@@ -173,7 +173,9 @@ def plot_overfitting(rows, base_row, metric, out_path):
         ax.set_title(f"variant: {variant}")
         ax.set_xlabel("training step")
         ax.set_xticks([0, 162, 324, 486])
-        ax.set_xticklabels(["base", "e1", "e2", "e3"])
+        ax.set_xticklabels(["base\n(no FT)", "epoch 1\n(162 steps)",
+                            "epoch 2\n(324 steps)", "epoch 3\n(486 steps)"],
+                           fontsize=8)
         ax.grid(True, alpha=0.3)
         ax.axvline(0, color="gray", linestyle=":", alpha=0.5)
 
