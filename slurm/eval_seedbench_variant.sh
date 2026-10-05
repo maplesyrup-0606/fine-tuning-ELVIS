@@ -14,11 +14,14 @@ set -euo pipefail
 
 # Usage:
 #   sbatch -J seedbench-llm-e2  slurm/eval_seedbench_variant.sh Qwen3-VL-4B-Instruct-llm-e2
-#   sbatch -J seedbench-both-e2 slurm/eval_seedbench_variant.sh Qwen3-VL-4B-Instruct-both-e2
+#   sbatch -J ocrbench_v2-llm   slurm/eval_seedbench_variant.sh Qwen3-VL-4B-Instruct-llm-e2 OCRBench_v2
 #
 # <MODEL_NAME> must already be registered in $VLMEVALKIT_DIR/vlmeval/config.py
 # (partial(vlm.Qwen3VLChat, model_path=...)).
-MODEL_NAME=${1:?usage: sbatch -J <jobname> slurm/eval_seedbench_variant.sh <MODEL_NAME>}
+# <DATASET> defaults to SEEDBench2 for backwards compat; any VLMEvalKit
+# dataset key works (OCRBench, OCRBench_v2, DocVQA_TEST, ChartQA_TEST, ...).
+MODEL_NAME=${1:?usage: sbatch -J <jobname> slurm/eval_seedbench_variant.sh <MODEL_NAME> [DATASET]}
+DATASET=${2:-SEEDBench2}
 
 # --- Environment (identical to baseline) ---
 module load python/3.11.5 cuda/12.6 opencv/4.13.0 rdkit arrow
@@ -38,10 +41,10 @@ mkdir -p "$RESULTS_DIR"
 mkdir -p logs
 
 # --- Sanity ---
-echo "=== Job $SLURM_JOB_ID on $(hostname) — model=$MODEL_NAME ==="
+echo "=== Job $SLURM_JOB_ID on $(hostname) — model=$MODEL_NAME  dataset=$DATASET ==="
 nvidia-smi
 python -c "import torch; print('cuda:', torch.cuda.is_available(), '|', torch.cuda.get_device_name(0))"
-python -c "from vlmeval.config import supported_VLM; assert '$MODEL_NAME' in supported_VLM, 'model key $MODEL_NAME missing from supported_VLM'; print('vlmeval OK')"
+python -c "from vlmeval.config import supported_VLM; assert '$MODEL_NAME' in supported_VLM, 'model key $MODEL_NAME missing from supported_VLM'; print('vlmeval model OK')"
 
 # --- Run ---
 # Same SIGUSR1 shutdown + --reuse chain pattern as baseline (apples-to-apples).
@@ -57,7 +60,7 @@ handle_usr1() {
 trap handle_usr1 USR1
 
 set +e
-python run.py --data SEEDBench2 --model "$MODEL_NAME" --reuse --verbose &
+python run.py --data "$DATASET" --model "$MODEL_NAME" --reuse --verbose &
 PYTHON_PID=$!
 wait $PYTHON_PID
 RC=$?
@@ -65,12 +68,17 @@ set -e
 
 # --- Publish (partial or complete) results ---
 OUT_SRC="$VLMEVALKIT_DIR/outputs/$MODEL_NAME"
-DEST="$RESULTS_DIR/seedbench_$MODEL_NAME"
+# Preserve legacy seedbench_<model> dir layout; other datasets land at <dataset>_<model>
+if [ "$DATASET" = "SEEDBench2" ]; then
+    DEST="$RESULTS_DIR/seedbench_$MODEL_NAME"
+else
+    DEST="$RESULTS_DIR/${DATASET}_$MODEL_NAME"
+fi
 mkdir -p "$DEST"
 if [ -d "$OUT_SRC" ]; then
-    cp -u "$OUT_SRC"/*SEEDBench2* "$DEST/" 2>/dev/null || true
-    echo "Copied any available SEEDBench2 outputs to $DEST"
-    ls -la "$DEST" | grep -i seedbench || true
+    cp -u "$OUT_SRC"/*${DATASET}* "$DEST/" 2>/dev/null || true
+    echo "Copied any available $DATASET outputs to $DEST"
+    ls -la "$DEST" | grep -iE "${DATASET}|.pkl|.xlsx|.csv" || true
 fi
 
 # --- Chain to next iteration if not done ---
@@ -93,4 +101,4 @@ cd "$SLURM_SUBMIT_DIR"
 sbatch --job-name="$SLURM_JOB_NAME" \
        --dependency=afterany:$SLURM_JOB_ID \
        --export=ALL,CHAIN_ITER=$NEXT_ITER,CHAIN_MAX=$CHAIN_MAX \
-       slurm/eval_seedbench_variant.sh "$MODEL_NAME"
+       slurm/eval_seedbench_variant.sh "$MODEL_NAME" "$DATASET"
