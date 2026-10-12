@@ -129,11 +129,12 @@ def main():
 
     # One WandB project, three runs — comparable in the UI.
     os.environ.setdefault("WANDB_PROJECT", cfg["wandb"]["project"])
-    os.environ.setdefault("WANDB_NAME", f"continuity-{args.variant}")
+    os.environ.setdefault("WANDB_NAME", f"{cfg['training']['wandb_run_prefix']}-{args.variant}")
 
     results_env = cfg["paths"]["results_env"]
     results_root = Path(os.environ.get(results_env, "results"))
-    output_dir = Path(args.output_dir) if args.output_dir else results_root / "checkpoints" / args.variant
+    output_dir = Path(args.output_dir) if args.output_dir else \
+        results_root / cfg["training"]["checkpoint_subdir"] / args.variant
     output_dir.mkdir(parents=True, exist_ok=True)
 
     swift_args = build_swift_args(cfg, args.variant, output_dir, args.resume_from)

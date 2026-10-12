@@ -58,12 +58,18 @@ python -c "import swift; print('ms-swift:', swift.__version__)"
 python -c "import peft; print('peft:', peft.__version__)"
 
 # --- Run ---
-# 3 epochs × 162 steps ≈ 60 min per variant. 6h wallclock is generous slack.
-# Auto-resume: if a previous run of this variant crashed after saving
-# checkpoint-epoch-N, resubmitting the same job picks up from there.
+# v2: 3 epochs × 189 steps ≈ 35-40 min per variant (v1 measured ~2.5 s/step;
+# v2 steps carry ~1.3x the tokens) + per-epoch validation. 6h wallclock is slack.
+# Auto-resume: if a previous run of this variant was killed after saving
+# a checkpoint, resubmitting the same job picks up from the newest one.
+# ms-swift saves under <ckpt_dir>/v<N>-<timestamp>/checkpoint-<step>.
 cd "$SLURM_SUBMIT_DIR"
 
-LATEST_CKPT=$(ls -td "$RESULTS_DIR/checkpoints/$VARIANT"/checkpoint-* 2>/dev/null | head -1 || true)
+CKPT_SUBDIR=$(python -c "import yaml; print(yaml.safe_load(open('config.yaml'))['training']['checkpoint_subdir'])")
+CKPT_DIR="$RESULTS_DIR/$CKPT_SUBDIR/$VARIANT"
+echo "=== Checkpoints: $CKPT_DIR ==="
+
+LATEST_CKPT=$(ls -td "$CKPT_DIR"/v*/checkpoint-* 2>/dev/null | head -1 || true)
 RESUME_ARGS=""
 if [ -n "$LATEST_CKPT" ] && [ -d "$LATEST_CKPT" ]; then
     echo "=== Auto-resume from $LATEST_CKPT ==="
@@ -74,13 +80,13 @@ fi
 set +e
 python scripts/train.py \
     --variant "$VARIANT" \
-    --output-dir "$RESULTS_DIR/checkpoints/$VARIANT" \
+    --output-dir "$CKPT_DIR" \
     $RESUME_ARGS
 EXIT_CODE=$?
 set -e
 
 echo "=== Python exited with code $EXIT_CODE ==="
-ls -la "$RESULTS_DIR/checkpoints/$VARIANT/" 2>/dev/null || true
+ls -la "$CKPT_DIR"/v*/ 2>/dev/null || true
 
 # Auto-chain only on wallclock kill (SIGTERM=143 or SIGKILL=137). Any other
 # nonzero exit is a real error (OOM, config, import) — don't loop on it.

@@ -84,6 +84,10 @@ training:
   # v2 multi-task data (scripts/build_dataset.py). v1 data: data/continuity/train.jsonl
   dataset_path: data/continuity/train_v2.jsonl
   val_dataset_path: data/continuity/val_v2.jsonl
+  # Checkpoints: $ELVIS_FINETUNING_RESULTS/<checkpoint_subdir>/<variant>/v<N>-<ts>/checkpoint-*
+  # v1 checkpoints live in checkpoints/ — kept separate so v2 can never resume from v1.
+  checkpoint_subdir: checkpoints_v2
+  wandb_run_prefix: continuity-v2
   objective_balance:
     # Share of the weighted answer-text loss given to Stage 2 (classification);
     # Stage 1 (rule writing) gets the rest. Applied via per-row loss_scale;
