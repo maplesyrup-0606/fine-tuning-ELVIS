@@ -1,182 +1,203 @@
 #!/usr/bin/env python3
 """
-Generate ground-truth Stage 1 rules for continuity patterns from their task names.
+Build ground-truth Stage 1 rules for every (pattern, episode) of a continuity split.
 
-Replaces the distilled rules from generate_rules.py (base Qwen3-VL-4B guessing
-the rule from 3+3 images) with rules derived directly from how ELVIS generates
-each pattern. Every pattern folder name fully determines its rule:
+v2 replacement for generate_rules.py (base Qwen3-VL-4B guessing rules from 3+3
+images). Each rule is derived from the generator metadata, so it is correct by
+construction. Schema: EXPERIMENT.md "Rule schema".
 
-    {idx:03d}_{task_counter}_{generator}_rel_{props}_{groups}_{quantity}_irrel_{props}
+Episode layout (per pattern, per side): episode k uses images
+  6k..6k+2  as Stage 1 examples  (ELVIS feeds positives first, then negatives)
+  6k+3..6k+5 as Stage 2 queries
+so a split generated with --num_samples 12 has 2 episodes per pattern.
 
-Semantics (ELVIS scripts/continuity/util_*.py + scripts/utils/data_utils.py):
-  - Positive: objects lie on the generator's layout, and every `rel` property
-    is restricted to its logic values (shape in {square, circle}, color in
-    {green, yellow}, size fixed).
-  - `irrel` properties: one shared value for every object, in both positive
-    and negative images, so they carry no signal.
-  - Properties in neither list: random in both positive and negative images.
-  - Negative: `cf_params` is a proper sublist of rel + ["continuity"], so at
-    least one of {layout, each rel property} is broken (randomized).
+Output (data/continuity/rules_<split>.json by default): one entry per episode
+with its example/query image paths (relative to $ELVIS_DATA), the structured
+answer key (`slots`, used by the rule grader) and the rendered `rule` text.
 
-Output has the same format as generate_rules.py, so build_dataset.py consumes
-it unchanged. No GPU, no model; runs in seconds.
+Semantics (ELVIS scripts/continuity/util_*.py + data_utils.assign_property):
+  - positive: on the layout, every rel prop within its logic values
+  - irrel props: one value shared by every object in an image
+  - props in neither list: random
+  - negative: breaks the layout and/or at least one rel prop
+
+CPU only, no model. Exits 1 if any example image contradicts its label.
 """
 
 import argparse
 import json
 import os
-import re
 import sys
 from datetime import datetime
 from pathlib import Path
 
-import yaml
-
-
-PATTERN_RE = re.compile(
-    r"^\d+_\d+_(?P<generator>.+?)_rel_(?P<rel>.+)_(?P<groups>\d+)_(?P<quantity>[a-z0-9]+)_irrel_(?P<irrel>.+)$"
-)
+from check_ft_data import ALLOWED_COLORS, ALLOWED_SHAPES, PATTERN_RE
 
 PROPS = ("shape", "color", "size")
+EPISODE_SIZE = 3  # examples per side = queries per side = ELVIS img_num
+NUMBER_WORDS = {1: "one", 2: "two", 3: "three", 4: "four"}
 
-NUMBER_WORDS = {1: "one", 2: "two", 3: "three", 4: "four", 5: "five", 6: "six"}
-
-# Layout of positive images, keyed by ELVIS generator function name.
-LAYOUTS = {
+GROUPING = {
     "non_overlap_one_split_n": lambda g: (
-        f"the objects form one straight main line that splits at a single point into "
-        f"{NUMBER_WORDS[g]} straight branches, with evenly spaced objects along each"
-    ),
+        f"objects are evenly spaced along one straight main line that splits into "
+        f"{NUMBER_WORDS[g]} straight branches"),
     "with_intersected_n_splines": lambda g: (
-        f"the objects form {NUMBER_WORDS[g]} smooth curves that cross each other at one shared point "
-        f"near the center of the image, with evenly spaced objects along each curve"
-    ),
+        f"objects are evenly spaced along {NUMBER_WORDS[g]} smooth curves that cross at one shared point"),
     "non_intersected_n_splines": lambda g: (
-        "the objects form one smooth curve with evenly spaced objects along it" if g == 1 else
-        f"the objects form {NUMBER_WORDS[g]} separate smooth curves that do not cross, "
-        f"with evenly spaced objects along each curve"
-    ),
+        "objects are evenly spaced along one smooth curve" if g == 1 else
+        f"objects are evenly spaced along {NUMBER_WORDS[g]} separate smooth curves that do not cross"),
     "feature_continuity_overlap_splines": lambda g: (
-        f"the objects form {NUMBER_WORDS[g]} smooth curves with evenly spaced objects along each; "
-        f"the first curve is doubled by a second row of objects running closely parallel to it"
-    ),
+        f"objects are evenly spaced along {NUMBER_WORDS[g]} smooth curves; the first curve has a "
+        f"second row of objects running closely parallel to it"),
 }
 
-REL_CONDITIONS = {
-    "shape": "every object is a square or a circle",
-    "color": "every object is green or yellow",
-    "size": "all objects are the same size",
-}
-
-REL_VIOLATIONS = {
-    "shape": "some object has a shape other than square or circle",
-    "color": "some object has a color other than green or yellow",
-    "size": "the objects have different sizes",
+RELEVANT = {
+    "shape": "shape (only square and circle)",
+    "color": "color (only green and yellow)",
+    "size": "size (all objects the same size)",
 }
 
 
 def parse_pattern(name):
     m = PATTERN_RE.match(name)
-    if not m:
+    if not m or m["generator"] not in GROUPING:
         raise ValueError(f"unrecognized pattern name: {name}")
-    rel = m["rel"].split("_")
-    irrel = m["irrel"].split("_")
-    unknown = [p for p in rel + irrel if p not in PROPS]
-    if unknown or m["generator"] not in LAYOUTS:
-        raise ValueError(f"unrecognized generator or property in pattern name: {name}")
+    rel, irrel = m["rel"].split("_"), m["irrel"].split("_")
     return {
         "generator": m["generator"],
-        "rel": rel,
-        "irrel": irrel,
-        "free": [p for p in PROPS if p not in rel and p not in irrel],
         "groups": int(m["groups"]),
+        "relevant": rel,
+        "irrelevant": irrel,
+        "free": [p for p in PROPS if p not in rel and p not in irrel],
     }
 
 
-def join_list(items):
-    if len(items) == 1:
-        return items[0]
-    return ", ".join(items[:-1]) + " and " + items[-1]
+def violations(objs, relevant, color_names):
+    """Ordered list of (category, evidence) the image breaks."""
+    out = []
+    if any(o["group_id"] < 0 for o in objs):
+        out.append(("scattered", "objects do not follow the lines"))
+    for prop in relevant:
+        if prop == "shape":
+            off = sorted({o["shape"] for o in objs} - ALLOWED_SHAPES)
+            if off:
+                out.append(("shape", f"has {', '.join(off[:3])}"))
+        elif prop == "color":
+            if {color_names[o["color_name"]] for o in objs} - ALLOWED_COLORS:
+                out.append(("color", "has colors other than green and yellow"))
+        elif len({round(o["size"], 9) for o in objs}) > 1:
+            out.append(("size", "objects differ in size"))
+    return out
 
 
-def build_rule(name):
-    spec = parse_pattern(name)
-    layout = LAYOUTS[spec["generator"]](spec["groups"])
-    conditions = [REL_CONDITIONS[p] for p in spec["rel"]]
-    violations = ["the objects are scattered randomly instead of lying along these lines"]
-    violations += [REL_VIOLATIONS[p] for p in spec["rel"]]
-
-    ignored = [f"object {join_list(spec['irrel'])} (the same for every object in both "
-               f"positive and negative images)"]
-    if spec["free"]:
-        ignored.append(f"object {join_list(spec['free'])} (random in both)")
-    return (
-        f"An image is positive only if all of these hold: {layout}; "
-        f"{'; '.join(conditions)}. "
-        f"An image is negative if any of them fails: {'; or '.join(violations)}. "
-        f"Ignore {' and '.join(ignored)}"
-    )
+def render(spec, neg_violations):
+    irrelevant = ([f"{p} (same for every object in an image)" for p in spec["irrelevant"]]
+                  + [f"{p} (varies freely)" for p in spec["free"]])
+    lines = [
+        "Principle: continuity",
+        f"Grouping: {GROUPING[spec['generator']](spec['groups'])}",
+        f"Relevant: {'; '.join(RELEVANT[p] for p in spec['relevant'])}",
+        f"Irrelevant: {'; '.join(irrelevant)}",
+    ]
+    for i, vs in enumerate(neg_violations):
+        lines.append(f"Image {EPISODE_SIZE + 1 + i}: {'; '.join(f'{c} ({e})' for c, e in vs)}")
+    return "\n".join(lines)
 
 
-def load_config(path):
-    with open(path) as f:
-        return yaml.safe_load(f)
+def load_objs(png_path):
+    with open(png_path.with_suffix(".json")) as f:
+        return json.load(f)["img_data"]
 
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__.strip().splitlines()[0])
-    parser.add_argument("--config", default="config.yaml")
+    parser.add_argument("--split", required=True, help="e.g. ft_train, ft_val")
+    parser.add_argument("--principle", default="continuity")
     parser.add_argument("--output", default=None,
-                        help="override rules.cache_path from config")
+                        help="default: data/<principle>/rules_<split>.json")
     parser.add_argument("--patterns", default=None,
                         help="comma-separated substrings; process only matching patterns (debug)")
-    parser.add_argument("--dry-run", action="store_true",
-                        help="print rules instead of writing them")
+    parser.add_argument("--print", type=int, default=0, metavar="N",
+                        help="print the first N rules")
     args = parser.parse_args()
 
-    cfg = load_config(args.config)
-    principle = cfg["data"]["principle"]
-    output_path = args.output or cfg["rules"]["cache_path"]
+    for env in ("ELVIS_ROOT", "ELVIS_DATA"):
+        if not os.environ.get(env):
+            sys.exit(f"ERROR: env var {env} is not set")
+    sys.path.insert(0, os.environ["ELVIS_ROOT"])
+    from scripts import config
+    color_names = config.color_large
 
-    elvis_data = os.environ.get(cfg["paths"]["elvis_data_env"])
-    if not elvis_data:
-        sys.exit(f"ERROR: env var {cfg['paths']['elvis_data_env']} is not set")
-    train_root = Path(elvis_data) / principle / "train"
-    if not train_root.is_dir():
-        sys.exit(f"ERROR: train dir not found at {train_root}")
-
-    all_patterns = sorted(p.name for p in train_root.iterdir() if p.is_dir())
+    data_root = Path(os.environ["ELVIS_DATA"])
+    split_root = data_root / args.principle / args.split
+    if not split_root.is_dir():
+        sys.exit(f"ERROR: split dir not found at {split_root}")
+    patterns = sorted(p.name for p in split_root.iterdir() if p.is_dir())
     if args.patterns:
         wanted = tuple(args.patterns.split(","))
-        patterns = [p for p in all_patterns if any(w in p for w in wanted)]
-    else:
-        patterns = all_patterns
-    print(f"Discovered {len(all_patterns)} patterns in {train_root}; processing {len(patterns)}.")
+        patterns = [p for p in patterns if any(w in p for w in wanted)]
 
-    rules = {p: build_rule(p) for p in patterns}
+    episodes, errors = [], []
+    for pattern in patterns:
+        spec = parse_pattern(pattern)
+        sides = {s: sorted((split_root / pattern / s).glob("*.png")) for s in ("positive", "negative")}
+        n = min(len(v) for v in sides.values())
+        if n % (2 * EPISODE_SIZE):
+            errors.append(f"{pattern}: {n} images per side is not a multiple of {2 * EPISODE_SIZE}")
+        for k in range(n // (2 * EPISODE_SIZE)):
+            start = 2 * EPISODE_SIZE * k
+            examples = {s: sides[s][start:start + EPISODE_SIZE] for s in sides}
+            queries = {s: sides[s][start + EPISODE_SIZE:start + 2 * EPISODE_SIZE] for s in sides}
 
-    if args.dry_run:
-        for p, r in rules.items():
-            print(f"{p}\n  {r}\n")
-        return
+            for p in examples["positive"]:
+                if violations(load_objs(p), spec["relevant"], color_names):
+                    errors.append(f"{p}: positive example breaks the rule")
+            neg_v = [violations(load_objs(p), spec["relevant"], color_names) for p in examples["negative"]]
+            for p, vs in zip(examples["negative"], neg_v):
+                if not vs:
+                    errors.append(f"{p}: negative example breaks nothing")
 
+            def rel_paths(d):
+                return {s: [str(p.relative_to(data_root)) for p in d[s]] for s in d}
+
+            episodes.append({
+                "pattern": pattern,
+                "episode": k,
+                "examples": rel_paths(examples),
+                "queries": rel_paths(queries),
+                "slots": {**spec, "image_violations": [[c for c, _ in vs] for vs in neg_v]},
+                "rule": render(spec, neg_v),
+            })
+
+    if errors:
+        print(f"ERROR: {len(errors)} problems. First 10:")
+        for e in errors[:10]:
+            print(f"  {e}")
+        return 1
+
+    for ep in episodes[:args.print]:
+        print(f"### {ep['pattern']} (episode {ep['episode']})\n{ep['rule']}\n")
+
+    output = Path(args.output or f"data/{args.principle}/rules_{args.split}.json")
+    output.parent.mkdir(parents=True, exist_ok=True)
     payload = {
         "meta": {
-            "source_model": None,
-            "generator": "programmatic",
-            "principle": principle,
-            "num_patterns": len(rules),
-            "elvis_data_path": str(train_root),
+            "generator": "scripts/generate_programmatic_rules.py",
+            "principle": args.principle,
+            "split": args.split,
+            "split_root": str(split_root),
+            "episode_size": EPISODE_SIZE,
+            "num_patterns": len(patterns),
+            "num_episodes": len(episodes),
             "generated_at": datetime.now().isoformat(timespec="seconds"),
         },
-        "rules": rules,
+        "episodes": episodes,
     }
-    output_path = Path(output_path)
-    output_path.parent.mkdir(parents=True, exist_ok=True)
-    with open(output_path, "w") as f:
-        json.dump(payload, f, indent=2)
-    print(f"Wrote {len(rules)} rules to {output_path}")
+    with open(output, "w") as f:
+        json.dump(payload, f, indent=1)
+    print(f"Wrote {len(episodes)} episode rules ({len(patterns)} patterns) to {output}")
+    return 0
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())
