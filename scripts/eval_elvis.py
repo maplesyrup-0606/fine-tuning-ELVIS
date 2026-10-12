@@ -45,8 +45,9 @@ def main():
     parser.add_argument("--task-num", default="full",
                         help="how many pattern folders to eval (int) or 'full'")
     parser.add_argument("--start-num", type=int, default=0)
-    parser.add_argument("--output-dir", default="results/eval",
-                        help="root output dir; per-principle results at <dir>/<variant>/<principle>/")
+    parser.add_argument("--output-dir", default=None,
+                        help="root output dir; per-principle results at <dir>/<variant>/<principle>/ "
+                             "(default: results/<evaluation.results_subdir> from config)")
     args = parser.parse_args()
 
     if args.principles == ["all"]:
@@ -75,6 +76,9 @@ def main():
     cfg = yaml.safe_load(open(args.config))
     model_id = cfg["model"]["base_id"]
     img_size = cfg["data"]["regeneration"]["img_size"]
+    rule_max_new_tokens = cfg["evaluation"]["rule_max_new_tokens"]
+    if args.output_dir is None:
+        args.output_dir = f"results/{cfg['evaluation']['results_subdir']}"
 
     adapter_path = args.checkpoint if args.variant != "base" else None
 
@@ -111,6 +115,7 @@ def main():
             task_num=args.task_num,
             adapter_path=adapter_path,
             output_dir=str(principle_out),
+            rule_max_new_tokens=rule_max_new_tokens,
         )
         if ret is None:
             print(f"[warn] {principle}: no pattern folders found under {data_path}/train — skipping")
@@ -125,6 +130,7 @@ def main():
             "checkpoint": adapter_path,
             "img_num": args.img_num,
             "task_num": args.task_num,
+            "rule_max_new_tokens": rule_max_new_tokens,
             "principles": results,
         }, f, indent=2)
 

@@ -194,14 +194,24 @@ def plot_overfitting(rows, base_row, metric, out_path):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__.strip().splitlines()[0])
-    parser.add_argument("--results-root", default="results/eval")
+    parser.add_argument("--results-root", default=None,
+                        help="default: results/<evaluation.results_subdir> from config (v2: eval_v2; "
+                             "pass results/eval for v1)")
     parser.add_argument("--config", default="config.yaml",
                         help="source of baseline_reference.continuity_mode1_base")
     parser.add_argument("--metric", choices=["accuracy", "f1"], default="accuracy")
     parser.add_argument("--csv", default=None, help="path to also write CSV")
-    parser.add_argument("--plot", default="results/eval/overfitting.png",
-                        help="path to write overfitting plot (set empty to skip)")
+    parser.add_argument("--plot", default=None,
+                        help="path to write overfitting plot (default: <results-root>/overfitting.png; "
+                             "set empty to skip)")
     args = parser.parse_args()
+
+    if args.results_root is None:
+        import yaml
+        with open(args.config) as f:
+            args.results_root = f"results/{yaml.safe_load(f)['evaluation']['results_subdir']}"
+    if args.plot is None:
+        args.plot = str(Path(args.results_root) / "overfitting.png")
 
     root = Path(args.results_root)
     if not root.is_dir():

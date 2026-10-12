@@ -48,7 +48,7 @@ export HF_HOME=${HF_HOME:-$SCRATCH/hf_cache}
 export TRANSFORMERS_CACHE=$HF_HOME/transformers
 
 RESULTS_DIR=${ELVIS_FINETUNING_RESULTS:-$SLURM_SUBMIT_DIR/results}
-mkdir -p "$RESULTS_DIR/eval" logs
+mkdir -p "$RESULTS_DIR" logs
 
 # --- Sanity ---
 echo "=== Job $SLURM_JOB_ID on $(hostname) — variant=$VARIANT ==="
@@ -68,6 +68,11 @@ fi
 # --- Run ---
 cd "$SLURM_SUBMIT_DIR"
 
+# v2 results go to a separate dir (config evaluation.results_subdir) so they never mix with v1's eval/.
+EVAL_SUBDIR=$(python -c "import yaml; print(yaml.safe_load(open('config.yaml'))['evaluation']['results_subdir'])")
+EVAL_DIR="$RESULTS_DIR/$EVAL_SUBDIR"
+echo "=== Results: $EVAL_DIR ==="
+
 CKPT_ARG=""
 if [ -n "$CHECKPOINT" ]; then
     CKPT_ARG="--checkpoint $CHECKPOINT"
@@ -77,7 +82,9 @@ python scripts/eval_elvis.py \
     --variant "$VARIANT" \
     $CKPT_ARG \
     --principles "${PRINCIPLES[@]}" \
-    --output-dir "$RESULTS_DIR/eval"
+    --output-dir "$EVAL_DIR"
 
-echo "=== Done. Summary: $RESULTS_DIR/eval/$VARIANT/summary.json ==="
-cat "$RESULTS_DIR/eval/$VARIANT/summary.json" 2>/dev/null || true
+# Runs land in <EVAL_DIR>/<variant>/<version-tag>/<checkpoint>/ (base: <variant>/<timestamp>/).
+SUMMARY=$(ls -t "$EVAL_DIR/$VARIANT"/*/summary.json "$EVAL_DIR/$VARIANT"/*/*/summary.json 2>/dev/null | head -1 || true)
+echo "=== Done. Summary: ${SUMMARY:-<not found>} ==="
+if [ -n "$SUMMARY" ]; then cat "$SUMMARY"; fi

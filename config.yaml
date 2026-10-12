@@ -112,6 +112,16 @@ wandb:
   project: Qwen3-VL-4B-fine-tuning-continuity
 
 evaluation:
+  # v2 eval outputs: $ELVIS_FINETUNING_RESULTS/<results_subdir>/ (v1 used eval/).
+  # Kept separate so aggregate_results.py never mixes v1 and v2 rows.
+  results_subdir: eval_v2
+  # Stage 1 (rule writing) generation budget, passed to ELVIS
+  # _run_qwen_baseline(rule_max_new_tokens=...). ELVIS's default is 128, which
+  # truncated 92% of base rules and is below the longest v2 GT rule (130 tokens).
+  # Generation stops at end-of-turn, so a high cap only costs time when a model
+  # rambles. Applies to every model in v2, base included.
+  rule_max_new_tokens: 1024
+
   # In-distribution: did fine-tuning learn the target task?
   per_epoch:
     - name: elvis_continuity_test
