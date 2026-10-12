@@ -12,6 +12,10 @@ are applied POST-HOC by scripts/eval_continuity.py at checkpoint-selection
 time, not during training. Rationale: 3 epochs × 5,184 samples on a 3g.40gb
 MIG slice is <2h; in-loop early stop would require a custom TrainerCallback
 that's fragile against ms-swift version drift.
+
+v2 (EXPERIMENT.md "v2 Plan"): the dataset mixes Stage 1 (rule-writing) and
+Stage 2 (classification) rows with per-row loss_scale weights, and a separate
+validation file is evaluated once per epoch.
 """
 
 import argparse
@@ -49,7 +53,14 @@ def build_swift_args(cfg, variant, output_dir, resume_from=None):
         "--torch_dtype", "bfloat16",
         "--tuner_type", "lora",
         "--dataset", train_cfg["dataset_path"],
+        # Validation loss once per epoch (eval_strategy defaults to save_strategy).
+        "--val_dataset", train_cfg["val_dataset_path"],
         "--output_dir", str(output_dir),
+
+        # Keep the per-row loss_scale weights in the dataset (Stage 1 vs Stage 2
+        # balance, see build_dataset.py). Without this ms-swift silently treats
+        # every trained token as weight 1 (template/base.py _encode_context_list).
+        "--is_binary_loss_scale", "false",
 
         # LoRA — shared hyperparameters
         "--lora_rank", str(lora_cfg["rank"]),
