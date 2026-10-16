@@ -113,7 +113,7 @@ def plot_radar(results, out_path: Path):
         ax.plot(angles, [r["overall"] * 100] * (n + 1),
                 color=color, linestyle=":", linewidth=1, alpha=0.7)
 
-    labels = [f"{s.replace(' & ', '\n& ')}\n[{LEVEL_OF[s]}]" for s in subparts]
+    labels = [s.replace(" & ", "\n& ") + f"\n[{LEVEL_OF[s]}]" for s in subparts]
     ax.set_xticks(angles[:-1])
     ax.set_xticklabels(labels, fontsize=9)
     ax.set_ylim(0, 100)
