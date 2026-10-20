@@ -34,6 +34,7 @@ COLORS = {"llm": "#2a78d6", "projector": "#eb6834", "both": "#1baf7a",
           "continuity-llm": "#2a78d6", "continuity-both": "#eb6834",
           "all-llm": "#1baf7a", "all-both": "#eda100"}
 SURFACE, INK, INK_2, GRID = "#fcfcfb", "#0b0b0b", "#52514e", "#e4e3df"
+SUMMARY = "summary.json"     # --summary summary_clean.json: overlap-free re-scoring (rescore_without_leaks.py)
 
 
 def marker(variant):
@@ -45,10 +46,10 @@ def load(root, metric, config, fill_base_continuity, base_root=None):
     base_root: folder holding the base run when it is not under root (standard v3 evaluation
     writes base to eval_v2*). Epoch = step / smallest step of the same run, so a missing
     checkpoint leaves a gap instead of shifting later epochs."""
-    rows = [parse_summary(p, root) for p in sorted(root.glob("**/summary.json"))]
+    rows = [parse_summary(p, root) for p in sorted(root.glob(f"**/{SUMMARY}"))]
     if base_root is not None:
         rows = [r for r in rows if r["variant"] != "base"] + \
-               [parse_summary(p, base_root) for p in sorted(base_root.glob("base/**/summary.json"))]
+               [parse_summary(p, base_root) for p in sorted(base_root.glob(f"base/**/{SUMMARY}"))]
     variants = sorted({r["variant"] for r in rows if r["variant"] != "base"},
                       key=lambda v: VARIANT_ORDER.index(v) if v in VARIANT_ORDER else 99)
     run_of = lambda v: v.rsplit("-", 1)[0] if "-" in v else ""     # continuity-both -> continuity
@@ -89,6 +90,8 @@ def main():
     parser.add_argument("--label", default=None, help="legend tag for --root (default: its folder name)")
     parser.add_argument("--compare-label", default=None, help="legend tag for --compare-root")
     parser.add_argument("--no-compare", action="store_true", help="plot --root only")
+    parser.add_argument("--summary", default="summary.json",
+                        help="summary file name to read; summary_clean.json = overlapping test images removed")
     parser.add_argument("--base-root", default=None,
                         help="folder with the base run for --root, if not under it "
                              "(standard v3 evaluation: results/eval_v2_on_test_v3)")
@@ -96,6 +99,8 @@ def main():
     parser.add_argument("--out", default=None, help="default: <root>/curves_by_principle.png")
     args = parser.parse_args()
 
+    global SUMMARY
+    SUMMARY = args.summary
     root, croot = Path(args.root), Path(args.compare_root)
     if not root.is_dir():
         raise SystemExit(f"results not found: {root}")
@@ -136,7 +141,8 @@ def main():
     title = f"ELVIS {args.metric} by principle — {label}" + ("" if cmp_data is None else f" solid, {clabel} dashed")
     fig.suptitle(title, color=INK, fontsize=13)
     fig.tight_layout(rect=(0, 0.04, 1, 0.95))
-    out = Path(args.out or root / "curves_by_principle.png")
+    suffix = "" if SUMMARY == "summary.json" else "_" + Path(SUMMARY).stem.replace("summary_", "")
+    out = Path(args.out or root / f"curves_by_principle{suffix}.png")
     fig.savefig(out, dpi=150, bbox_inches="tight", facecolor=SURFACE)
     print(f"Wrote {out}\n")
 
