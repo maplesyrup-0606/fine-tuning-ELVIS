@@ -68,8 +68,14 @@ fi
 # --- Run ---
 cd "$SLURM_SUBMIT_DIR"
 
-# v2 results go to a separate dir (config evaluation.results_subdir) so they never mix with v1's eval/.
-EVAL_SUBDIR=$(python -c "import yaml; print(yaml.safe_load(open('config.yaml'))['evaluation']['results_subdir'])")
+# Results dir from config: evaluation.results_subdir (model-written rules), or with
+# RUBRICS=1 evaluation.rubric_results_subdir (v3: ground-truth rubric instead of Stage 1).
+#   sbatch --export=ALL,RUBRICS=1 -J <name> slurm/eval_elvis.sh <variant> <checkpoint>
+RUBRICS=${RUBRICS:-0}
+RUBRIC_ARG=""
+SUBDIR_KEY=results_subdir
+if [ "$RUBRICS" = "1" ]; then RUBRIC_ARG="--rubrics"; SUBDIR_KEY=rubric_results_subdir; fi
+EVAL_SUBDIR=$(python -c "import yaml; print(yaml.safe_load(open('config.yaml'))['evaluation']['$SUBDIR_KEY'])")
 EVAL_DIR="$RESULTS_DIR/$EVAL_SUBDIR"
 echo "=== Results: $EVAL_DIR ==="
 
@@ -82,7 +88,7 @@ python scripts/eval_elvis.py \
     --variant "$VARIANT" \
     $CKPT_ARG \
     --principles "${PRINCIPLES[@]}" \
-    --output-dir "$EVAL_DIR"
+    --output-dir "$EVAL_DIR" $RUBRIC_ARG
 
 # Runs land in <EVAL_DIR>/<variant>/<version-tag>/<checkpoint>/ (base: <variant>/<timestamp>/).
 SUMMARY=$(ls -t "$EVAL_DIR/$VARIANT"/*/summary.json "$EVAL_DIR/$VARIANT"/*/*/summary.json 2>/dev/null | head -1 || true)

@@ -48,6 +48,10 @@ def main():
     parser.add_argument("--output-dir", default=None,
                         help="root output dir; per-principle results at <dir>/<variant>/<principle>/ "
                              "(default: results/<evaluation.results_subdir> from config)")
+    parser.add_argument("--rubrics", action="store_true",
+                        help="v3 rubric evaluation: skip Stage 1 and classify with the pattern's ground-truth "
+                             "rubric from data/<principle>/rubrics.json (default output: "
+                             "results/<evaluation.rubric_results_subdir>)")
     args = parser.parse_args()
 
     if args.principles == ["all"]:
@@ -78,7 +82,23 @@ def main():
     img_size = cfg["data"]["regeneration"]["img_size"]
     rule_max_new_tokens = cfg["evaluation"]["rule_max_new_tokens"]
     if args.output_dir is None:
-        args.output_dir = f"results/{cfg['evaluation']['results_subdir']}"
+        key = "rubric_results_subdir" if args.rubrics else "results_subdir"
+        args.output_dir = f"results/{cfg['evaluation'][key]}"
+
+    # Rubric mode: load every principle's rubrics up front and make sure each pattern
+    # ELVIS will evaluate (the <principle>/train folders) has one — fail before loading the model.
+    rubrics = {}
+    if args.rubrics:
+        for principle in args.principles:
+            path = Path(f"data/{principle}/rubrics.json")
+            if not path.exists():
+                parser.error(f"{path} missing — run generate_programmatic_rules.py --principle {principle} --rubrics")
+            table = json.load(open(path))["rubrics"]
+            names = sorted(p.name for p in Path(elvis_data, principle, "train").iterdir() if p.is_dir())
+            missing = [n for n in names if n not in table]
+            if missing:
+                parser.error(f"{principle}: {len(missing)} ELVIS patterns have no rubric, e.g. {missing[0]}")
+            rubrics[principle] = table
 
     adapter_path = args.checkpoint if args.variant != "base" else None
 
@@ -116,6 +136,7 @@ def main():
             adapter_path=adapter_path,
             output_dir=str(principle_out),
             rule_max_new_tokens=rule_max_new_tokens,
+            rules=rubrics.get(principle),
         )
         if ret is None:
             print(f"[warn] {principle}: no pattern folders found under {data_path}/train — skipping")
@@ -131,6 +152,7 @@ def main():
             "img_num": args.img_num,
             "task_num": args.task_num,
             "rule_max_new_tokens": rule_max_new_tokens,
+            "rule_source": "rubric" if args.rubrics else "model",
             "principles": results,
         }, f, indent=2)
 

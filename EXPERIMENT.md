@@ -473,3 +473,17 @@ other groups" (no value names); palette count omitted unless relevant; separate_
 "evenly spaced along the outline(s)"; symmetry describes positions only ("pairs at mirror
 positions", "objects at the same distances along each arm") since shapes are not mirrored.
 Samples with rubrics: results/survey/rubric_*.png.
+
+## v3 evaluation (2026-10-19)
+
+- **Rubric evaluation** (v3's main metric): `eval_elvis.py --rubrics` /
+  `sbatch --export=ALL,RUBRICS=1 slurm/eval_elvis.sh <variant> <checkpoint>`. ELVIS's
+  `_run_qwen_baseline(rules=...)` skips Stage 1 and classifies with the pattern's
+  ground-truth rubric (data/<principle>/rubrics.json); results in results/eval_v3_rubric/.
+  Fails before loading the model if any ELVIS pattern lacks a rubric.
+- Standard ELVIS Mode 1 (model writes its own rule) still reported for comparability.
+- TODO: new test set from the fixed generators (separate ELVIS_DATA root with fresh
+  train/test, new seeds; no code changes) for a clean score; keep original ELVIS test
+  for comparability. Evaluate only base + v3 winners (+ v1/v2 best if needed).
+- TODO: SEED-Bench-2 at temperature 0 (greedy; removes sampling variance) for base and
+  the v3 winners only.
