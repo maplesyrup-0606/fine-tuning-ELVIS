@@ -40,11 +40,23 @@ def marker(variant):
     return {"llm": "o", "projector": "s", "both": "^"}[variant.rsplit("-", 1)[-1]]
 
 
-def load(root, metric, config, fill_base_continuity):
-    """({principle: {variant: {x: value}}}, variants), x = 0 for base, 1..n for epochs."""
+def load(root, metric, config, fill_base_continuity, base_root=None):
+    """({principle: {variant: {x: value}}}, variants), x = 0 for base, 1..n for epochs.
+    base_root: folder holding the base run when it is not under root (standard v3 evaluation
+    writes base to eval_v2*). Epoch = step / smallest step of the same run, so a missing
+    checkpoint leaves a gap instead of shifting later epochs."""
     rows = [parse_summary(p, root) for p in sorted(root.glob("**/summary.json"))]
+    if base_root is not None:
+        rows = [r for r in rows if r["variant"] != "base"] + \
+               [parse_summary(p, base_root) for p in sorted(base_root.glob("base/**/summary.json"))]
     variants = sorted({r["variant"] for r in rows if r["variant"] != "base"},
                       key=lambda v: VARIANT_ORDER.index(v) if v in VARIANT_ORDER else 99)
+    run_of = lambda v: v.rsplit("-", 1)[0] if "-" in v else ""     # continuity-both -> continuity
+    steps_per_epoch = {}
+    for r in rows:
+        if r["step"]:
+            k = run_of(r["variant"])
+            steps_per_epoch[k] = min(steps_per_epoch.get(k, r["step"]), r["step"])
     out = {p: {} for p in PRINCIPLES}
     base = next((r for r in rows if r["variant"] == "base"), None)
     base_vals = {}
@@ -59,7 +71,8 @@ def load(root, metric, config, fill_base_continuity):
         steps = sorted({r["step"] for r in rows if r["variant"] == variant and r["step"]})
         for p in PRINCIPLES:
             series = {0: base_vals[p]} if base_vals.get(p) is not None else {}
-            for epoch, step in enumerate(steps, start=1):
+            for step in steps:
+                epoch = round(step / steps_per_epoch[run_of(variant)])
                 r = next(r for r in rows if r["variant"] == variant and r["step"] == step)
                 v = r["principles"].get(p, {}).get(metric)
                 if v is not None:
@@ -76,6 +89,9 @@ def main():
     parser.add_argument("--label", default=None, help="legend tag for --root (default: its folder name)")
     parser.add_argument("--compare-label", default=None, help="legend tag for --compare-root")
     parser.add_argument("--no-compare", action="store_true", help="plot --root only")
+    parser.add_argument("--base-root", default=None,
+                        help="folder with the base run for --root, if not under it "
+                             "(standard v3 evaluation: results/eval_v2_on_test_v3)")
     parser.add_argument("--metric", choices=["accuracy", "f1"], default="accuracy")
     parser.add_argument("--out", default=None, help="default: <root>/curves_by_principle.png")
     args = parser.parse_args()
@@ -84,7 +100,8 @@ def main():
     if not root.is_dir():
         raise SystemExit(f"results not found: {root}")
     label, clabel = args.label or root.name, args.compare_label or croot.name
-    main_data, main_vars = load(root, args.metric, args.config, fill_base_continuity=False)
+    main_data, main_vars = load(root, args.metric, args.config, fill_base_continuity=False,
+                                base_root=Path(args.base_root) if args.base_root else None)
     cmp_data, cmp_vars = (None, []) if args.no_compare or not croot.is_dir() else \
         load(croot, args.metric, args.config, fill_base_continuity=True)
     variants = sorted(set(main_vars) | set(cmp_vars),
@@ -116,7 +133,7 @@ def main():
     handles, labels = axes[0].get_legend_handles_labels()
     fig.legend(handles, labels, loc="lower center", ncol=min(len(labels), 4), frameon=False,
                bbox_to_anchor=(0.5, -0.12 if len(labels) > 4 else -0.06))
-    title = f"ELVIS {args.metric} by principle — {label} solid" + ("" if cmp_data is None else f", {clabel} dashed")
+    title = f"ELVIS {args.metric} by principle — {label}" + ("" if cmp_data is None else f" solid, {clabel} dashed")
     fig.suptitle(title, color=INK, fontsize=13)
     fig.tight_layout(rect=(0, 0.04, 1, 0.95))
     out = Path(args.out or root / "curves_by_principle.png")
@@ -132,7 +149,7 @@ def main():
         print("  base".ljust(22) + "  ".join(f"{base[p]:10.2f}" if base[p] is not None else f"{'—':>10}"
                                             for p in PRINCIPLES))
         for variant in vs:
-            n = max((len([x for x in data[p].get(variant, {}) if x > 0]) for p in PRINCIPLES), default=0)
+            n = max((max([x for x in data[p].get(variant, {}) if x > 0], default=0) for p in PRINCIPLES), default=0)
             for e in range(1, n + 1):
                 vals = [data[p].get(variant, {}).get(e) for p in PRINCIPLES]
                 print(f"  {variant} e{e}".ljust(22) + "  ".join(f"{v:10.2f}" if v is not None else f"{'—':>10}"
