@@ -255,8 +255,13 @@ def main():
                 )
         print(f"\nCSV written: {csv_path}")
 
-    if args.plot:
+    # This plot is laid out for the v1/v2 variants (llm/projector/both, v1 step ticks);
+    # v3 labels (<run>-<variant>) use plot_principle_curves.py instead.
+    if args.plot and any(r["variant"] in TRAIN_VARIANTS for r in rows):
         plot_overfitting(rows, base, args.metric, args.plot)
+    elif args.plot:
+        print("[info] no llm/projector/both rows: skipping the v1/v2 overfitting plot "
+              "(use scripts/plot_principle_curves.py)")
 
 
 if __name__ == "__main__":

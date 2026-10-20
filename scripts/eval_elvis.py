@@ -81,9 +81,15 @@ def main():
     model_id = cfg["model"]["base_id"]
     img_size = cfg["data"]["regeneration"]["img_size"]
     rule_max_new_tokens = cfg["evaluation"]["rule_max_new_tokens"]
+    # v3 checkpoints live under <results>/<v3.checkpoint_subdir>/<run>/<variant>/<vN-ts>/<checkpoint>.
+    ckpt = Path(args.checkpoint) if args.checkpoint and args.variant != "base" else None
+    v3_run = ckpt.parents[2].name if ckpt and cfg["v3"]["checkpoint_subdir"] in ckpt.parts else None
+    label = f"{v3_run}-{args.variant}" if v3_run else args.variant     # e.g. all-both
     if args.output_dir is None:
-        key = "rubric_results_subdir" if args.rubrics else "results_subdir"
-        args.output_dir = f"results/{cfg['evaluation'][key]}"
+        key = ("rubric_results_subdir" if args.rubrics else
+               "v3_results_subdir" if v3_run else "results_subdir")
+        results_root = Path(os.environ.get(cfg["paths"]["results_env"], "results"))
+        args.output_dir = str(results_root / cfg["evaluation"][key])
 
     # Rubric mode: load every principle's rubrics up front and make sure each pattern
     # ELVIS will evaluate (the <principle>/train folders) has one — fail before loading the model.
@@ -107,9 +113,9 @@ def main():
     # For --variant base (no adapter) we substitute a wall-clock timestamp.
     if adapter_path:
         ckpt_path = Path(adapter_path)
-        run_key = Path(args.variant) / ckpt_path.parent.name / ckpt_path.name
+        run_key = Path(label) / ckpt_path.parent.name / ckpt_path.name
     else:
-        run_key = Path(args.variant) / datetime.now().strftime("%Y%m%d-%H%M%S")
+        run_key = Path(label) / datetime.now().strftime("%Y%m%d-%H%M%S")
     run_dir = Path(args.output_dir) / run_key
     run_dir.mkdir(parents=True, exist_ok=True)
 
@@ -148,6 +154,7 @@ def main():
     with open(summary_path, "w") as f:
         json.dump({
             "variant": args.variant,
+            "label": label,
             "checkpoint": adapter_path,
             "img_num": args.img_num,
             "task_num": args.task_num,

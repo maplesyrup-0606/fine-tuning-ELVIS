@@ -134,6 +134,8 @@ evaluation:
   # v3 rubric evaluation (eval_elvis.py --rubrics): Stage 1 skipped, the pattern's
   # ground-truth rubric is given instead. Kept apart from model-written-rule results.
   rubric_results_subdir: eval_v3_rubric
+  # v3 checkpoints under standard ELVIS (model writes its own rule); labels <run>-<variant>.
+  v3_results_subdir: eval_v3
   # Stage 1 (rule writing) generation budget, passed to ELVIS
   # _run_qwen_baseline(rule_max_new_tokens=...). ELVIS's default is 128, which
   # truncated 92% of base rules and is below the longest v2 GT rule (130 tokens).
