@@ -25,19 +25,20 @@ from pathlib import Path
 
 from PIL import Image, ImageDraw
 
-from generate_programmatic_rules import parse_pattern, render, violations
+from rubric_specs import SPECS
 from show_episode import LABEL_H, PAD, TEXT_LINE_H, TILE, font
 
 WRAP = 150
 
 
 def gt_rule(data_root, principle, pattern, color_names):
-    if principle != "continuity":
+    if principle not in SPECS:
         return None
-    spec = parse_pattern(pattern)
+    spec = SPECS[principle]
+    slots = spec.parse(pattern)
     negs = sorted((data_root / principle / "train" / pattern / "negative").glob("*.json"))[:3]
-    return render(spec, [violations(json.load(open(p))["img_data"], spec["relevant"], color_names)
-                         for p in negs])
+    return spec.render(slots, [spec.violations(json.load(open(p))["img_data"], slots, color_names)
+                               for p in negs])
 
 
 def sheet(data_root, principle, pattern, entry, model_rule, truth):

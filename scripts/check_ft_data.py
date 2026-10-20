@@ -1,16 +1,16 @@
 #!/usr/bin/env python3
 """
-Sanity-check generated continuity splits: every label must agree with its metadata.
+Sanity-check generated splits: every label must agree with its metadata.
 
-For each pattern in $ELVIS_DATA/continuity/<split>/, reads the per-image JSON
-written by ELVIS main.py and checks it against the generator's semantics
-(ELVIS scripts/continuity/util_*.py + scripts/utils/data_utils.assign_property):
+For each pattern in $ELVIS_DATA/<principle>/<split>/, reads the per-image JSON
+written by ELVIS main.py and checks it against the principle's generator
+semantics, as encoded in rubric_specs.py:
 
-  positive  - every object on the layout (group_id >= 0)
+  positive  - grouping intact (spec.grouping_broken is False)
             - every `rel` prop within its logic values
             - every `irrel` prop constant across objects
   negative  - every `irrel` prop constant across objects
-            - at least one of {layout, each rel prop} broken; a negative that
+            - grouping and/or at least one rel prop broken; a negative that
               breaks nothing is an "accidental positive" (label noise)
 
 The pattern name is the source of truth for rel/irrel; the JSON's prop_* and
@@ -23,59 +23,21 @@ CPU only, no model. Exit code 1 if any hard check fails.
 import argparse
 import json
 import os
-import re
 import sys
 from collections import Counter
 from pathlib import Path
 
-PATTERN_RE = re.compile(
-    r"^\d+_\d+_(?P<generator>.+?)_rel_(?P<rel>.+)_(?P<groups>\d+)_(?P<quantity>[a-z0-9]+)_irrel_(?P<irrel>.+)$"
-)
-
-# Logic values shared by all four continuity generators (`logic = {...}` in util_*.py).
-ALLOWED_SHAPES = {"square", "circle"}
-ALLOWED_COLORS = {"green", "yellow"}
+from rubric_specs import get_spec
 
 
-def parse_pattern(name):
-    m = PATTERN_RE.match(name)
-    if not m:
-        raise ValueError(f"unrecognized pattern name: {name}")
-    return m["rel"].split("_"), m["irrel"].split("_")
-
-
-def obj_props(objs, color_names):
-    return {
-        "shape": [o["shape"] for o in objs],
-        "color": [color_names[o["color_name"]] for o in objs],
-        "size": [round(o["size"], 9) for o in objs],
-    }
-
-
-def rel_ok(prop, values):
-    if prop == "shape":
-        return set(values) <= ALLOWED_SHAPES
-    if prop == "color":
-        return set(values) <= ALLOWED_COLORS
-    return len(set(values)) == 1  # size: one fixed size
-
-
-def check_image(json_path, is_positive, rel, irrel, color_names):
+def check_image(spec, json_path, is_positive, slots, color_names):
     """Return (hard_errors, accidental_positive, broken) for one image."""
     with open(json_path) as f:
         objs = json.load(f)["img_data"]
     if not objs:
         return ["no objects"], False, []
-    props = obj_props(objs, color_names)
-    errors = []
-
-    for p in irrel:
-        if len(set(props[p])) != 1:
-            errors.append(f"irrel {p} not constant")
-
-    on_layout = all(o["group_id"] >= 0 for o in objs)
-    broken = [] if on_layout else ["layout"]
-    broken += [p for p in rel if not rel_ok(p, props[p])]
+    errors = spec.irrelevant_errors(objs, slots, color_names)
+    broken = [c for c, _ in spec.violations(objs, slots, color_names)]
 
     if is_positive:
         errors += [f"positive breaks {b}" for b in broken]
@@ -89,7 +51,8 @@ def main():
     parser.add_argument("--num-samples", type=int, required=True,
                         help="expected images per side per pattern")
     parser.add_argument("--principle", default="continuity")
-    parser.add_argument("--expected-patterns", type=int, default=432)
+    parser.add_argument("--expected-patterns", type=int, default=None,
+                        help="default: the principle spec's pattern count")
     args = parser.parse_args()
 
     for env in ("ELVIS_ROOT", "ELVIS_DATA"):
@@ -98,6 +61,8 @@ def main():
     sys.path.insert(0, os.environ["ELVIS_ROOT"])
     from scripts import config
     color_names = config.color_large
+    spec = get_spec(args.principle)
+    expected = args.expected_patterns or spec.expected_patterns
 
     split_root = Path(os.environ["ELVIS_DATA"]) / args.principle / args.split
     if not split_root.is_dir():
@@ -106,11 +71,13 @@ def main():
 
     hard = []            # (pattern, side, file, message)
     accidental = []      # (pattern, file)
+    unverified = Counter()   # generator -> negatives breaking nothing checkable
     neg_breaks = Counter()
     n_images = 0
 
     for pattern in patterns:
-        rel, irrel = parse_pattern(pattern)
+        parsed = spec.parse(pattern)
+        grouping_checked = spec.generators[parsed["generator"]].grouping_checked
         for side in ("positive", "negative"):
             side_dir = split_root / pattern / side
             pngs = sorted(side_dir.glob("*.png"))
@@ -120,17 +87,19 @@ def main():
                                                   f"expected {args.num_samples}"))
             for jp in jsons:
                 n_images += 1
-                errors, acc, broken = check_image(jp, side == "positive", rel, irrel, color_names)
+                errors, acc, broken = check_image(spec, jp, side == "positive", parsed, color_names)
                 hard += [(pattern, side, jp.name, e) for e in errors]
-                if acc:
+                if acc and grouping_checked:
                     accidental.append((pattern, jp.name))
+                elif acc:
+                    unverified[parsed["generator"]] += 1
                 if side == "negative":
-                    neg_breaks.update(broken or ["nothing"])
+                    neg_breaks.update(broken or (["nothing"] if grouping_checked else ["grouping?"]))
 
     n_neg = n_images // 2
     print(f"Split:      {split_root}")
-    print(f"Patterns:   {len(patterns)} (expected {args.expected_patterns})")
-    print(f"Images:     {n_images} (expected {args.expected_patterns * 2 * args.num_samples})")
+    print(f"Patterns:   {len(patterns)} (expected {expected})")
+    print(f"Images:     {n_images} (expected {expected * 2 * args.num_samples})")
     print(f"Hard errors: {len(hard)}")
     for pattern, side, name, msg in hard[:20]:
         print(f"  {pattern}/{side}/{name}: {msg}")
@@ -139,11 +108,16 @@ def main():
     print(f"Accidental positives (negatives breaking nothing): {len(accidental)} / {n_neg}")
     for pattern, name in accidental[:10]:
         print(f"  {pattern}/negative/{name}")
+    if unverified:
+        print("Negatives breaking no checkable rule, in generators whose grouping is not visible in "
+              "metadata (expected: these broke the grouping):")
+        for gen, count in unverified.most_common():
+            print(f"  {gen}: {count}")
     print("What negatives break (an image can break several):")
     for what, count in neg_breaks.most_common():
         print(f"  {what:8s} {count}")
 
-    ok = not hard and len(patterns) == args.expected_patterns
+    ok = not hard and len(patterns) == expected
     print("RESULT:", "PASS" if ok else "FAIL")
     return 0 if ok else 1
 
