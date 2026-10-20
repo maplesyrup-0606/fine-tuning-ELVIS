@@ -75,6 +75,9 @@ cd "$SLURM_SUBMIT_DIR"
 RUBRICS=${RUBRICS:-0}
 RUBRIC_ARG=""
 if [ "$RUBRICS" = "1" ]; then RUBRIC_ARG="--rubrics"; fi
+# SPLIT_SUFFIX=v3: evaluate on train_v3/test_v3 (generated with the fixed generators).
+SPLIT_SUFFIX=${SPLIT_SUFFIX:-}
+SPLIT_ARG=${SPLIT_SUFFIX:+--split-suffix $SPLIT_SUFFIX}
 export ELVIS_FINETUNING_RESULTS="$RESULTS_DIR"
 
 CKPT_ARG=""
@@ -86,4 +89,4 @@ python scripts/eval_elvis.py \
     --variant "$VARIANT" \
     $CKPT_ARG \
     --principles "${PRINCIPLES[@]}" \
-    $RUBRIC_ARG
+    $RUBRIC_ARG $SPLIT_ARG

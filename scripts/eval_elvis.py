@@ -52,7 +52,13 @@ def main():
                         help="v3 rubric evaluation: skip Stage 1 and classify with the pattern's ground-truth "
                              "rubric from data/<principle>/rubrics.json (default output: "
                              "results/<evaluation.rubric_results_subdir>)")
+    parser.add_argument("--split-suffix", default="",
+                        help="evaluate on train_<suffix>/test_<suffix> instead of ELVIS's train/test "
+                             "(e.g. v3: the set generated with the fixed generators); results go to "
+                             "<results folder>_on_test_<suffix>")
     args = parser.parse_args()
+    examples_split = f"train_{args.split_suffix}" if args.split_suffix else "train"
+    test_split = f"test_{args.split_suffix}" if args.split_suffix else "test"
 
     if args.principles == ["all"]:
         args.principles = ALL_PRINCIPLES
@@ -89,7 +95,8 @@ def main():
         key = ("rubric_results_subdir" if args.rubrics else
                "v3_results_subdir" if v3_run else "results_subdir")
         results_root = Path(os.environ.get(cfg["paths"]["results_env"], "results"))
-        args.output_dir = str(results_root / cfg["evaluation"][key])
+        folder = cfg["evaluation"][key] + (f"_on_{test_split}" if args.split_suffix else "")
+        args.output_dir = str(results_root / folder)
 
     # Rubric mode: load every principle's rubrics up front and make sure each pattern
     # ELVIS will evaluate (the <principle>/train folders) has one — fail before loading the model.
@@ -100,7 +107,7 @@ def main():
             if not path.exists():
                 parser.error(f"{path} missing — run generate_programmatic_rules.py --principle {principle} --rubrics")
             table = json.load(open(path))["rubrics"]
-            names = sorted(p.name for p in Path(elvis_data, principle, "train").iterdir() if p.is_dir())
+            names = sorted(p.name for p in Path(elvis_data, principle, examples_split).iterdir() if p.is_dir())
             missing = [n for n in names if n not in table]
             if missing:
                 parser.error(f"{principle}: {len(missing)} ELVIS patterns have no rubric, e.g. {missing[0]}")
@@ -143,6 +150,8 @@ def main():
             output_dir=str(principle_out),
             rule_max_new_tokens=rule_max_new_tokens,
             rules=rubrics.get(principle),
+            examples_split=examples_split,
+            test_split=test_split,
         )
         if ret is None:
             print(f"[warn] {principle}: no pattern folders found under {data_path}/train — skipping")
@@ -160,6 +169,7 @@ def main():
             "task_num": args.task_num,
             "rule_max_new_tokens": rule_max_new_tokens,
             "rule_source": "rubric" if args.rubrics else "model",
+            "test_split": test_split,
             "principles": results,
         }, f, indent=2)
 
