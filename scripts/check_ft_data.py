@@ -106,7 +106,11 @@ def main():
     if len(hard) > 20:
         print(f"  ... {len(hard) - 20} more")
     print(f"Accidental positives (negatives breaking nothing): {len(accidental)} / {n_neg}")
-    for pattern, name in accidental[:10]:
+    trained = [(p, n) for p, n in accidental if not spec.exclude_from_training(spec.parse(p))]
+    if accidental:
+        print(f"  in patterns excluded from training: {len(accidental) - len(trained)}")
+        print(f"  in patterns used for training:      {len(trained)}  (must be 0)")
+    for pattern, name in (trained or accidental)[:10]:
         print(f"  {pattern}/negative/{name}")
     if unverified:
         print("Negatives breaking no checkable rule, in generators whose grouping is not visible in "
@@ -117,7 +121,7 @@ def main():
     for what, count in neg_breaks.most_common():
         print(f"  {what:8s} {count}")
 
-    ok = not hard and len(patterns) == expected
+    ok = not hard and not trained and len(patterns) == expected
     print("RESULT:", "PASS" if ok else "FAIL")
     return 0 if ok else 1
 
