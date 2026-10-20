@@ -108,6 +108,22 @@ training:
     target_absolute: 0.67   # ~7% absolute over 0.5976 baseline
     regression_patience: 1  # stop if this epoch's accuracy < previous epoch
 
+v3:
+  # Classification only, with ground-truth rubrics (EXPERIMENT.md "v3 Plan").
+  # Data: slurm/gen_v3_data.sh -> scripts/build_v3_dataset.py. Train with
+  # `train.py --run <name>` / `sbatch slurm/train.sh <variant> <name>`; variants llm, both.
+  # Same LoRA/optimizer/epochs (3) as v1/v2: each principle's rows are seen 3 times in
+  # both runs, so `all` makes ~6x the updates of `continuity` (2,790 vs 486 steps).
+  checkpoint_subdir: checkpoints_v3     # -> <results>/checkpoints_v3/<run>/<variant>/
+  wandb_run_prefix: v3                  # -> v3-<run>-<variant>
+  runs:
+    continuity:
+      dataset_path: data/v3/ft_train_continuity.jsonl       # 5,184 rows
+      val_dataset_path: data/v3/ft_val_continuity.jsonl     # 5,184 rows
+    all:
+      dataset_path: data/v3/ft_train_all.jsonl              # 29,784 rows
+      val_dataset_path: data/v3/ft_val_all.jsonl#5000       # ms-swift samples 5,000 (seeded)
+
 wandb:
   project: Qwen3-VL-4B-fine-tuning-continuity
 

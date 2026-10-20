@@ -12,10 +12,14 @@
 
 set -euo pipefail
 
-# Usage: sbatch slurm/train.sh <llm|projector|both>
+# Usage: sbatch slurm/train.sh <llm|projector|both> [<run>]
+#   <run>: a v3 run under config v3.runs (continuity, all); omit for v2.
+#   e.g.  sbatch -J v3-all-both slurm/train.sh both all
 # Auto-chains on wallclock kill (exit 143/137) up to CHAIN_MAX times. Override
-# with `sbatch --export=ALL,CHAIN_MAX=<n> slurm/train.sh <variant>`.
+# with `sbatch --export=ALL,CHAIN_MAX=<n> slurm/train.sh <variant> [<run>]`.
 VARIANT=${1:-}
+RUN=${2:-}
+RUN_ARGS=${RUN:+--run $RUN}
 if [ -z "$VARIANT" ]; then
     echo "ERROR: variant required. Usage: sbatch slurm/train.sh <llm|projector|both>"
     exit 1
@@ -65,8 +69,8 @@ python -c "import peft; print('peft:', peft.__version__)"
 # ms-swift saves under <ckpt_dir>/v<N>-<timestamp>/checkpoint-<step>.
 cd "$SLURM_SUBMIT_DIR"
 
-CKPT_SUBDIR=$(python -c "import yaml; print(yaml.safe_load(open('config.yaml'))['training']['checkpoint_subdir'])")
-CKPT_DIR="$RESULTS_DIR/$CKPT_SUBDIR/$VARIANT"
+# v2: <results>/checkpoints_v2/<variant>;  v3: <results>/checkpoints_v3/<run>/<variant>
+CKPT_DIR=$(ELVIS_FINETUNING_RESULTS="$RESULTS_DIR" python scripts/train.py --variant "$VARIANT" $RUN_ARGS --print-output-dir)
 echo "=== Checkpoints: $CKPT_DIR ==="
 
 LATEST_CKPT=$(ls -td "$CKPT_DIR"/v*/checkpoint-* 2>/dev/null | head -1 || true)
@@ -79,7 +83,7 @@ fi
 # Capture python's exit code without triggering `set -e` early exit.
 set +e
 python scripts/train.py \
-    --variant "$VARIANT" \
+    --variant "$VARIANT" $RUN_ARGS \
     --output-dir "$CKPT_DIR" \
     $RESUME_ARGS
 EXIT_CODE=$?
@@ -96,7 +100,7 @@ if { [ "$EXIT_CODE" -eq 143 ] || [ "$EXIT_CODE" -eq 137 ]; } \
     echo "=== Wallclock kill (exit $EXIT_CODE); chaining iter $NEXT/$CHAIN_MAX for variant=$VARIANT ==="
     sbatch --dependency=afterany:$SLURM_JOB_ID \
            --export=ALL,CHAIN_ITER=$NEXT \
-           "$0" "$VARIANT"
+           "$0" "$VARIANT" "$RUN"
 fi
 
 exit $EXIT_CODE

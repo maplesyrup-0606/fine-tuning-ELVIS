@@ -32,12 +32,14 @@ def load_config(path):
         return yaml.safe_load(f)
 
 
-def build_swift_args(cfg, variant, output_dir, resume_from=None):
+def build_swift_args(cfg, variant, output_dir, resume_from=None, data=None):
     """Convert config.yaml + variant selection → `swift sft` CLI arguments.
 
     variant: one of the keys under cfg["variants"] (llm, projector, both).
+    data: {"dataset_path", "val_dataset_path"}; default: v2's paths under `training`.
     """
     train_cfg = cfg["training"]
+    data = data or train_cfg
     lora_cfg = cfg["lora"]
     variant_cfg = cfg["variants"][variant]
 
@@ -52,9 +54,9 @@ def build_swift_args(cfg, variant, output_dir, resume_from=None):
         "--model", cfg["model"]["base_id"],
         "--torch_dtype", "bfloat16",
         "--tuner_type", "lora",
-        "--dataset", train_cfg["dataset_path"],
+        "--dataset", data["dataset_path"],
         # Validation loss once per epoch (eval_strategy defaults to save_strategy).
-        "--val_dataset", train_cfg["val_dataset_path"],
+        "--val_dataset", data["val_dataset_path"],
         "--output_dir", str(output_dir),
 
         # Keep the per-row loss_scale weights in the dataset (Stage 1 vs Stage 2
@@ -118,6 +120,10 @@ def main():
                         help="override results/checkpoints dir (default: <results>/checkpoints/<variant>)")
     parser.add_argument("--resume-from", default=None,
                         help="path to checkpoint to resume from")
+    parser.add_argument("--run", default=None,
+                        help="v3 run name under config v3.runs (e.g. continuity, all); omit for v2")
+    parser.add_argument("--print-output-dir", action="store_true",
+                        help="print the checkpoint dir for this variant/run and exit (used by train.sh)")
     parser.add_argument("--dry-run", action="store_true",
                         help="print the swift command without running")
     args = parser.parse_args()
@@ -126,21 +132,33 @@ def main():
 
     if args.variant not in cfg.get("variants", {}):
         parser.error(f"variant {args.variant!r} not found in {args.config} variants: block")
-
-    # One WandB project, three runs — comparable in the UI.
-    os.environ.setdefault("WANDB_PROJECT", cfg["wandb"]["project"])
-    os.environ.setdefault("WANDB_NAME", f"{cfg['training']['wandb_run_prefix']}-{args.variant}")
+    if args.run is not None and args.run not in cfg["v3"]["runs"]:
+        parser.error(f"run {args.run!r} not found in {args.config} v3.runs: {sorted(cfg['v3']['runs'])}")
 
     results_env = cfg["paths"]["results_env"]
     results_root = Path(os.environ.get(results_env, "results"))
-    output_dir = Path(args.output_dir) if args.output_dir else \
-        results_root / cfg["training"]["checkpoint_subdir"] / args.variant
+    if args.run is None:   # v2
+        data = None
+        run_name = f"{cfg['training']['wandb_run_prefix']}-{args.variant}"
+        default_dir = results_root / cfg["training"]["checkpoint_subdir"] / args.variant
+    else:                  # v3
+        data = cfg["v3"]["runs"][args.run]
+        run_name = f"{cfg['v3']['wandb_run_prefix']}-{args.run}-{args.variant}"
+        default_dir = results_root / cfg["v3"]["checkpoint_subdir"] / args.run / args.variant
+    output_dir = Path(args.output_dir) if args.output_dir else default_dir
+    if args.print_output_dir:
+        print(output_dir)
+        return 0
     output_dir.mkdir(parents=True, exist_ok=True)
 
-    swift_args = build_swift_args(cfg, args.variant, output_dir, args.resume_from)
+    # One WandB project; run names distinguish versions, runs and variants.
+    os.environ.setdefault("WANDB_PROJECT", cfg["wandb"]["project"])
+    os.environ.setdefault("WANDB_NAME", run_name)
+
+    swift_args = build_swift_args(cfg, args.variant, output_dir, args.resume_from, data)
 
     print("=" * 60)
-    print(f"Variant: {args.variant}")
+    print(f"Variant: {args.variant}   Run: {args.run or 'v2'}   WandB: {run_name}")
     print(f"Output: {output_dir}")
     print("Running:")
     print(" \\\n  ".join(swift_args))
