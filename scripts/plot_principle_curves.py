@@ -135,7 +135,7 @@ def main():
         ax.set_xticks([0, 1, 2, 3])
         ax.set_xticklabels(["base", "ep 1", "ep 2", "ep 3"])
     axes[0].set_ylabel(f"{args.metric} (%)" if args.metric == "accuracy" else args.metric)
-    handles, labels = axes[0].get_legend_handles_labels()
+    handles, labels = max((ax.get_legend_handles_labels() for ax in axes), key=lambda hl: len(hl[1]))
     fig.legend(handles, labels, loc="lower center", ncol=min(len(labels), 4), frameon=False,
                bbox_to_anchor=(0.5, -0.12 if len(labels) > 4 else -0.06))
     title = f"ELVIS {args.metric} by principle — {label}" + ("" if cmp_data is None else f" solid, {clabel} dashed")
