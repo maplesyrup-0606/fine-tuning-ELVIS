@@ -1,6 +1,6 @@
 #!/bin/bash
 #SBATCH --job-name=seedbench2-baseline-qwen3vl4b
-#SBATCH --account=def-lsigal
+#SBATCH --account=rrg-lsigal
 #SBATCH --time=03:00:00
 #SBATCH --gpus=nvidia_h100_80gb_hbm3_3g.40gb:1
 #SBATCH --cpus-per-task=6

@@ -1,5 +1,5 @@
 #!/bin/bash
-#SBATCH --account=def-lsigal
+#SBATCH --account=rrg-lsigal
 #SBATCH --time=0:30:00
 #SBATCH --cpus-per-task=4
 #SBATCH --mem=32G
