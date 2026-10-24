@@ -9,6 +9,7 @@ venv/
 # Data / results (large, machine-specific)
 data/*.jsonl
 data/*.json
+data/*/
 results/
 wandb/
 checkpoints/
@@ -17,9 +18,9 @@ checkpoints/
 *.bin
 
 # Logs
-#logs/
-#*.log
-#slurm-*.out
+logs/
+*.log
+slurm-*.out
 
 # OS
 .DS_Store
