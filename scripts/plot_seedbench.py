@@ -48,9 +48,8 @@ COLORS = ["#1f77b4", "#d62728", "#2ca02c", "#9467bd", "#ff7f0e"]
 def load_result(result_dir: Path, label: str):
     """Prefer *_enriched.xlsx (has question_type), fall back to raw result xlsx."""
     enriched = sorted(result_dir.glob("*_enriched.xlsx"))
-    # Judge name varies: *_gpt-4o-mini_result.xlsx with an OpenAI key, e.g.
-    # *_exact_matching_result.xlsx without one.
-    raw = sorted(result_dir.glob("*_result.xlsx"))
+    # Prefer the gpt-4o-mini judge file; any other *_result.xlsx only as a fallback.
+    raw = sorted(result_dir.glob("*_gpt-4o-mini_result.xlsx")) or sorted(result_dir.glob("*_result.xlsx"))
     source = enriched[0] if enriched else (raw[0] if raw else None)
     if source is None:
         raise FileNotFoundError(
