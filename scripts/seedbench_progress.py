@@ -66,7 +66,11 @@ def main():
                 continue
             try:
                 d = pickle.load(open(pkl, "rb"))
-            except Exception:                 # being written right now
+            except Exception as e:            # e.g. being written right now
+                print(f"  [warn] cannot read {pkl}: {type(e).__name__}: {e}")
+                continue
+            if not isinstance(d, dict):
+                print(f"  [warn] {pkl} holds a {type(d).__name__}, not a dict; skipped")
                 continue
             if isinstance(d, dict) and len(d) > len(best):
                 best = d
