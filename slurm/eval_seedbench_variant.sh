@@ -85,9 +85,16 @@ fi
 CHAIN_ITER=${CHAIN_ITER:-1}
 CHAIN_MAX=${CHAIN_MAX:-15}
 
-if [ $RC -eq 0 ]; then
-    echo "=== Eval completed (iter $CHAIN_ITER). Chain done. ==="
+# VLMEvalKit exits 0 even when a dataset errors out (e.g. "Engine core initialization
+# failed"), so exit code alone is not "done": require the score file as well.
+SCORE=$(find -L "$OUT_SRC" -name "*${DATASET}*acc*" 2>/dev/null | head -1)
+if [ $RC -eq 0 ] && [ -n "$SCORE" ]; then
+    echo "=== Eval completed (iter $CHAIN_ITER), score file: $SCORE. Chain done. ==="
     exit 0
+fi
+if [ $RC -eq 0 ]; then
+    echo "=== Exit 0 but no ${DATASET} score file under $OUT_SRC: run did not finish; chaining ==="
+    RC=1
 fi
 
 if [ $CHAIN_ITER -ge $CHAIN_MAX ]; then
