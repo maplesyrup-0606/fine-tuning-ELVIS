@@ -19,9 +19,15 @@ import subprocess
 from pathlib import Path
 
 KEYS = ["Qwen3-VL-4B-Instruct-t0",
-        "Qwen3-VL-4B-Instruct-v3-continuity-llm-e3", "Qwen3-VL-4B-Instruct-v3-continuity-both-e3",
-        "Qwen3-VL-4B-Instruct-v3-all-llm-e3", "Qwen3-VL-4B-Instruct-v3-all-both-e3"]
-
+        "Qwen3-VL-4B-Instruct-v3-continuity-llm-e3", 
+        "Qwen3-VL-4B-Instruct-v3-continuity-both-e3",
+        "Qwen3-VL-4B-Instruct-v3-all-llm-e3", 
+        "Qwen3-VL-4B-Instruct-v3-all-both-e3",
+        "Qwen3-VL-4B-Instruct-t0p",
+        "Qwen3-VL-4B-Instruct-v3-continuity-llm-e3-t0p",
+        "Qwen3-VL-4B-Instruct-v3-continuity-both-e3-t0p",
+        "Qwen3-VL-4B-Instruct-v3-all-llm-e3-t0p",
+        "Qwen3-VL-4B-Instruct-v3-all-both-e3-t0p"]
 
 def dataset_size(dataset):
     tsv = Path(os.environ.get("LMUData", Path.home() / "LMUData")) / f"{dataset}.tsv"
