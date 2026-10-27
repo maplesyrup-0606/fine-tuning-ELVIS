@@ -53,9 +53,18 @@ def main():
     parser.add_argument("--dataset", default="SEEDBench2")
     parser.add_argument("--long", type=int, default=10000, help="answers with at least this many chars count as runaway")
     parser.add_argument("--results", default="results", help="folder with our seedbench_<key>/ copies")
+    parser.add_argument("--all", action="store_true",
+                        help="every run found: results/seedbench_*/<key>_<dataset>.xlsx and outputs/<key>/ "
+                             "folders with <dataset> files (plus KEYS)")
     args = parser.parse_args()
 
     root = Path(os.environ.get("VLMEVALKIT_DIR", Path(os.environ.get("SCRATCH", "."), "VLMEvalKit"))) / "outputs"
+    if args.all:
+        found = {p.name[:-len(f"_{args.dataset}.xlsx")]
+                 for p in Path(args.results).glob(f"seedbench_*/*_{args.dataset}.xlsx")}
+        found |= {d.name for d in root.iterdir() if d.is_dir() and any(d.glob(f"**/*{args.dataset}*"))} \
+            if root.is_dir() else set()
+        args.keys = sorted(found | set(args.keys))
     total = dataset_size(args.dataset)
     jobs = slurm_states()
     print(f"{'model':48s} {'answers':>14s} {'%':>6s} {'runaway':>14s}  {'done':5s} {'from':5s} slurm")
