@@ -51,17 +51,27 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__.strip().splitlines()[0])
     parser.add_argument("keys", nargs="*", default=KEYS)
     parser.add_argument("--dataset", default="SEEDBench2")
-    parser.add_argument("--long", type=int, default=10000, help="chars above which an answer counts as runaway")
+    parser.add_argument("--long", type=int, default=10000, help="answers with at least this many chars count as runaway")
+    parser.add_argument("--results", default="results", help="folder with our seedbench_<key>/ copies")
     args = parser.parse_args()
 
     root = Path(os.environ.get("VLMEVALKIT_DIR", Path(os.environ.get("SCRATCH", "."), "VLMEvalKit"))) / "outputs"
     total = dataset_size(args.dataset)
     jobs = slurm_states()
-    print(f"{'model':44s} {'answers':>14s} {'%':>6s} {'runaway':>8s}  {'done':5s} slurm")
+    print(f"{'model':48s} {'answers':>14s} {'%':>6s} {'runaway':>14s}  {'done':5s} {'from':5s} slurm")
     for key in args.keys:
         out = root / key
-        best = {}
-        for pkl in out.glob(f"**/*{args.dataset}*.pkl"):
+        # A finished run keeps all answers in <key>_<dataset>.xlsx (the in-progress .pkl is
+        # deleted at the end); look in VLMEvalKit's outputs and in our results/seedbench_*/ copies.
+        final = sorted(out.glob(f"**/{key}_{args.dataset}.xlsx")) + \
+                sorted(Path(args.results).glob(f"seedbench_*/{key}_{args.dataset}.xlsx"))
+        if final:
+            import pandas as pd
+            best = dict(enumerate(pd.read_excel(final[0], usecols=["prediction"])["prediction"].astype(str)))
+            source = "xlsx"
+        else:
+            best, source = {}, "pkl"
+        for pkl in ([] if final else out.glob(f"**/*{args.dataset}*.pkl")):
             if "result" in pkl.name:          # scoring output, not partial predictions
                 continue
             try:
@@ -75,12 +85,14 @@ def main():
             if isinstance(d, dict) and len(d) > len(best):
                 best = d
         n = len(best)
-        runaway = sum(len(str(v)) > args.long for v in best.values())
-        done = any(out.glob(f"**/*{args.dataset}*acc*")) if out.exists() else False
+        runaway = sum(len(str(v)) >= args.long for v in best.values())
+        done = bool(final) or (any(out.glob(f"**/*{args.dataset}*acc*")) if out.exists() else False)
         pct = f"{100 * n / total:.1f}" if total else "?"
+        run_pct = f"{runaway} ({100 * runaway / n:.1f}%)" if n else "0"
         short = key.replace("Qwen3-VL-4B-Instruct-", "")
         state = jobs.get(f"sb2-{short}", "-")
-        print(f"{key:44s} {n:>6d}/{total or '?':<7} {pct:>6s} {runaway:>8d}  {'yes' if done else 'no':5s} {state}")
+        print(f"{key:48s} {n:>6d}/{total or '?':<7} {pct:>6s} {run_pct:>14s}  "
+              f"{'yes' if done else 'no':5s} {source:5s} {state}")
 
 
 if __name__ == "__main__":
