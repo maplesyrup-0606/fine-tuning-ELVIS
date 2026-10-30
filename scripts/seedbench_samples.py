@@ -68,11 +68,17 @@ def main():
         if args.disagree:
             idx = [i for i in idx if len({int(answers[m].at[i, "hit"]) for m in answers}) > 1]
         picks[skill] = (idx, rng.sample(idx, min(args.per_skill, len(idx))))
-    wanted = {int(ref.at[i, "index"]) for _, p in picks.values() for i in p}
+    # Compare indices as text: chunked reads can type the tsv's index column as strings.
+    wanted = {str(int(ref.at[i, "index"])) for _, p in picks.values() for i in p}
     tsv = Path(os.environ.get("LMUData", Path.home() / "LMUData")) / "SEEDBench2.tsv"
-    keep = [c[c["index"].isin(wanted)] for c in
-            pd.read_csv(tsv, sep="\t", usecols=["index", "image"], chunksize=200)]
-    data = pd.concat(keep).set_index("index")
+    keep = [c[c["index"].str.strip().isin(wanted)] for c in
+            pd.read_csv(tsv, sep="\t", usecols=["index", "image"], dtype={"index": str}, chunksize=200)]
+    data = pd.concat(keep)
+    data["index"] = data["index"].str.strip()
+    data = data.set_index("index")
+    missing = wanted - set(data.index)
+    if missing:
+        print(f"[warn] {len(missing)} picked questions not found in {tsv}: {sorted(missing)[:5]}")
 
     for skill, (idx, picked) in picks.items():
         name = ref.loc[idx[0], "question_type"] if idx else "?"
@@ -81,7 +87,9 @@ def main():
             d = Path(args.out) / f"skill_{skill}" / f"{ref.at[i, 'index']}_row{i}"
             d.mkdir(parents=True, exist_ok=True)
             row = ref.loc[i]
-            tsv_index = row["index"]
+            tsv_index = str(int(row["index"]))
+            if tsv_index not in data.index:
+                continue
             for k, im in enumerate(images_of(data.at[tsv_index, "image"])):
                 im.save(d / f"frame_{k:02d}.png")
             opts = "\n".join(f"  {c}. {row[c]}" for c in "ABCD" if c in row and pd.notna(row[c]))
