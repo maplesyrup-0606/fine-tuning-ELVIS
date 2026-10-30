@@ -235,8 +235,52 @@ def plot_faceted_bars(results, out_path: Path):
     print(f"Plot written: {out_path}")
 
 
-def plot_per_subpart(results, out_dir: Path):
-    """One PNG per subpart (6 total), each sized for its own skill count."""
+def _plot_subpart_vertical(plt, np, results, sp, skills, out_dir, written, re):
+    """Vertical grouped bars for one subpart: skills on x, one bar per model, fixed height."""
+    import textwrap
+    n_models = len(results)
+    bar_w = 0.8 / max(1, n_models)
+    fig, ax = plt.subplots(figsize=(max(10, 1.6 * len(skills) + 3), 6.5))
+    x = np.arange(len(skills))
+    n_of = {}
+    for mi, r in enumerate(results):
+        sub = r["per_skill"][r["per_skill"]["subpart"] == sp]
+        qid_to = {(row.question_type_id, row.question_type): (row.acc * 100, row.n) for row in sub.itertuples()}
+        vals = [qid_to.get(k, (0, 0))[0] for k in skills]
+        for k in skills:
+            n_of.setdefault(k, qid_to.get(k, (0, 0))[1])
+        color = COLORS[mi % len(COLORS)]
+        subrow = r["per_subpart"][r["per_subpart"]["subpart"] == sp]
+        sp_overall = (subrow.iloc[0]["acc"] * 100) if len(subrow) else None
+        label = f"{r['label']} ({sp_overall:.1f}%)" if sp_overall is not None else r["label"]
+        bars = ax.bar(x + (mi - (n_models - 1) / 2) * bar_w, vals, bar_w, color=color, label=label)
+        for b, v in zip(bars, vals):
+            ax.text(b.get_x() + b.get_width() / 2, v + 1, f"{v:.0f}", ha="center", va="bottom",
+                    fontsize=8, color="#333333")
+        if sp_overall is not None:
+            ax.axhline(sp_overall, color=color, linestyle=":", linewidth=1.2, alpha=0.65)
+    ax.set_xticks(x)
+    ax.set_xticklabels([textwrap.fill(f"{qid}. {qname}", 16) + f"\n(n={n_of[(qid, qname)]})"
+                        for qid, qname in skills], fontsize=9)
+    ax.set_ylim(0, 105)
+    ax.set_ylabel("accuracy (%)", fontsize=11)
+    ax.grid(axis="y", alpha=0.3)
+    ax.set_axisbelow(True)
+    ax.set_title(f"[{LEVEL_OF[sp]}]  {sp}\nSEED-Bench-2 per-skill accuracy "
+                 f"(dotted = each model's subpart overall)", fontsize=12, loc="left")
+    ax.legend(ncol=min(n_models, 5), fontsize=9, loc="upper center", bbox_to_anchor=(0.5, -0.22),
+              frameon=False)
+    fig.tight_layout()
+    slug = re.sub(r"[^a-z0-9]+", "_", sp.lower()).strip("_")
+    out_path = out_dir / f"seedbench_skill_{slug}.png"
+    fig.savefig(out_path, dpi=150, bbox_inches="tight")
+    plt.close(fig)
+    written.append(out_path)
+
+
+def plot_per_subpart(results, out_dir: Path, orient: str = "auto"):
+    """One PNG per subpart (6 total), each sized for its own skill count.
+    orient: 'h' horizontal bars, 'v' vertical grouped bars, 'auto' = vertical when > 20 bars."""
     import matplotlib
     matplotlib.use("Agg")
     import matplotlib.pyplot as plt
@@ -262,6 +306,12 @@ def plot_per_subpart(results, out_dir: Path):
                 skills_seen[(row.question_type_id, row.question_type)] = True
         skills = sorted(skills_seen.keys())
         if not skills:
+            continue
+
+        # Many bars (e.g. L1 single-image: 9 skills x 5 models) make the horizontal layout
+        # very tall; switch to vertical grouped bars with a fixed height instead.
+        if orient == "v" or (orient == "auto" and len(skills) * n_models > 20):
+            _plot_subpart_vertical(plt, np, results, sp, skills, out_dir, written, re)
             continue
 
         fig_h = max(3.5, 0.55 * len(skills) * n_models + 2.0)
@@ -369,6 +419,9 @@ def main():
                    help="skill mode only: emit one PNG per subpart (6 total) "
                         "into the first result dir, instead of a single combined "
                         "faceted PNG. Each PNG sized for its own skill count.")
+    p.add_argument("--orient", choices=["auto", "h", "v"], default="auto",
+                   help="--per-subpart bar layout: h = horizontal, v = vertical grouped bars, "
+                        "auto = vertical when a subpart has > 20 bars (e.g. L1 single-image)")
     args = p.parse_args()
 
     results = []
@@ -403,7 +456,7 @@ def main():
         plot_radar(results, Path(args.out))
     elif args.per_subpart:
         per_subpart_dir.mkdir(parents=True, exist_ok=True)
-        plot_per_subpart(results, per_subpart_dir)
+        plot_per_subpart(results, per_subpart_dir, args.orient)
     else:
         plot_faceted_bars(results, Path(args.out))
 
