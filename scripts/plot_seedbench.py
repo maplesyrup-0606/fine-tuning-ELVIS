@@ -382,6 +382,8 @@ def main():
         results.append(load_result(d, lab))
 
     default_stem = f"seedbench_{args.group_by}"
+    # --per-subpart writes into --out's folder when --out is given, else the first result dir.
+    per_subpart_dir = Path(args.out).parent if args.out else first_dir
     if args.out is None:
         args.out = str(first_dir / f"{default_stem}.png")
     if args.csv is None and args.write_csv:
