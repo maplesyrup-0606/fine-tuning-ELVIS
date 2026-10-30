@@ -400,7 +400,8 @@ def main():
     if args.group_by == "subpart":
         plot_radar(results, Path(args.out))
     elif args.per_subpart:
-        plot_per_subpart(results, first_dir)
+        per_subpart_dir.mkdir(parents=True, exist_ok=True)
+        plot_per_subpart(results, per_subpart_dir)
     else:
         plot_faceted_bars(results, Path(args.out))
 
