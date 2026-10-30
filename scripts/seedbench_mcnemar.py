@@ -31,10 +31,23 @@ def binom_two_sided(k, n):
 
 
 def load(results, key):
+    """Per-question rows in file order. Pairing is by row position (every result file lists
+    the dataset's questions in the same order); joining on `index` is unsafe because it can
+    repeat in the enriched files, which pairs copies with each other."""
     files = glob.glob(f"{results}/seedbench_{key}/*_enriched.xlsx")
     if not files:
         raise SystemExit(f"no *_enriched.xlsx for {key} (run enrich_seedbench.py first)")
-    return pd.read_excel(files[0], usecols=["index", "question_type_id", "hit"]).set_index("index")
+    return pd.read_excel(files[0], usecols=["index", "question_type_id", "hit"])
+
+
+def pair(base, other, key):
+    """Row-aligned base/model hits; stop unless both list the same questions in the same order."""
+    if len(base) != len(other) or not (base["index"].values == other["index"].values).all() \
+            or not (base["question_type_id"].values == other["question_type_id"].values).all():
+        raise SystemExit(f"{key}: rows do not line up with base (different length or order)")
+    d = base.copy()
+    d["hit_m"] = other["hit"].values
+    return d
 
 
 def main():
@@ -52,9 +65,12 @@ def main():
     print(f"{'skill':>5} {'model':24s} {'n':>5} {'base%':>6} {'model%':>7} {'diff':>6} "
           f"{'only_model':>10} {'only_base':>9} {'p':>8}")
     for m in MODELS:
-        d = base.join(load(args.results, f"{PREFIX}-{m}{args.suffix}"), rsuffix="_m", how="inner")
+        d = pair(base, load(args.results, f"{PREFIX}-{m}{args.suffix}"), m)
         for s in skills:
             x = d[d["question_type_id"] == s]
+            n_base = int((base["question_type_id"] == s).sum())
+            if len(x) != n_base:
+                print(f"  [warn] skill {s}: {len(x)} paired questions vs {n_base} in base")
             only_m = int(((x["hit"] == 0) & (x["hit_m"] == 1)).sum())
             only_b = int(((x["hit"] == 1) & (x["hit_m"] == 0)).sum())
             p = binom_two_sided(only_m, only_m + only_b)

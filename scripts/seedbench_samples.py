@@ -52,7 +52,12 @@ def main():
         f = glob.glob(f"{args.results}/seedbench_{PREFIX}-{suffix}/*_enriched.xlsx")
         if not f:
             raise SystemExit(f"no *_enriched.xlsx for {PREFIX}-{suffix}")
-        answers[name] = pd.read_excel(f[0]).set_index("index")
+        # Rows are in the same order in every model's file; pair by position, not `index`
+        # (which can repeat in the enriched files).
+        answers[name] = pd.read_excel(f[0])
+    for name, df in answers.items():
+        if len(df) != len(answers["base"]) or not (df["index"].values == answers["base"]["index"].values).all():
+            raise SystemExit(f"{name}: rows do not line up with base")
     ref = answers["base"]
     tsv = Path(os.environ.get("LMUData", Path.home() / "LMUData")) / "SEEDBench2.tsv"
     data = pd.read_csv(tsv, sep="\t").set_index("index")
@@ -66,13 +71,14 @@ def main():
         name = ref.loc[idx[0], "question_type"] if idx else "?"
         print(f"skill {skill} ({name}): {len(idx)} candidate questions, exporting {len(picked)}")
         for i in picked:
-            d = Path(args.out) / f"skill_{skill}" / str(i)
+            d = Path(args.out) / f"skill_{skill}" / f"{ref.at[i, 'index']}_row{i}"
             d.mkdir(parents=True, exist_ok=True)
-            for k, im in enumerate(images_of(data.at[i, "image"])):
-                im.save(d / f"frame_{k:02d}.png")
             row = ref.loc[i]
+            tsv_index = row["index"]
+            for k, im in enumerate(images_of(data.at[tsv_index, "image"])):
+                im.save(d / f"frame_{k:02d}.png")
             opts = "\n".join(f"  {c}. {row[c]}" for c in "ABCD" if c in row and pd.notna(row[c]))
-            lines = [f"skill {skill}: {name}", f"index {i}", "", f"Q: {row['question']}", opts,
+            lines = [f"skill {skill}: {name}", f"index {row['index']} (row {i})", "", f"Q: {row['question']}", opts,
                      f"correct: {row['answer']}", "", "model answers:"]
             for m, df in answers.items():
                 pred = str(df.at[i, "prediction"]).replace("\n", " ")
