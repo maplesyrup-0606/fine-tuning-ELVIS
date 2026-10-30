@@ -1,7 +1,7 @@
 #!/bin/bash
 #SBATCH --account=rrg-lsigal
 #SBATCH --time=03:00:00
-#SBATCH --gpus=nvidia_h100_80gb_hbm3_3g.40gb:1
+#SBATCH --gpus=h100:1
 #SBATCH --cpus-per-task=6
 #SBATCH --mem=32G
 #SBATCH --output=logs/seedbench_%x_%j.out
