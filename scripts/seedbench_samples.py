@@ -59,15 +59,22 @@ def main():
         if len(df) != len(answers["base"]) or not (df["index"].values == answers["base"]["index"].values).all():
             raise SystemExit(f"{name}: rows do not line up with base")
     ref = answers["base"]
-    tsv = Path(os.environ.get("LMUData", Path.home() / "LMUData")) / "SEEDBench2.tsv"
-    data = pd.read_csv(tsv, sep="\t").set_index("index")
-
+    # Pick the questions first, then stream the tsv (several GB of base64 images) in chunks,
+    # keeping only the picked rows; reading it whole gets the process killed on a login node.
     rng = random.Random(args.seed)
+    picks = {}
     for skill in args.skills:
         idx = list(ref.index[ref["question_type_id"] == skill])
         if args.disagree:
             idx = [i for i in idx if len({int(answers[m].at[i, "hit"]) for m in answers}) > 1]
-        picked = rng.sample(idx, min(args.per_skill, len(idx)))
+        picks[skill] = (idx, rng.sample(idx, min(args.per_skill, len(idx))))
+    wanted = {int(ref.at[i, "index"]) for _, p in picks.values() for i in p}
+    tsv = Path(os.environ.get("LMUData", Path.home() / "LMUData")) / "SEEDBench2.tsv"
+    keep = [c[c["index"].isin(wanted)] for c in
+            pd.read_csv(tsv, sep="\t", usecols=["index", "image"], chunksize=200)]
+    data = pd.concat(keep).set_index("index")
+
+    for skill, (idx, picked) in picks.items():
         name = ref.loc[idx[0], "question_type"] if idx else "?"
         print(f"skill {skill} ({name}): {len(idx)} candidate questions, exporting {len(picked)}")
         for i in picked:
