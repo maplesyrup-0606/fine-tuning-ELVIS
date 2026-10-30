@@ -33,8 +33,9 @@ def dataset_size(dataset):
     tsv = Path(os.environ.get("LMUData", Path.home() / "LMUData")) / f"{dataset}.tsv"
     if not tsv.exists():
         return None
-    with open(tsv) as f:
-        return sum(1 for _ in f) - 1
+    # Count rows, not lines: some questions contain line breaks inside quoted fields.
+    import pandas as pd
+    return len(pd.read_csv(tsv, sep="\t", usecols=["index"]))
 
 
 def slurm_states():
