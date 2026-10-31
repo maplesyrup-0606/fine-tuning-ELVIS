@@ -27,7 +27,12 @@ KEYS = ["Qwen3-VL-4B-Instruct-t0",
         "Qwen3-VL-4B-Instruct-v3-continuity-llm-e3-t0p",
         "Qwen3-VL-4B-Instruct-v3-continuity-both-e3-t0p",
         "Qwen3-VL-4B-Instruct-v3-all-llm-e3-t0p",
-        "Qwen3-VL-4B-Instruct-v3-all-both-e3-t0p"]
+        "Qwen3-VL-4B-Instruct-v3-all-both-e3-t0p",
+        "Qwen3-VL-4B-Instruct",                              # base at T0.7 + penalty (old run)
+        "Qwen3-VL-4B-Instruct-v3-continuity-llm-e3-t07",
+        "Qwen3-VL-4B-Instruct-v3-continuity-both-e3-t07",
+        "Qwen3-VL-4B-Instruct-v3-all-llm-e3-t07",
+        "Qwen3-VL-4B-Instruct-v3-all-both-e3-t07"]
 
 def dataset_size(dataset):
     tsv = Path(os.environ.get("LMUData", Path.home() / "LMUData")) / f"{dataset}.tsv"
