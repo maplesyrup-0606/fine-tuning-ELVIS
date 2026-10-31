@@ -1,86 +1,80 @@
 #!/usr/bin/env python3
 """
 Does the model think (emit <think>...</think>), and does temperature change that?
+Runs VLMEvalKit's own code path, not a re-implementation:
 
-Takes one SEED-Bench-2 L1 single-image question, shows the exact prompt the chat template
-builds (any <think> pre-fill would be visible there), then answers it --repeats times at
-temperature 0 (greedy) and at temperature 0.7 (Qwen's recommended sampling), printing the
-raw output with special tokens kept, so a thinking block cannot be hidden.
+  dataset  = build_dataset('SEEDBench2')                     (as run.py)
+  model    = supported_VLM[<key>]()                          (our vlmeval/config.py entry: vLLM, sampling, penalties)
+  struct   = same prompt rule as vlmeval/inference.py infer_data
+  response = model.generate(message=struct, dataset='SEEDBench2')   (same call as infer_data)
+
+One question is answered --repeats times per temperature. The -t0p and -t07 config entries
+differ only in temperature and the vLLM wrapper reads self.temperature on every call, so
+setting model.temperature reproduces both entries. Prints the message VLMEvalKit builds, the
+chat-template prompt, and each raw response (what VLMEvalKit saves as `prediction`, since
+SPLIT_THINK is not set).
 
 Usage (GPU):
   python scripts/thinking_check.py
-  python scripts/thinking_check.py --model results/merged/v3-all-both-e3 --repeats 5 --row 5
+  python scripts/thinking_check.py --key Qwen3-VL-4B-Instruct-v3-all-both-e3-t0p --row 5
 """
 
 import argparse
-import ast
-import base64
-import glob
-import io
-import os
-from pathlib import Path
 
-import pandas as pd
-import torch
-from PIL import Image
-from transformers import AutoModelForImageTextToText, AutoProcessor
+from vlmeval.config import supported_VLM
+from vlmeval.dataset import build_dataset
 
-
-def pick_question(results, subpart, row):
-    # Use the plain result file, not *_enriched.xlsx: the enriched file is reordered and its
-    # `index` does not match the dataset tsv (e.g. "index 10 not found").
-    f = (glob.glob(f"{results}/seedbench_Qwen3-VL-4B-Instruct-t0p/*_SEEDBench2.xlsx")
-         + glob.glob(f"{results}/seedbench_base/*_SEEDBench2.xlsx"))
-    if not f:
-        raise SystemExit("no SEED-Bench result file to pick a question from")
-    df = pd.read_excel(f[0])
-    q = df[df["subpart"] == subpart].iloc[row]
-    tsv = Path(os.environ.get("LMUData", Path.home() / "LMUData")) / "SEEDBench2.tsv"
-    want = str(int(q["index"]))
-    for chunk in pd.read_csv(tsv, sep="\t", usecols=["index", "image"], dtype={"index": str}, chunksize=200):
-        hit = chunk[chunk["index"].str.strip() == want]
-        if len(hit):
-            img = str(hit.iloc[0]["image"])
-            if img.startswith("["):
-                img = ast.literal_eval(img)[0]
-            return q, Image.open(io.BytesIO(base64.b64decode(img))).convert("RGB")
-    raise SystemExit(f"index {want} not found in {tsv}")
+DATASET = "SEEDBench2"
 
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__.strip().splitlines()[0])
-    parser.add_argument("--model", default="Qwen/Qwen3-VL-4B-Instruct")
+    parser.add_argument("--key", default="Qwen3-VL-4B-Instruct-t0p", help="model key in vlmeval/config.py")
     parser.add_argument("--subpart", default="Single-Image & Text Comprehension", help="SEED-Bench-2 part")
     parser.add_argument("--row", type=int, default=0, help="which question of that part")
+    parser.add_argument("--temps", type=float, nargs="+", default=[0.0, 0.7])
     parser.add_argument("--repeats", type=int, default=3)
-    parser.add_argument("--max-new-tokens", type=int, default=512)
-    parser.add_argument("--results", default="results")
     args = parser.parse_args()
 
-    q, image = pick_question(args.results, args.subpart, args.row)
-    opts = "\n".join(f"{c}. {q[c]}" for c in "ABCD" if c in q and pd.notna(q[c]))
-    text = f"Question: {q['question']}\nOptions:\n{opts}\nPlease select the correct answer from the options above."
-    print(f"model: {args.model}\n{args.subpart}, row {args.row}, index {q['index']}, "
-          f"correct answer: {q['answer']}\n")
+    dataset = build_dataset(DATASET)
+    data = dataset.data
+    line = data[data["subpart"] == args.subpart].iloc[args.row]
+    print(f"key: {args.key}\n{args.subpart}, row {args.row}, index {line['index']}, correct answer: {line['answer']}\n")
 
-    processor = AutoProcessor.from_pretrained(args.model)
-    model = AutoModelForImageTextToText.from_pretrained(args.model, torch_dtype=torch.bfloat16, device_map="auto")
-    messages = [{"role": "user", "content": [{"type": "image", "image": image}, {"type": "text", "text": text}]}]
-    prompt = processor.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)
-    print("=== prompt as the chat template builds it (look for <think>) ===")
-    print(prompt)
-    inputs = processor.apply_chat_template(messages, tokenize=True, add_generation_prompt=True,
-                                           return_dict=True, return_tensors="pt").to(model.device)
+    model = supported_VLM[args.key]()
 
-    configs = {"temperature 0 (greedy)": dict(do_sample=False),
-               "temperature 0.7, top_p 0.8, top_k 20": dict(do_sample=True, temperature=0.7, top_p=0.8, top_k=20)}
-    for name, gen in configs.items():
-        print(f"\n=== {name} ===")
+    # Same prompt rule as vlmeval/inference.py infer_data.
+    if hasattr(dataset, "force_use_dataset_prompt") and dataset.force_use_dataset_prompt:
+        struct = dataset.build_prompt(line)
+    elif hasattr(model, "use_custom_prompt") and model.use_custom_prompt(DATASET):
+        struct = model.build_prompt(line, dataset=DATASET)
+    else:
+        struct = dataset.build_prompt(line)
+    print("=== message VLMEvalKit builds (struct) ===")
+    for item in struct:
+        print(f"  {item['type']}: {item['value']}")
+
+    # The exact text the chat template produces for this message (look for <think>).
+    try:
+        msgs = [{"role": "user", "content": model._prepare_content(struct, dataset=DATASET)}]
+        if getattr(model, "system_prompt", None) is not None:
+            msgs.insert(0, {"role": "system", "content": model.system_prompt})
+        print("\n=== chat-template prompt ===")
+        print(model.processor.apply_chat_template(msgs, tokenize=False, add_generation_prompt=True))
+    except Exception as e:  # private helper; the check below does not depend on it
+        print(f"\n(could not render chat-template prompt: {type(e).__name__}: {e})")
+
+    print(f"\nsettings from config: top_p={model.top_p} top_k={model.top_k} "
+          f"presence_penalty={model.presence_penalty} repetition_penalty={model.repetition_penalty} "
+          f"max_new_tokens={model.max_new_tokens}")
+    for t in args.temps:
+        model.temperature = t
+        print(f"\n=== temperature {t} ===")
         for r in range(args.repeats):
-            out = model.generate(**inputs, max_new_tokens=args.max_new_tokens, **gen)
-            raw = processor.batch_decode(out[:, inputs["input_ids"].shape[1]:], skip_special_tokens=False)[0]
-            print(f"--- run {r + 1}: {len(raw)} chars, '<think>' present: {'<think>' in raw}")
-            print(raw)
+            response = model.generate(message=struct, dataset=DATASET)
+            print(f"--- run {r + 1}: {len(response)} chars | '<think>' {'<think>' in response} | "
+                  f"'</think>' {'</think>' in response}")
+            print(response)
 
 
 if __name__ == "__main__":
