@@ -9,7 +9,7 @@ raw output with special tokens kept, so a thinking block cannot be hidden.
 
 Usage (GPU):
   python scripts/thinking_check.py
-  python scripts/thinking_check.py --model results/merged/v3-all-both-e3 --repeats 5 --skill 3
+  python scripts/thinking_check.py --model results/merged/v3-all-both-e3 --repeats 5 --row 5
 """
 
 import argparse
@@ -26,13 +26,15 @@ from PIL import Image
 from transformers import AutoModelForImageTextToText, AutoProcessor
 
 
-def pick_question(results, skill, row):
-    f = glob.glob(f"{results}/seedbench_Qwen3-VL-4B-Instruct-t0p/*_enriched.xlsx") or \
-        glob.glob(f"{results}/seedbench_base/*_enriched.xlsx")
+def pick_question(results, subpart, row):
+    # Use the plain result file, not *_enriched.xlsx: the enriched file is reordered and its
+    # `index` does not match the dataset tsv (e.g. "index 10 not found").
+    f = (glob.glob(f"{results}/seedbench_Qwen3-VL-4B-Instruct-t0p/*_SEEDBench2.xlsx")
+         + glob.glob(f"{results}/seedbench_base/*_SEEDBench2.xlsx"))
     if not f:
-        raise SystemExit("no enriched SEED-Bench result to pick a question from")
+        raise SystemExit("no SEED-Bench result file to pick a question from")
     df = pd.read_excel(f[0])
-    q = df[df["question_type_id"] == skill].iloc[row]
+    q = df[df["subpart"] == subpart].iloc[row]
     tsv = Path(os.environ.get("LMUData", Path.home() / "LMUData")) / "SEEDBench2.tsv"
     want = str(int(q["index"]))
     for chunk in pd.read_csv(tsv, sep="\t", usecols=["index", "image"], dtype={"index": str}, chunksize=200):
@@ -48,17 +50,17 @@ def pick_question(results, skill, row):
 def main():
     parser = argparse.ArgumentParser(description=__doc__.strip().splitlines()[0])
     parser.add_argument("--model", default="Qwen/Qwen3-VL-4B-Instruct")
-    parser.add_argument("--skill", type=int, default=1, help="L1 single-image skill id (1-16)")
-    parser.add_argument("--row", type=int, default=0, help="which question of that skill")
+    parser.add_argument("--subpart", default="Single-Image & Text Comprehension", help="SEED-Bench-2 part")
+    parser.add_argument("--row", type=int, default=0, help="which question of that part")
     parser.add_argument("--repeats", type=int, default=3)
     parser.add_argument("--max-new-tokens", type=int, default=512)
     parser.add_argument("--results", default="results")
     args = parser.parse_args()
 
-    q, image = pick_question(args.results, args.skill, args.row)
+    q, image = pick_question(args.results, args.subpart, args.row)
     opts = "\n".join(f"{c}. {q[c]}" for c in "ABCD" if c in q and pd.notna(q[c]))
     text = f"Question: {q['question']}\nOptions:\n{opts}\nPlease select the correct answer from the options above."
-    print(f"model: {args.model}\nskill {args.skill} ({q.get('question_type', '')}), index {q['index']}, "
+    print(f"model: {args.model}\n{args.subpart}, row {args.row}, index {q['index']}, "
           f"correct answer: {q['answer']}\n")
 
     processor = AutoProcessor.from_pretrained(args.model)
