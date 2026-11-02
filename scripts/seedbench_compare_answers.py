@@ -39,12 +39,10 @@ def load(d):
     f = glob.glob(f"{d}/*_gpt-4o-mini_result.xlsx") or glob.glob(f"{d}/*_result.xlsx")
     if not f:
         return None
-    df = pd.read_excel(f[0]).set_index("index")
-    dup = df.index.duplicated()
-    if dup.any():  # some result files repeat an index; keep one row per question
-        print(f"[note] {d}: dropped {int(dup.sum())} duplicate index rows")
-        df = df[~dup]
-    return df
+    # Rows are paired by position, not `index`: the saved index is lossy (~3,099 pairs of
+    # different questions share one value), but every result file lists the questions in the
+    # same order. main() checks the question text matches row by row.
+    return pd.read_excel(f[0]).reset_index(drop=True)
 
 
 def main():
@@ -74,9 +72,10 @@ def main():
         raise SystemExit("no results for the main run set")
 
     ref = next(iter(main_runs.values()))
+    for (s, name), df in runs.items():
+        if len(df) != len(ref) or not (df["question"].astype(str).values == ref["question"].astype(str).values).all():
+            raise SystemExit(f"{name} ({s}): rows do not line up with {args.rset} base (length or question order differs)")
     idx = ref.index
-    for df in runs.values():
-        idx = idx.intersection(df.index)
     if args.subpart:
         idx = idx[ref.loc[idx, "subpart"] == args.subpart]
     if args.disagree:
@@ -86,7 +85,7 @@ def main():
     lines = []
     for i in picked:
         q = ref.loc[i]
-        lines += ["=" * 100, f"index {i} | {q['subpart']}", f"Q: {q['question']}"]
+        lines += ["=" * 100, f"row {i} (index {q['index']}) | {q['subpart']}", f"Q: {q['question']}"]
         lines += [f"   {c}. {q[c]}" for c in "ABCDE" if c in q and pd.notna(q[c])]
         lines.append(f"correct: {q['answer']}")
         for s in sets:
