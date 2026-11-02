@@ -11,8 +11,9 @@ Run sets (decoding settings):
   t07  temperature 0.7 + penalty (Qwen's recommended)      base: results/seedbench_base, v3: <P>-v3-<m>-e3-t07
 
 Usage:
-  python scripts/seedbench_compare_answers.py                         # 10 random questions, greedy (t0p)
-  python scripts/seedbench_compare_answers.py --also t07 --disagree   # add T0.7 answers; only questions where models differ
+  python scripts/seedbench_compare_answers.py                         # 10 random questions: greedy (t0p) vs T0.7
+  python scripts/seedbench_compare_answers.py --disagree              # only questions where the greedy models differ
+  python scripts/seedbench_compare_answers.py --also none             # greedy answers only
   python scripts/seedbench_compare_answers.py --subpart "Video & Text Comprehension" -n 5 --out results/compare.md
 """
 
@@ -38,13 +39,19 @@ def load(d):
     f = glob.glob(f"{d}/*_gpt-4o-mini_result.xlsx") or glob.glob(f"{d}/*_result.xlsx")
     if not f:
         return None
-    return pd.read_excel(f[0]).set_index("index")
+    df = pd.read_excel(f[0]).set_index("index")
+    dup = df.index.duplicated()
+    if dup.any():  # some result files repeat an index; keep one row per question
+        print(f"[note] {d}: dropped {int(dup.sum())} duplicate index rows")
+        df = df[~dup]
+    return df
 
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__.strip().splitlines()[0])
     parser.add_argument("--set", dest="rset", default="t0p", choices=SUFFIX, help="main run set")
-    parser.add_argument("--also", choices=SUFFIX, default=None, help="second run set shown under each question")
+    parser.add_argument("--also", choices=list(SUFFIX) + ["none"], default="t07",
+                        help="second run set shown under each question (default t07: greedy vs sampled)")
     parser.add_argument("-n", type=int, default=10, help="number of questions")
     parser.add_argument("--subpart", default=None, help="restrict to one SEED-Bench-2 part")
     parser.add_argument("--disagree", action="store_true", help="only questions where the main set's models differ")
@@ -53,7 +60,7 @@ def main():
     parser.add_argument("--out", default=None, help="also write the output to this file (e.g. .md)")
     args = parser.parse_args()
 
-    sets = [args.rset] + ([args.also] if args.also else [])
+    sets = [args.rset] + ([args.also] if args.also not in (None, "none", args.rset) else [])
     runs = {}
     for s in sets:
         for name, d in run_dirs(s).items():
