@@ -10,6 +10,7 @@ Usage:
   python scripts/plot_acc.py --dataset VisFactor --set t07
   python scripts/plot_acc.py --dataset VisFactor --set t07 --columns CS1 CS2 CS3 ALL --out results/plots/visfactor_cs.png
   python scripts/plot_acc.py --dataset VisFactor --set t0p t07          # both decoding settings side by side
+  python scripts/plot_acc.py --dataset VisFactor --set t07 --heatmap    # models x subtests heat map
 """
 
 import argparse
@@ -44,6 +45,7 @@ def main():
     parser.add_argument("--set", nargs="+", default=["t07"], choices=list(SETS))
     parser.add_argument("--models", nargs="+", default=list(MODELS), choices=list(MODELS))
     parser.add_argument("--columns", nargs="+", default=None, help="subtests to plot (default: all)")
+    parser.add_argument("--heatmap", action="store_true", help="heat map (models x subtests) instead of bars")
     parser.add_argument("--results", default="results")
     parser.add_argument("--out", default=None, help="PNG path (default: results/plots/<dataset>_<sets>.png)")
     args = parser.parse_args()
@@ -72,6 +74,34 @@ def main():
     matplotlib.use("Agg")
     import matplotlib.pyplot as plt
     import numpy as np
+    title = f"{args.dataset}: {' / '.join(args.set) if not args.keys else 'selected runs'}"
+    if args.heatmap:
+        # Single-hue sequential scale: lighter = lower, darker = higher; numbers in every cell.
+        vals = df.values.astype(float)
+        fig, ax = plt.subplots(figsize=(max(6, 0.75 * len(cols) + 3), max(2.5, 0.55 * len(df) + 1.5)))
+        im = ax.imshow(vals, cmap="Blues", vmin=0, vmax=max(100, float(np.nanmax(vals))), aspect="auto")
+        for r in range(vals.shape[0]):
+            for c in range(vals.shape[1]):
+                v = vals[r, c]
+                ax.text(c, r, "-" if np.isnan(v) else f"{v:.0f}", ha="center", va="center", fontsize=9,
+                        color="white" if v > 60 else "#1a1a1a")
+        ax.set_xticks(range(len(cols)))
+        ax.set_xticklabels(cols, fontsize=10)
+        ax.set_yticks(range(len(df)))
+        ax.set_yticklabels(df.index, fontsize=10)
+        ax.tick_params(length=0)
+        for s in ax.spines.values():
+            s.set_visible(False)
+        fig.colorbar(im, ax=ax, fraction=0.025, pad=0.02, label="score (%)")
+        ax.set_title(title, loc="left")
+        fig.tight_layout()
+        out = Path(args.out or f"{args.results}/plots/{args.dataset}_{'_'.join(args.set)}_heatmap.png")
+        out.parent.mkdir(parents=True, exist_ok=True)
+        fig.savefig(out, dpi=150, bbox_inches="tight")
+        df.round(2).to_csv(out.with_suffix(".csv"))
+        print(f"\nwritten: {out}  and  {out.with_suffix('.csv')}")
+        return
+
     n_models = len(df)
     width = 0.8 / n_models
     fig, ax = plt.subplots(figsize=(max(8, 0.9 * len(cols) * max(1, n_models / 3) + 3), 5.5))
@@ -89,7 +119,7 @@ def main():
     ax.set_ylim(0, min(105, max(10, float(np.nanmax(df.values)) * 1.15)))
     ax.grid(axis="y", alpha=0.3)
     ax.set_axisbelow(True)
-    ax.set_title(f"{args.dataset}: {' / '.join(args.set) if not args.keys else 'selected runs'}", loc="left")
+    ax.set_title(title, loc="left")
     ax.legend(ncol=min(n_models, 5), fontsize=9, loc="upper center", bbox_to_anchor=(0.5, -0.08), frameon=False)
     fig.tight_layout()
 
