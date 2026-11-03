@@ -15,13 +15,13 @@ Run sets (--set) map to config.py keys:
   t07-cp  <P>[-v3-<m>-e3]-t07-cp                    T0.7 + penalty, Qwen MCQ prompt, 200 tokens
 
 Usage:
-  python scripts/seedbench_progress.py                                  # SEEDBench2, -cp sets
-  python scripts/seedbench_progress.py --set t0p t07 --scores           # earlier SEED-Bench runs + scores
-  python scripts/seedbench_progress.py --dataset VisFactor --set t07 --scores
-  python scripts/seedbench_progress.py --dataset VisFactor --set t07 --models base all-both
-  python scripts/seedbench_progress.py --pending                        # hide finished runs
-  python scripts/seedbench_progress.py --all                            # every run found for the dataset
-  python scripts/seedbench_progress.py Qwen3-VL-4B-Instruct-t0p         # explicit keys
+  python scripts/eval_progress.py                                  # SEEDBench2, -cp sets
+  python scripts/eval_progress.py --set t0p t07 --scores           # earlier SEED-Bench runs + scores
+  python scripts/eval_progress.py --dataset VisFactor --set t07 --scores
+  python scripts/eval_progress.py --dataset VisFactor --set t07 --models base all-both
+  python scripts/eval_progress.py --pending                        # hide finished runs
+  python scripts/eval_progress.py --all                            # every run found for the dataset
+  python scripts/eval_progress.py Qwen3-VL-4B-Instruct-t0p         # explicit keys
 """
 
 import argparse
@@ -72,11 +72,12 @@ def slurm_jobs():
 
 
 def job_state(key, jobs, job_prefix):
-    """Job names are <prefix>-<key without PREFIX-> (e.g. sb2-v3-all-both-e3-t07, vf-t0p)."""
+    """Job names are <prefix>-<key without PREFIX-> (e.g. sb2-v3-all-both-e3-t07, vf-t0p);
+    extra dashes after the prefix are ignored (vf--v3-..., and plain vf / vf- for the base key)."""
     rest = key[len(PREFIX):].lstrip("-") if key.startswith(PREFIX) else key
     for name, state in jobs:
         pre, _, tail = name.partition("-")
-        if tail == rest and (job_prefix is None or pre == job_prefix):
+        if tail.lstrip("-") == rest and (job_prefix is None or pre == job_prefix):
             return state
     return "-"
 
