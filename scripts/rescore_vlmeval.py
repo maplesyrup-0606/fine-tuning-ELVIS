@@ -60,7 +60,10 @@ def main():
     parser.add_argument("--keys", nargs="+", default=None, help="model keys (default: every run found)")
     parser.add_argument("--dataset", default="SEEDBench2")
     parser.add_argument("--judge", default="gpt-4o-mini")
-    parser.add_argument("--nproc", type=int, default=8, help="parallel judge calls")
+    parser.add_argument("--nproc", type=int, default=4, help="parallel judge calls (too many -> OpenAI rate limits)")
+    parser.add_argument("--verbose", action="store_true", help="print the judge's raw API responses (shows API errors)")
+    parser.add_argument("--max-random", type=int, default=0,
+                        help="stop after a run with more random fallbacks than this (judge/API failures)")
     parser.add_argument("--results", default="results")
     parser.add_argument("--dry-run", action="store_true")
     args = parser.parse_args()
@@ -72,7 +75,7 @@ def main():
     if not runs:
         raise SystemExit(f"no saved answers matching {args.results}/*/<key>_{args.dataset}.xlsx")
 
-    print(f"{len(runs)} runs:")
+    print(f"{len(runs)} runs:", flush=True)
     for key, p in runs:
         cur = current_result(p.parent, key, args.dataset)
         info = "acc {:.2f} | unscored {} | random {}".format(*summary(cur)) if cur else "no scoring yet"
@@ -98,14 +101,22 @@ def main():
                 continue  # an earlier backup
             target = f.with_name(f.stem + tag + f.suffix)
             if target.exists():
-                raise SystemExit(f"{target} already exists - rename it first so nothing is overwritten")
-            f.rename(target)
+                # The original is already kept as target: f is left over from an interrupted re-score
+                # (possibly with failed judge calls) -> discard it and re-score this run from scratch.
+                print(f"  discarding unfinished re-score file {f.name} (original kept as {target.name})")
+                f.unlink()
+            else:
+                f.rename(target)
         t0 = time.time()
-        ds.evaluate(str(p), model=args.judge, nproc=args.nproc)
+        ds.evaluate(str(p), model=args.judge, nproc=args.nproc, verbose=args.verbose)
         new = summary(current_result(p.parent, key, args.dataset))
         before = f"{old[0]:.2f} (unscored {old[1]}, random {old[2]})" if old else "-"
         print(f"  {p.parent.name:62s} acc {before} -> {new[0]:.2f} (unscored {new[1]}, random {new[2]})"
               f"  [{time.time() - t0:.0f}s]", flush=True)
+        if new[2] > args.max_random:
+            raise SystemExit(f"\n!! {new[2]} answers in {p.parent.name} were scored with VLMEvalKit's RANDOM fallback "
+                             f"(judge/API failures, e.g. rate limits). Stopping. Its old scoring is kept with suffix {tag}; "
+                             f"fix the API issue (or lower --nproc), then rerun with --keys {key}")
 
 
 if __name__ == "__main__":
