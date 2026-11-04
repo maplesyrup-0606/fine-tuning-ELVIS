@@ -86,8 +86,11 @@ def main():
     if not os.environ.get("OPENAI_API_KEY"):
         raise SystemExit("OPENAI_API_KEY is not set in this shell")
     from vlmeval.dataset.utils import build_judge
-    if not build_judge(model=args.judge).working():
-        raise SystemExit(f"judge {args.judge} is not working from here (no internet / bad key?) - nothing changed")
+    judge = build_judge(model=args.judge)
+    reply = str(judge.generate("Reply with the single letter A."))  # VLMEvalKit's working() missed a 401 key
+    if not judge.working() or "Failed to obtain answer" in reply or "A" not in reply.upper():
+        raise SystemExit(f"judge {args.judge} is not working from here (test reply: {reply[:120]!r}); "
+                         "check OPENAI_API_KEY / internet - nothing changed")
 
     tsv = Path(os.environ.get("LMUData", Path.home() / "LMUData")) / f"{args.dataset}.tsv"
     ds = light_dataset(args.dataset, tsv)
