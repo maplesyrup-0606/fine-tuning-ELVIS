@@ -15,7 +15,8 @@ Then, on base's B-right/A-wrong questions: how each v3 model answered them in A.
 
 Usage:
   python scripts/decoding_diff.py                                    # A = t0p, B = t07
-  python scripts/decoding_diff.py --a t0 --b t07 --examples 5 --out results/decoding_diff.md
+  python scripts/decoding_diff.py --examples 10 --out results/decoding_diff.html   # + readable HTML examples
+  python scripts/decoding_diff.py --a t0 --b t07 --models base
 """
 
 import argparse
@@ -86,8 +87,8 @@ def main():
     parser.add_argument("--models", nargs="+", default=list(MODELS), choices=list(MODELS))
     parser.add_argument("--dataset", default="SEEDBench2")
     parser.add_argument("--results", default="results")
-    parser.add_argument("--examples", type=int, default=0, help="example flips per model written to --out")
-    parser.add_argument("--out", default="results/decoding_diff.md")
+    parser.add_argument("--examples", type=int, default=0, help="example flips per model written to --out (HTML)")
+    parser.add_argument("--out", default="results/decoding_diff.html")
     args = parser.parse_args()
 
     ka, kb = keys_for([args.a], args.models), keys_for([args.b], args.models)
@@ -134,13 +135,23 @@ def main():
             print(f"    A scoring path  : {pct_table(A.path[flips])}")
             print(f"    B answer format : {pct_table(B.fmt[flips])}")
             print(f"    SEED-Bench part : {pct_table(A.subpart[flips])}")
+            # Same answer text but different score = the difference comes from scoring, not the model.
+            same = A.prediction == B.prediction
+            n_same = int((flips & same).sum())
+            rev_same = int(((A.hit == 1) & (B.hit == 0) & same).sum())
+            print(f"    identical answer text in A and B: {n_same} ({100 * n_same / flips.sum():.1f}%)"
+                  f"  [reverse direction, A right/B wrong with identical text: {rev_same}]")
+            if n_same:
+                print(f"      their scoring  A: {pct_table(A.path[flips & same])}")
+                print(f"      their scoring  B: {pct_table(B.path[flips & same])}")
         runs[m] = (A, B, flips)
-        for i in A.index[flips][:args.examples]:
-            examples += [f"### {m} | row {i} | {A.at[i, 'subpart']}", f"**Q:** {A.at[i, 'question']}",
-                         " ".join(f"{c}. {A.at[i, c]}" for c in "ABCDE" if c in A and pd.notna(A.at[i, c])),
-                         f"**correct:** {A.at[i, 'answer']}",
-                         f"- **A** ({A.at[i, 'path']}): {A.at[i, 'prediction'][:400]}",
-                         f"- **B** ({B.at[i, 'path']}): {B.at[i, 'prediction'][:400]}", ""]
+        same = A.prediction == B.prediction
+        order = list(A.index[flips & same]) + list(A.index[flips & ~same])  # identical-answer flips first
+        for i in order[:args.examples]:
+            examples.append(dict(
+                model=m, row=i, part=A.at[i, "subpart"], q=A.at[i, "question"], answer=A.at[i, "answer"],
+                options=[(c, A.at[i, c]) for c in "ABCDE" if c in A and pd.notna(A.at[i, c])],
+                same=bool(same[i]), runs=[(f"A = {short_name(key_a)}", A.loc[i]), (f"B = {short_name(key_b)}", B.loc[i])]))
 
     if "base" in runs and len(runs) > 1:
         A0, _, flips = runs["base"]
@@ -152,9 +163,38 @@ def main():
             print(f"  {m:16s} correct {100 * A.hit[flips].mean():.1f}% | format: {pct_table(A.fmt[flips])}")
 
     if args.examples and examples:
-        with open(args.out, "w") as f:
-            f.write("\n".join(examples) + "\n")
+        write_html(examples, args.out)
         print(f"\nexamples written to {args.out}")
+
+
+def write_html(examples, out):
+    """Readable report: answers in boxes (model Markdown shown as plain text), judge decision beside them."""
+    from html import escape
+    css = ("body{font:14px/1.45 system-ui,sans-serif;max-width:1200px;margin:0 auto;padding:16px;background:#fcfcfb;color:#111}"
+           ".card{border:1px solid #ddd;border-radius:8px;padding:12px;margin:16px 0;background:#fff}"
+           ".meta{color:#555;font-size:12px}.q{font-weight:600;margin:6px 0}.opt{margin:2px 0}"
+           ".runs{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:8px}"
+           ".run{border:1px solid #eee;border-radius:6px;padding:8px}"
+           "pre{white-space:pre-wrap;max-height:320px;overflow:auto;background:#f6f6f4;padding:8px;border-radius:4px;font-size:12px}"
+           ".ok{color:#1a7f4b;font-weight:600}.bad{color:#c0392b;font-weight:600}"
+           ".badge{background:#fff3cd;border:1px solid #e0c36a;border-radius:4px;padding:1px 6px;font-size:12px}")
+    parts = [f"<!doctype html><meta charset='utf-8'><title>Decoding diff examples</title><style>{css}</style>",
+             "<h2>Questions right in B but wrong in A</h2><p class='meta'>Identical-answer cases first: the same text "
+             "scored differently points to the scoring, not the model.</p>"]
+    for e in examples:
+        badge = " <span class='badge'>identical answer text</span>" if e["same"] else ""
+        opts = "".join(f"<div class='opt'>{escape(c)}. {escape(str(v))}</div>" for c, v in e["options"])
+        runs = ""
+        for label, r in e["runs"]:
+            mark = "<span class='ok'>✓ right</span>" if int(r["hit"]) == 1 else "<span class='bad'>✗ wrong</span>"
+            runs += (f"<div class='run'><b>{escape(label)}</b> {mark} <span class='meta'>scored by: {escape(r['path'])}</span>"
+                     f"<pre>{escape(str(r['prediction'])[:3000])}</pre>"
+                     f"<div class='meta'>VLMEvalKit log:</div><pre>{escape(str(r['log'])[:600])}</pre></div>")
+        parts.append(f"<div class='card'><div class='meta'>{escape(e['model'])} · row {e['row']} · {escape(str(e['part']))}"
+                     f"{badge}</div><div class='q'>{escape(str(e['q']))}</div>{opts}"
+                     f"<div>correct: <b>{escape(str(e['answer']))}</b></div><div class='runs'>{runs}</div></div>")
+    with open(out, "w") as f:
+        f.write("\n".join(parts))
 
 
 if __name__ == "__main__":
