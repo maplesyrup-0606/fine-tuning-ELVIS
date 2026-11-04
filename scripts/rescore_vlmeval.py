@@ -2,48 +2,38 @@
 """
 Re-score saved VLMEvalKit MCQ answers with a working GPT judge (no model, no GPU).
 
-Why: scoring at the end of a Slurm job runs on a compute node without internet, so the OpenAI
-judge silently fails and VLMEvalKit falls back to exact matching: every answer the rules cannot
-parse becomes 'Z' (log: "Failed in Prefetch ...") and counts as wrong. Run this on a LOGIN node
-(compute nodes have no internet, so a GPU/CPU job would fail the same way).
+Why: the runs were scored with a revoked OpenAI key, so the judge silently failed and VLMEvalKit fell
+back to exact matching: every answer the rules cannot parse became 'Z' (log: "Failed in Prefetch ...")
+and counted as wrong.
 
 For each run folder results/*/<key>_<dataset>.xlsx (the saved answers):
-  1. rename the old scoring files in place, <key>_<dataset>_<x>.<ext> -> <key>_<dataset>_<x>_old<YYYYMMDD>.<ext>
+  1. check its question indices against the dataset (VLMEvalKit's own build_dataset loader) before
+     touching anything; report duplicate indices in the answer file
+  2. rename the old scoring files in place, <key>_<dataset>_<x>.<ext> -> <key>_<dataset>_<x>_old<YYYYMMDD>.<ext>
      (kept for comparison; VLMEvalKit would otherwise reuse its cached *_result.pkl)
-  2. call VLMEvalKit's own ImageMCQDataset.evaluate() with the judge, using a light dataset object
-     with only index/question/answer/options (the full tsv with images gets killed on a login node)
-  3. the new scoring takes the standard names, so plot/analysis scripts pick it up automatically;
-     report old vs new accuracy and how many answers were still unscored ("Failed in Prefetch")
+  3. call VLMEvalKit's own evaluate() with the judge; the new scoring takes the standard names, so
+     plot/analysis scripts pick it up; report old vs new accuracy, unscored and random-fallback counts
 
-Usage (login node, OPENAI_API_KEY set):
-  python scripts/rescore_vlmeval.py --dry-run              # list runs and their current scoring
-  nohup python scripts/rescore_vlmeval.py > rescore.log 2>&1 &
-  python scripts/rescore_vlmeval.py --keys Qwen3-VL-4B-Instruct-t0p Qwen3-VL-4B-Instruct
+Loading the full dataset needs ~30+ GB RAM: run it as a CPU job (slurm/rescore_vlmeval.sh).
+  sbatch slurm/rescore_vlmeval.sh                          # all SEEDBench2 runs under results/
+  sbatch slurm/rescore_vlmeval.sh --keys Qwen3-VL-4B-Instruct-t0p
+  python scripts/rescore_vlmeval.py --dry-run              # list runs and their current scoring (no RAM needed)
 """
 
 import argparse
 import glob
 import os
-import string
 import time
 from pathlib import Path
 
 import pandas as pd
 
 
-def light_dataset(dataset, tsv):
-    """ImageMCQDataset with only the text columns its evaluate() needs (index, question, answer, A-Z)."""
-    from vlmeval.dataset.image_mcq import ImageMCQDataset
-    keep = lambda c: c in ("index", "question", "answer") or c in string.ascii_uppercase
-    data = pd.concat(pd.read_csv(tsv, sep="\t", usecols=keep, chunksize=2000, dtype={"index": str}))
-    # Same index handling as VLMEvalKit's ImageBaseDataset (image_base.py:157, 179-180): str, then int
-    # if every index is an integer; chunked reads can otherwise leave mixed str/int indices.
-    data["index"] = [str(x).strip() for x in data["index"]]
-    if all(x.lstrip("-").isdigit() for x in data["index"]):
-        data["index"] = [int(x) for x in data["index"]]
-    ds = ImageMCQDataset.__new__(ImageMCQDataset)
-    ds.dataset_name, ds.data = dataset, data
-    return ds
+def load_dataset(dataset):
+    """VLMEvalKit's own loader (full tsv, same index handling as the original runs). Needs ~30+ GB RAM,
+    so run inside a CPU job (slurm/rescore_vlmeval.sh), not on a login node."""
+    from vlmeval.dataset import build_dataset
+    return build_dataset(dataset)
 
 
 def current_result(folder, key, dataset):
@@ -97,8 +87,7 @@ def main():
         raise SystemExit(f"judge {args.judge} is not working from here (test reply: {reply[:120]!r}); "
                          "check OPENAI_API_KEY / internet - nothing changed")
 
-    tsv = Path(os.environ.get("LMUData", Path.home() / "LMUData")) / f"{args.dataset}.tsv"
-    ds = light_dataset(args.dataset, tsv)
+    ds = load_dataset(args.dataset)
     tag = "_old" + time.strftime("%Y%m%d")
     print(f"\njudge {args.judge} OK; old scoring files kept with suffix {tag}\n", flush=True)
     meta_index = set(ds.data["index"])
@@ -108,9 +97,12 @@ def main():
         eval_index = list(load(str(p))["index"])
         missing = [x for x in eval_index if x not in meta_index]
         if missing:
-            raise SystemExit(f"{p.name}: {len(missing)} of {len(eval_index)} answer indices are not in {tsv.name} "
+            raise SystemExit(f"{p.name}: {len(missing)} of {len(eval_index)} answer indices are not in {args.dataset} "
                              f"(e.g. {missing[:3]}, types {sorted({type(x).__name__ for x in missing[:50]})}; "
                              f"dataset index example {next(iter(meta_index))!r}) - nothing changed for this run")
+        dups = len(eval_index) - len(set(eval_index))
+        if dups:
+            print(f"  note: {p.name} has {dups} duplicate question indices (VLMEvalKit scores those pairs together)")
         cur = current_result(p.parent, key, args.dataset)
         old = summary(cur) if cur else None
         for f in map(Path, glob.glob(f"{p.parent}/{key}_{args.dataset}_*")):
