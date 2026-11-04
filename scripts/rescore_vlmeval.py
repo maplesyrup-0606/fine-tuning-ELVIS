@@ -101,7 +101,16 @@ def main():
     ds = light_dataset(args.dataset, tsv)
     tag = "_old" + time.strftime("%Y%m%d")
     print(f"\njudge {args.judge} OK; old scoring files kept with suffix {tag}\n", flush=True)
+    meta_index = set(ds.data["index"])
     for key, p in runs:
+        # evaluate() asserts every answer's index is in the dataset; check first, before renaming anything.
+        from vlmeval.smp import load
+        eval_index = list(load(str(p))["index"])
+        missing = [x for x in eval_index if x not in meta_index]
+        if missing:
+            raise SystemExit(f"{p.name}: {len(missing)} of {len(eval_index)} answer indices are not in {tsv.name} "
+                             f"(e.g. {missing[:3]}, types {sorted({type(x).__name__ for x in missing[:50]})}; "
+                             f"dataset index example {next(iter(meta_index))!r}) - nothing changed for this run")
         cur = current_result(p.parent, key, args.dataset)
         old = summary(cur) if cur else None
         for f in map(Path, glob.glob(f"{p.parent}/{key}_{args.dataset}_*")):
