@@ -35,7 +35,12 @@ def light_dataset(dataset, tsv):
     """ImageMCQDataset with only the text columns its evaluate() needs (index, question, answer, A-Z)."""
     from vlmeval.dataset.image_mcq import ImageMCQDataset
     keep = lambda c: c in ("index", "question", "answer") or c in string.ascii_uppercase
-    data = pd.concat(pd.read_csv(tsv, sep="\t", usecols=keep, chunksize=2000))
+    data = pd.concat(pd.read_csv(tsv, sep="\t", usecols=keep, chunksize=2000, dtype={"index": str}))
+    # Same index handling as VLMEvalKit's ImageBaseDataset (image_base.py:157, 179-180): str, then int
+    # if every index is an integer; chunked reads can otherwise leave mixed str/int indices.
+    data["index"] = [str(x).strip() for x in data["index"]]
+    if all(x.lstrip("-").isdigit() for x in data["index"]):
+        data["index"] = [int(x) for x in data["index"]]
     ds = ImageMCQDataset.__new__(ImageMCQDataset)
     ds.dataset_name, ds.data = dataset, data
     return ds
