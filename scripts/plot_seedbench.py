@@ -25,6 +25,8 @@ from pathlib import Path
 
 import pandas as pd
 
+from eval_progress import MODELS, SETS, keys_for
+
 
 SUBPART_ORDER = [
     "Single-Image & Text Comprehension",
@@ -87,7 +89,7 @@ def parse_result_arg(arg: str):
     return Path(d), lab
 
 
-def plot_radar(results, out_path: Path):
+def plot_radar(results, out_path: Path, title_suffix=""):
     import matplotlib
     matplotlib.use("Agg")
     import matplotlib.pyplot as plt
@@ -134,7 +136,7 @@ def plot_radar(results, out_path: Path):
                         xy=(a, v), xytext=(a, v + 7),
                         ha="center", fontsize=7, color=COLORS[0])
 
-    ax.set_title("SEED-Bench-2 per-subpart accuracy\n"
+    ax.set_title(f"SEED-Bench-2 per-subpart accuracy{title_suffix}\n"
                  "(dotted ring = each model's overall accuracy)",
                  pad=28, fontsize=12)
     ax.legend(loc="upper right", bbox_to_anchor=(1.3, 1.1), fontsize=9)
@@ -403,8 +405,13 @@ def write_csv(results, csv_path: Path, group_by: str):
 
 def main():
     p = argparse.ArgumentParser(description=__doc__.strip().splitlines()[0])
-    p.add_argument("--result", action="append", required=True,
+    p.add_argument("--result", action="append", default=[],
                    help="<dir>[:label], repeat for each model")
+    p.add_argument("--set", nargs="+", default=None, choices=list(SETS),
+                   help="instead of --result: base + v3 runs of each set (results/seedbench_<key>), "
+                        "one plot per set in results/plots/ (seedbench_<group>_<set>.png)")
+    p.add_argument("--models", nargs="+", default=list(MODELS), choices=list(MODELS))
+    p.add_argument("--results", default="results")
     p.add_argument("--group-by", choices=["subpart", "skill"], default="subpart",
                    help="radar at subpart level (default) or "
                         "faceted bars at skill level (requires enriched xlsx)")
@@ -423,10 +430,27 @@ def main():
                    help="--per-subpart bar layout: h = horizontal, v = vertical grouped bars, "
                         "auto = vertical when a subpart has > 20 bars (e.g. L1 single-image)")
     args = p.parse_args()
+    if args.set:
+        for s in args.set:
+            dirs = [f"{run_dir(args.results, k)}:{m}" for m, k in zip(args.models, keys_for([s], args.models))]
+            run(p, args, dirs, args.out or f"{args.results}/plots/seedbench_{args.group_by}_{s}.png", f" [{s}]")
+        return
+    if not args.result:
+        p.error("give --result or --set")
+    run(p, args, args.result, args.out)
 
+
+def run_dir(results, key):
+    """results/seedbench_<key>, else whichever results/*/ folder holds <key>_SEEDBench2.xlsx."""
+    d = Path(results) / f"seedbench_{key}"
+    found = sorted(Path(results).glob(f"*/{key}_SEEDBench2.xlsx"))
+    return d if d.is_dir() or not found else found[0].parent
+
+
+def run(p, args, result_args, out, title_suffix=""):
     results = []
     first_dir = None
-    for arg in args.result:
+    for arg in result_args:
         d, lab = parse_result_arg(arg)
         if not d.is_dir():
             p.error(f"not a directory: {d}")
@@ -436,11 +460,11 @@ def main():
 
     default_stem = f"seedbench_{args.group_by}"
     # --per-subpart writes into --out's folder when --out is given, else the first result dir.
-    per_subpart_dir = Path(args.out).parent if args.out else first_dir
-    if args.out is None:
-        args.out = str(first_dir / f"{default_stem}.png")
-    if args.csv is None and args.write_csv:
-        args.csv = str(first_dir / f"{default_stem}.csv")
+    per_subpart_dir = Path(out).parent if out else first_dir
+    if out is None:
+        out = str(first_dir / f"{default_stem}.png")
+    csv = args.csv or (str(Path(out).with_suffix(".csv")) if args.write_csv else None)
+    Path(out).parent.mkdir(parents=True, exist_ok=True)
 
     print("\n=== Per-subpart accuracy ===")
     print(f"{'label':<16}{'level':<6}{'subpart':<42}{'n':>6}  acc")
@@ -453,15 +477,15 @@ def main():
         print()
 
     if args.group_by == "subpart":
-        plot_radar(results, Path(args.out))
+        plot_radar(results, Path(out), title_suffix)
     elif args.per_subpart:
         per_subpart_dir.mkdir(parents=True, exist_ok=True)
         plot_per_subpart(results, per_subpart_dir, args.orient)
     else:
-        plot_faceted_bars(results, Path(args.out))
+        plot_faceted_bars(results, Path(out))
 
-    if args.csv:
-        write_csv(results, Path(args.csv), args.group_by)
+    if csv:
+        write_csv(results, Path(csv), args.group_by)
 
 
 if __name__ == "__main__":
