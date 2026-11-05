@@ -274,7 +274,7 @@ def _plot_subpart_vertical(plt, np, results, sp, skills, out_dir, written, re):
               frameon=False)
     fig.tight_layout()
     slug = re.sub(r"[^a-z0-9]+", "_", sp.lower()).strip("_")
-    out_path = out_dir / f"seedbench_skill_{slug}.png"
+    out_path = out_dir / f"{SUBPART_ORDER.index(sp) + 1}_{slug}.png"
     fig.savefig(out_path, dpi=150, bbox_inches="tight")
     plt.close(fig)
     written.append(out_path)
@@ -365,7 +365,7 @@ def plot_per_subpart(results, out_dir: Path, orient: str = "auto"):
 
         fig.tight_layout()
         slug = re.sub(r"[^a-z0-9]+", "_", sp.lower()).strip("_")
-        out_path = out_dir / f"seedbench_skill_{slug}.png"
+        out_path = out_dir / f"{SUBPART_ORDER.index(sp) + 1}_{slug}.png"
         fig.savefig(out_path, dpi=150, bbox_inches="tight")
         plt.close(fig)
         written.append(out_path)
@@ -409,7 +409,7 @@ def main():
                    help="<dir>[:label], repeat for each model")
     p.add_argument("--set", nargs="+", default=None, choices=list(SETS),
                    help="instead of --result: base + v3 runs of each set (results/seedbench_<key>), "
-                        "one plot per set in results/plots/ (seedbench_<group>_<set>.png)")
+                        "plots go to results/plots/seedbench/<set>/")
     p.add_argument("--models", nargs="+", default=list(MODELS), choices=list(MODELS))
     p.add_argument("--results", default="results")
     p.add_argument("--group-by", choices=["subpart", "skill"], default="subpart",
@@ -433,9 +433,9 @@ def main():
     if args.set:
         for s in args.set:
             dirs = [f"{run_dir(args.results, k)}:{m}" for m, k in zip(args.models, keys_for([s], args.models))]
-            # --per-subpart names files by subpart only -> one folder per set so sets don't overwrite each other
-            out = (f"{args.results}/plots/skill_{s}/seedbench_skill.png" if args.per_subpart
-                   else f"{args.results}/plots/seedbench_{args.group_by}_{s}.png")
+            # one folder per set: results/plots/seedbench/<set>/ (radar.png, skills.png, 1_..6_<subpart>.png)
+            name = "radar" if args.group_by == "subpart" else "skills"
+            out = f"{args.results}/plots/seedbench/{s}/{name}.png"
             run(p, args, dirs, args.out or out, f" [{s}]")
         return
     if not args.result:
