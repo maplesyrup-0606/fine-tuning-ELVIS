@@ -121,6 +121,25 @@ def scores(acc_file):
     return " ".join(vals)
 
 
+def overall_table(sets, models, root, results, dataset):
+    """Models x sets, Overall accuracy (%) from each run's *_acc file; '-' if not scored yet."""
+    import pandas as pd
+    rows = {}
+    for m in models:
+        row = {}
+        for s in sets:
+            key = keys_for([s], [m])[0]
+            acc = progress(key, root, results, dataset, 10000)[3]
+            if acc:
+                df = pd.read_csv(acc[0]) if acc[0].suffix == ".csv" else pd.read_excel(acc[0])
+                v = float(df["Overall"].iloc[0])
+                row[s] = f"{100 * v if v <= 1 else v:.2f}"
+            else:
+                row[s] = "-"
+        rows[m] = row
+    return pd.DataFrame(rows).T.to_string()
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__.strip().splitlines()[0],
                                      formatter_class=argparse.RawDescriptionHelpFormatter, epilog=__doc__)
@@ -131,6 +150,7 @@ def main():
     parser.add_argument("--all", action="store_true", help="every key that has results for this dataset")
     parser.add_argument("--pending", action="store_true", help="hide runs that are already done")
     parser.add_argument("--scores", action="store_true", help="also print the *_acc scores of finished runs")
+    parser.add_argument("--table", action="store_true", help="only a models x sets table of Overall accuracy")
     parser.add_argument("--job-prefix", default=None,
                         help="Slurm job-name prefix to match (default: sb2 for SEEDBench2, vf for VisFactor, else any)")
     parser.add_argument("--long", type=int, default=10000, help="answers with at least this many chars count as runaway")
@@ -145,6 +165,10 @@ def main():
             found |= {d.name for d in root.iterdir() if d.is_dir() and any(d.glob(f"**/*_{args.dataset}*"))}
         keys = sorted(found)
     job_prefix = args.job_prefix or {"SEEDBench2": "sb2", "VisFactor": "vf"}.get(args.dataset)
+
+    if args.table:
+        print(overall_table(args.set, args.models, root, args.results, args.dataset))
+        return
 
     total = dataset_size(args.dataset)
     jobs = slurm_jobs()
