@@ -433,7 +433,10 @@ def main():
     if args.set:
         for s in args.set:
             dirs = [f"{run_dir(args.results, k)}:{m}" for m, k in zip(args.models, keys_for([s], args.models))]
-            run(p, args, dirs, args.out or f"{args.results}/plots/seedbench_{args.group_by}_{s}.png", f" [{s}]")
+            # --per-subpart names files by subpart only -> one folder per set so sets don't overwrite each other
+            out = (f"{args.results}/plots/skill_{s}/seedbench_skill.png" if args.per_subpart
+                   else f"{args.results}/plots/seedbench_{args.group_by}_{s}.png")
+            run(p, args, dirs, args.out or out, f" [{s}]")
         return
     if not args.result:
         p.error("give --result or --set")
