@@ -101,7 +101,9 @@ def progress(key, root, results, dataset, long):
         if isinstance(d, dict) and len(d) > len(best):
             best = d
     runaway = sum(len(str(v)) >= long for v in best.values())
-    acc = sorted(out.glob(f"**/{key}_{dataset}*acc*")) + sorted(Path(results).glob(f"*/{key}_{dataset}*acc*"))
+    # results/ first: rescore_vlmeval.py re-scores there (outputs/ keeps the original scoring); skip _old<date> backups.
+    acc = [f for f in sorted(Path(results).glob(f"*/{key}_{dataset}*acc*")) + sorted(out.glob(f"**/{key}_{dataset}*acc*"))
+           if "_old" not in f.stem]
     return len(best), runaway, bool(final) or bool(acc), acc
 
 
