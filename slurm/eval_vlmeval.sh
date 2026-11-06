@@ -4,23 +4,25 @@
 #SBATCH --gpus=nvidia_h100_80gb_hbm3_3g.40gb:1
 #SBATCH --cpus-per-task=6
 #SBATCH --mem=32G
-#SBATCH --output=logs/seedbench_%x_%j.out
-#SBATCH --error=logs/seedbench_%x_%j.err
+#SBATCH --output=logs/eval_%x_%j.out
+#SBATCH --error=logs/eval_%x_%j.err
 #SBATCH --mail-type=BEGIN,END,FAIL
 #SBATCH --mail-user=mercurymcindoe@gmail.com
 #SBATCH --signal=B:USR1@120
 
 set -euo pipefail
 
+# One VLMEvalKit model x dataset run, resubmitting itself until the score file exists.
 # Usage:
-#   sbatch -J seedbench-llm-e2  slurm/eval_seedbench_variant.sh Qwen3-VL-4B-Instruct-llm-e2
-#   sbatch -J ocrbench_v2-llm   slurm/eval_seedbench_variant.sh Qwen3-VL-4B-Instruct-llm-e2 OCRBench_v2
+#   sbatch -J sb2-t0p-cp   slurm/eval_vlmeval.sh Qwen3-VL-4B-Instruct-t0p-cp
+#   sbatch -J mmstar-t0p-cp slurm/eval_vlmeval.sh Qwen3-VL-4B-Instruct-t0p-cp MMStar
 #
 # <MODEL_NAME> must already be registered in $VLMEVALKIT_DIR/vlmeval/config.py
 # (partial(vlm.Qwen3VLChat, model_path=...)).
-# <DATASET> defaults to SEEDBench2 for backwards compat; any VLMEvalKit
-# dataset key works (OCRBench, OCRBench_v2, DocVQA_TEST, ChartQA_TEST, ...).
-MODEL_NAME=${1:?usage: sbatch -J <jobname> slurm/eval_seedbench_variant.sh <MODEL_NAME> [DATASET]}
+# <DATASET> defaults to SEEDBench2; any VLMEvalKit dataset key works
+# (MMMU_DEV_VAL, MMStar, MMBench_DEV_EN_V11, AI2D_TEST, VisFactor, OCRBench, ...).
+# MCQ datasets use the GPT judge: the OpenAI key is read from $VLMEVALKIT_DIR/.env.
+MODEL_NAME=${1:?usage: sbatch -J <jobname> slurm/eval_vlmeval.sh <MODEL_NAME> [DATASET]}
 DATASET=${2:-SEEDBench2}
 
 # --- Environment (identical to baseline) ---
@@ -30,6 +32,10 @@ VENV=${VENV:-$SCRATCH/venv/elvis}
 source "$VENV/bin/activate"
 
 VLMEVALKIT_DIR=${VLMEVALKIT_DIR:-$SCRATCH/VLMEvalKit}
+# OpenAI key for the MCQ judge; without it VLMEvalKit silently falls back to exact matching
+# ("Failed in Prefetch" -> unparsed answers counted wrong).
+if [ -f "$VLMEVALKIT_DIR/.env" ]; then set -a; source "$VLMEVALKIT_DIR/.env"; set +a; fi
+[ -n "${OPENAI_API_KEY:-}" ] || echo "!! WARNING: OPENAI_API_KEY not set - MCQ answers will be scored without the GPT judge"
 
 export HF_HOME=${HF_HOME:-$SCRATCH/hf_cache}
 export TRANSFORMERS_CACHE=$HF_HOME/transformers
@@ -108,4 +114,4 @@ cd "$SLURM_SUBMIT_DIR"
 sbatch --job-name="$SLURM_JOB_NAME" \
        --dependency=afterany:$SLURM_JOB_ID \
        --export=ALL,CHAIN_ITER=$NEXT_ITER,CHAIN_MAX=$CHAIN_MAX \
-       slurm/eval_seedbench_variant.sh "$MODEL_NAME" "$DATASET"
+       slurm/eval_vlmeval.sh "$MODEL_NAME" "$DATASET"
