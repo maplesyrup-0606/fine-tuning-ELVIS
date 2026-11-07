@@ -49,7 +49,7 @@ def _num(v):
 
 def check(key, dataset, results, total):
     """Completeness + judge stats for one run."""
-    r = dict(answers=0, total=total, scored=False, unscored=None, random=None, acc=None, n={})
+    r = dict(answers=0, total=total, scored=False, unscored=None, random=None, acc=None, n={}, levels={})
     ans = newest(list(Path(results).glob(f"*/{key}_{dataset}.xlsx")))
     if ans is not None:
         r["answers"] = len(pd.read_excel(ans, usecols=["index"]))
@@ -64,9 +64,11 @@ def check(key, dataset, results, total):
         if "split" in d and (d["split"] == "validation").any():
             d = d[d["split"] == "validation"]
         r["n"] = {"Overall": len(d)}
-        for col in ("l2-category", "category"):
+        for col in ("category", "l2-category"):  # two levels; each question is in one category per level
             if col in d:
-                r["n"].update(d[col].astype(str).value_counts().to_dict())
+                counts = d[col].astype(str).value_counts()
+                r["levels"][col] = list(counts.index)
+                r["n"].update(counts.to_dict())
     acc = newest(list(Path(results).glob(f"*/{key}_{dataset}_acc.csv")))
     if acc is not None:
         r["scored"] = True
@@ -158,7 +160,7 @@ CSS = """
   --ok:#5cc58a;--bad:#ff8a80}}
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.5 system-ui,sans-serif}
 main{max-width:1200px;margin:0 auto;padding:20px 16px 48px}h1{font-size:21px;margin:0 0 4px}
-h2{font-size:17px;margin:28px 0 6px}.muted{color:var(--muted)}
+h2{font-size:17px;margin:28px 0 6px}h3{font-size:15px;margin:16px 0 2px}h3+p{margin:0 0 6px}.muted{color:var(--muted)}
 .scroll{overflow-x:auto}table{border-collapse:collapse;background:var(--card);font-variant-numeric:tabular-nums}
 th,td{border:1px solid var(--line);padding:4px 10px;text-align:right;white-space:nowrap}
 th[scope=row],tr:first-child th{text-align:left}td small{display:block;font-size:11px;color:var(--muted)}
@@ -227,8 +229,20 @@ def main():
         cat = pd.DataFrame({m: checks[ds, m]["acc"] or {} for m in keys}).T
         if cat.empty or "Overall" not in cat:
             continue
-        cols = ["Overall"] + [c for c in cat.columns if c != "Overall"]
-        parts += [f"<h2>{escape(ds)} by category</h2>", table(cat[cols].astype(float), base, n=checks[ds, base]["n"])]
+        n, levels = checks[ds, base]["n"], checks[ds, base]["levels"]
+        parts.append(f"<h2>{escape(ds)} by category</h2>")
+        shown = {"Overall"}
+        for level, cats in levels.items():
+            cols = [c for c in cats if c in cat.columns]
+            if not cols:
+                continue
+            shown |= set(cols)
+            total = sum(n[c] for c in cols)
+            parts += [f"<h3>{escape(level)} ({len(cols)} groups)</h3><p class='muted'>n sums to {total} of "
+                      f"{n['Overall']}</p>", table(cat[["Overall"] + cols].astype(float), base, n=n)]
+        rest = [c for c in cat.columns if c not in shown]
+        if rest:  # columns without a matching category column in the result file
+            parts += ["<h3>other columns</h3>", table(cat[["Overall"] + rest].astype(float), base, n=n)]
     parts += ["<details><summary>Run verification</summary><div class='scroll'><table>"
               "<tr><th>dataset</th><th>model</th><th>answers</th><th>scored</th><th>unscored (no judge)</th>"
               f"<th>random fallback</th><th>status</th></tr>{ver_rows}</table></div></details>",
