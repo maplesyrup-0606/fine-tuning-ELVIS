@@ -6,7 +6,8 @@ check every run is complete and judge-scored, then write one self-contained HTML
 Per dataset x model (results/*/<key>_<dataset>*):
   answers   rows in <key>_<dataset>.xlsx vs the dataset tsv in $LMUData
   scored    a <key>_<dataset>_acc.csv exists (not an _old<date> backup)
-  unscored  answers the rules could not parse and no GPT judge was used ("Failed in Prefetch")
+  unscored  answers the rules could not parse and no GPT judge was used ("Failed in Prefetch, no GPT-based answer matching ...";
+            MMBench's circular "Failed in Prefetching Rolling" is a scored wrong answer, not this)
   random    answers scored by VLMEvalKit's random fallback (judge failed)
 A run is OK when all answers are there, it is scored, and unscored == 0.
 
@@ -56,7 +57,7 @@ def check(key, dataset, results, total):
     if res is not None:
         d = pd.read_excel(res)
         log = d["log"].astype(str) if "log" in d else pd.Series([], dtype=str)
-        r["unscored"] = int(log.str.contains("Failed in Prefetch").sum())
+        r["unscored"] = int(log.str.contains("no GPT-based answer matching").sum())
         r["random"] = int(log.str.contains("randomly generate").sum())
     acc = newest(list(Path(results).glob(f"*/{key}_{dataset}_acc.csv")))
     if acc is not None:

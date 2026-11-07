@@ -45,7 +45,7 @@ def current_result(folder, key, dataset):
 def summary(result_xlsx):
     d = pd.read_excel(result_xlsx, usecols=["hit", "log"])
     log = d["log"].astype(str)
-    return 100 * d["hit"].mean(), int(log.str.contains("Failed in Prefetch").sum()), \
+    return 100 * d["hit"].mean(), int(log.str.contains("no GPT-based answer matching").sum()), \
         int(log.str.contains("randomly generate").sum())
 
 

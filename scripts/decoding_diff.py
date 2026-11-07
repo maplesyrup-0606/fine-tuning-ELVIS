@@ -59,7 +59,7 @@ def path(row):
     log, pred = row["log"], row["prediction"]
     if "randomly generate" in log:
         return "random"
-    if "Failed in Prefetch" in log:  # rules failed and no GPT judge was available -> scored as wrong
+    if "no GPT-based answer matching" in log:  # rules failed and no GPT judge was available -> scored as wrong
         return "no judge (exact matching) -> wrong"
     if log.startswith(f"Match Log: {pred}"):
         return "rule"
