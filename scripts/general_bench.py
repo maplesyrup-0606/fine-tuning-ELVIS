@@ -49,7 +49,7 @@ def _num(v):
 
 def check(key, dataset, results, total):
     """Completeness + judge stats for one run."""
-    r = dict(answers=0, total=total, scored=False, unscored=None, random=None, acc=None)
+    r = dict(answers=0, total=total, scored=False, unscored=None, random=None, acc=None, n={})
     ans = newest(list(Path(results).glob(f"*/{key}_{dataset}.xlsx")))
     if ans is not None:
         r["answers"] = len(pd.read_excel(ans, usecols=["index"]))
@@ -59,6 +59,14 @@ def check(key, dataset, results, total):
         log = d["log"].astype(str) if "log" in d else pd.Series([], dtype=str)
         r["unscored"] = int(log.str.contains("no GPT-based answer matching").sum())
         r["random"] = int(log.str.contains("randomly generate").sum())
+        # Questions per category column of the acc file (same rows report_acc averages: MMMU validation split,
+        # MMBench one row per circular group).
+        if "split" in d and (d["split"] == "validation").any():
+            d = d[d["split"] == "validation"]
+        r["n"] = {"Overall": len(d)}
+        for col in ("l2-category", "category"):
+            if col in d:
+                r["n"].update(d[col].astype(str).value_counts().to_dict())
     acc = newest(list(Path(results).glob(f"*/{key}_{dataset}_acc.csv")))
     if acc is not None:
         r["scored"] = True
@@ -113,10 +121,23 @@ def shade(delta):
     return f" style='background:rgba({rgb},{a:.2f})'"
 
 
-def table(df, base, fmt="{:.1f}"):
-    """Models x columns; non-base cells shaded by their difference vs base, which is shown in small text."""
+def noise(p, n):
+    """~2 standard errors (points) of the difference of two accuracies around p (%) on n questions.
+    Treats the two runs as independent, so it is conservative (paired runs vary less)."""
+    p = min(max(p / 100, 0.01), 0.99)
+    return 200 * (2 * p * (1 - p) / n) ** 0.5
+
+
+def table(df, base, fmt="{:.1f}", n=None):
+    """Models x columns; non-base cells shaded by their difference vs base, which is shown in small text.
+    With n (questions per column): an extra row with n and the ~2 SE noise band, and differences larger than
+    that band are marked (● and bold)."""
     head = "".join(f"<th>{escape(str(c))}</th>" for c in df.columns)
     body = ""
+    if n:
+        band = {c: noise(df.at[base, c], n[c]) if n.get(c) and pd.notna(df.at[base, c]) else None for c in df.columns}
+        body += "<tr class='n'><th scope='row'>n <small>±noise</small></th>" + "".join(
+            f"<td>{n.get(c, '–')}<small>{'' if band[c] is None else f'±{band[c]:.1f}'}</small></td>" for c in df.columns) + "</tr>"
     for m, row in df.iterrows():
         cells = ""
         for c, v in row.items():
@@ -124,8 +145,9 @@ def table(df, base, fmt="{:.1f}"):
                 cells += "<td>–</td>"
                 continue
             d = None if m == base or pd.isna(df.at[base, c]) else v - df.at[base, c]
-            extra = f"<small>{d:+.1f}</small>" if d is not None else ""
-            cells += f"<td{shade(d)}>{fmt.format(v)}{extra}</td>"
+            big = n and d is not None and band.get(c) is not None and abs(d) > band[c]
+            extra = f"<small>{'● ' if big else ''}{d:+.1f}</small>" if d is not None else ""
+            cells += f"<td{shade(d)}{' class=big' if big else ''}>{fmt.format(v)}{extra}</td>"
         body += f"<tr><th scope='row'>{escape(str(m))}</th>{cells}</tr>"
     return f"<div class='scroll'><table><tr><th></th>{head}</tr>{body}</table></div>"
 
@@ -143,6 +165,8 @@ th[scope=row],tr:first-child th{text-align:left}td small{display:block;font-size
 .ok{color:var(--ok);font-weight:600}.bad{color:var(--bad);font-weight:600}
 img{max-width:100%;height:auto;background:#fff;border:1px solid var(--line);border-radius:6px}
 details{margin:8px 0}summary{cursor:pointer;font-weight:600}
+td.big{font-weight:700}td.big small{color:var(--ink);font-weight:700}
+tr.n td,tr.n th{background:transparent;color:var(--muted);font-size:12px}
 """
 
 
@@ -191,9 +215,12 @@ def main():
              f"<style>{CSS}</style></head><body><main>",
              f"<h1>General benchmarks: base vs v3 ({escape(args.set)})</h1>",
              f"<p class='muted'>VLMEvalKit, GPT-judge scoring (gpt-4o-mini). Accuracy in %. Small numbers = difference "
-             f"vs base; blue = higher, red = lower. MMMU = validation split. Runs verified: "
+             f"vs base; blue = higher, red = lower. Row n = questions per column (MMBench: circular question groups) and "
+             f"±noise = about 2 standard errors of a difference at that n; <b>● bold</b> = difference larger than that, "
+             f"i.e. unlikely to be chance alone. MMMU = validation split. Runs verified: "
              f"<b class='{'ok' if not bad else 'bad'}'>{n_ok}/{len(checks)} OK</b> (details at the bottom).</p>",
-             "<h2>Overall accuracy</h2>", table(overall, base, "{:.2f}"),
+             "<h2>Overall accuracy</h2>",
+             table(overall, base, "{:.2f}", {ds: checks[ds, base]["n"].get("Overall") for ds in args.datasets}),
              "<h2>Difference vs base</h2>",
              f"<img alt='accuracy minus base per dataset' src='data:image/png;base64,{chart_png(overall, base)}'>"]
     for ds in args.datasets:
@@ -201,7 +228,7 @@ def main():
         if cat.empty or "Overall" not in cat:
             continue
         cols = ["Overall"] + [c for c in cat.columns if c != "Overall"]
-        parts += [f"<h2>{escape(ds)} by category</h2>", table(cat[cols].astype(float), base)]
+        parts += [f"<h2>{escape(ds)} by category</h2>", table(cat[cols].astype(float), base, n=checks[ds, base]["n"])]
     parts += ["<details><summary>Run verification</summary><div class='scroll'><table>"
               "<tr><th>dataset</th><th>model</th><th>answers</th><th>scored</th><th>unscored (no judge)</th>"
               f"<th>random fallback</th><th>status</th></tr>{ver_rows}</table></div></details>",
