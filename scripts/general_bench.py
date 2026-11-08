@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 General-ability benchmarks (default: the four from the ELVIS correlation study) for base + v3 models:
-check every run is complete and judge-scored, then write one self-contained HTML report.
+check every run is complete and judge-scored, then write one self-contained interactive HTML report.
 
 Per dataset x model (results/*/<key>_<dataset>*):
   answers   rows in <key>_<dataset>.xlsx vs the dataset tsv in $LMUData
@@ -11,19 +11,24 @@ Per dataset x model (results/*/<key>_<dataset>*):
   random    answers scored by VLMEvalKit's random fallback (judge failed)
 A run is OK when all answers are there, it is scored, and unscored == 0.
 
-Report: Overall accuracy (models x datasets), difference vs base (chart + table), and per-category
-accuracy for each dataset. MMMU uses the 'validation' row (the reported split), others the first row.
+Report (scripts/general_bench.html is the page; the data is embedded as JSON): overview cards and a
+difference-vs-base chart with each benchmark's noise band, then per benchmark the category tables for both
+category levels (n, ~2 SE noise band, differences beyond it marked), a forest plot of one model vs base, and
+example questions per category (image, options, correct answer, every model's answer).
+MMMU uses the validation split (the reported one); MMBench counts circular question groups.
 
 Usage (on Fir, from fine-tuning-ELVIS):
-  python scripts/general_bench.py                    # verify only
+  python scripts/general_bench.py                                     # verify only
   python scripts/general_bench.py --html results/general_bench.html
-  python scripts/general_bench.py --set t0p-cp --datasets MMStar AI2D_TEST
+  python scripts/general_bench.py --html results/gb.html --samples 12 --sample-cats structuralized_imagetext_understanding
 """
 
 import argparse
+import ast
 import base64
 import io
-from html import escape
+import json
+import os
 from pathlib import Path
 
 import pandas as pd
@@ -31,7 +36,10 @@ import pandas as pd
 from eval_progress import MODELS, SETS, dataset_size, keys_for
 
 DATASETS = ["MMMU_DEV_VAL", "MMStar", "MMBench_DEV_EN_V11", "AI2D_TEST"]
-COLORS = ["#2a6fb0", "#c8553d", "#3a9a5b", "#8a5cb8"]  # v3 models, fixed order
+LABELS = {"MMMU_DEV_VAL": "MMMU (val)", "MMStar": "MMStar", "MMBench_DEV_EN_V11": "MMBench v1.1 (dev, EN)",
+          "AI2D_TEST": "AI2D (test)"}
+LEVELS = ("category", "l2-category")  # VLMEvalKit's two category levels; each question has one value per level
+TEMPLATE = Path(__file__).with_name("general_bench.html")
 
 
 def newest(files):
@@ -47,24 +55,32 @@ def _num(v):
         return False
 
 
+def judged(key, dataset, results):
+    """Judged rows of one run (prediction, hit, category columns, log, ...); MMMU validation split only."""
+    f = newest(list(Path(results).glob(f"*/{key}_{dataset}_*_result.xlsx")))
+    if f is None:
+        return None, None
+    d = pd.read_excel(f)
+    log = d["log"].astype(str) if "log" in d else pd.Series([], dtype=str)
+    if "split" in d and (d["split"] == "validation").any():
+        d = d[d["split"] == "validation"]
+    d["index"] = d["index"].astype(str)
+    return d.set_index("index"), log
+
+
 def check(key, dataset, results, total):
-    """Completeness + judge stats for one run."""
+    """Completeness + judge stats + accuracies for one run."""
     r = dict(answers=0, total=total, scored=False, unscored=None, random=None, acc=None, n={}, levels={})
     ans = newest(list(Path(results).glob(f"*/{key}_{dataset}.xlsx")))
     if ans is not None:
         r["answers"] = len(pd.read_excel(ans, usecols=["index"]))
-    res = newest(list(Path(results).glob(f"*/{key}_{dataset}_*_result.xlsx")))
-    if res is not None:
-        d = pd.read_excel(res)
-        log = d["log"].astype(str) if "log" in d else pd.Series([], dtype=str)
+    d, log = judged(key, dataset, results)
+    if d is not None:
         r["unscored"] = int(log.str.contains("no GPT-based answer matching").sum())
         r["random"] = int(log.str.contains("randomly generate").sum())
-        # Questions per category column of the acc file (same rows report_acc averages: MMMU validation split,
-        # MMBench one row per circular group).
-        if "split" in d and (d["split"] == "validation").any():
-            d = d[d["split"] == "validation"]
+        # Questions per category: the same rows report_acc averages (MMMU validation, MMBench circular groups).
         r["n"] = {"Overall": len(d)}
-        for col in ("category", "l2-category"):  # two levels; each question is in one category per level
+        for col in LEVELS:
             if col in d:
                 counts = d[col].astype(str).value_counts()
                 r["levels"][col] = list(counts.index)
@@ -80,96 +96,81 @@ def check(key, dataset, results, total):
     return r
 
 
-def chart_png(overall, base):
-    """Difference vs base per dataset, one bar per v3 model, as base64 PNG."""
-    import matplotlib
-    matplotlib.use("Agg")
-    import matplotlib.pyplot as plt
-    import numpy as np
-    v3 = [m for m in overall.index if m != base]
-    ds = list(overall.columns)
-    fig, ax = plt.subplots(figsize=(max(6, 1.9 * len(ds) + 2), 3.8))
-    w = 0.8 / max(1, len(v3))
-    x = np.arange(len(ds))
-    for i, m in enumerate(v3):
-        delta = (overall.loc[m] - overall.loc[base]).values.astype(float)
-        bars = ax.bar(x + (i - (len(v3) - 1) / 2) * w, delta, w * 0.92, label=m, color=COLORS[i % len(COLORS)])
-        for b, v in zip(bars, delta):
-            if not np.isnan(v):
-                ax.text(b.get_x() + b.get_width() / 2, v + (0.04 if v >= 0 else -0.04), f"{v:+.1f}",
-                        ha="center", va="bottom" if v >= 0 else "top", fontsize=7, color="#333")
-    ax.axhline(0, color="#555", linewidth=1)
-    ax.set_xticks(x)
-    ax.set_xticklabels(ds, fontsize=9)
-    ax.set_ylabel("accuracy − base (points)")
-    ax.grid(axis="y", alpha=0.3)
-    ax.set_axisbelow(True)
-    for s in ("top", "right"):
-        ax.spines[s].set_visible(False)
-    ax.legend(ncol=len(v3), fontsize=8, loc="upper center", bbox_to_anchor=(0.5, -0.12), frameon=False)
-    fig.tight_layout()
-    buf = io.BytesIO()
-    fig.savefig(buf, format="png", dpi=150, bbox_inches="tight")
-    plt.close(fig)
-    return base64.b64encode(buf.getvalue()).decode()
+def thumbnails(cell, image_map, size=520, limit=3):
+    """VLMEvalKit image field -> up to `limit` small JPEG data URIs. The field is base64, a list of base64
+    strings (multi-image questions), or the index of another row holding the image (to save space)."""
+    from PIL import Image
+    s = str(cell)
+    if 0 < len(s) <= 64:
+        s = image_map.get(s, "")
+    try:
+        imgs = ast.literal_eval(s) if s.startswith("[") else [s]
+    except (ValueError, SyntaxError):
+        imgs = [s]
+    out = []
+    for b in imgs[:limit]:
+        try:
+            im = Image.open(io.BytesIO(base64.b64decode(b))).convert("RGB")
+        except Exception:
+            continue
+        im.thumbnail((size, size))
+        buf = io.BytesIO()
+        im.save(buf, format="JPEG", quality=72)
+        out.append("data:image/jpeg;base64," + base64.b64encode(buf.getvalue()).decode())
+    return out
 
 
-def shade(delta):
-    """Background for a difference vs base: blue = better, red = worse, stronger with size (capped at 3 points)."""
-    if delta is None or pd.isna(delta) or abs(delta) < 0.05:
-        return ""
-    a = min(abs(delta) / 3, 1) * 0.45
-    rgb = "42,111,176" if delta > 0 else "200,85,61"
-    return f" style='background:rgba({rgb},{a:.2f})'"
+def samples(ds, runs, levels, k, only=None, seed=0):
+    """Up to k example questions per finest-level category, with image thumbnails and every model's answer."""
+    tsv = Path(os.environ.get("LMUData", Path.home() / "LMUData")) / f"{ds}.tsv"
+    base = next(iter(runs.values()))
+    if k <= 0 or base is None or not tsv.is_file():
+        return []
+    meta = pd.read_csv(tsv, sep="\t", dtype=str, keep_default_na=False)
+    image_map = dict(zip(meta["index"], meta["image"])) if "image" in meta else {}
+    meta = meta.set_index("index")
+    level = max(levels, key=lambda lv: len(levels[lv])) if levels else None
+    groups = base.groupby(base[level].astype(str)) if level else [("all questions", base)]
+    out = []
+    for name, g in groups:
+        if only and not (name in only or any(str(g[lv].iloc[0]) in only for lv in levels if lv in g)):
+            continue
+        for idx in g.sample(min(k, len(g)), random_state=seed).index:
+            row = meta.loc[idx] if idx in meta.index else None
+            if isinstance(row, pd.DataFrame):
+                row = row.iloc[0]
+            out.append(dict(
+                index=idx,
+                cats={lv: str(g.at[idx, lv]) for lv in levels if lv in g},
+                images=thumbnails(row["image"], image_map) if row is not None and "image" in row else [],
+                question=str(g.at[idx, "question"]) if "question" in g else "",
+                hint=str(row["hint"]) if row is not None and "hint" in row else "",
+                options=[[c, str(row[c])] for c in "ABCDEFGHI" if row is not None and c in row and str(row[c]).strip()],
+                answer=str(g.at[idx, "answer"]) if "answer" in g else "",
+                preds={m: [str(r.at[idx, "prediction"])[:400], int(r.at[idx, "hit"])]
+                       for m, r in runs.items() if r is not None and idx in r.index}))
+    return out
 
 
-def noise(p, n):
-    """~2 standard errors (points) of the difference of two accuracies around p (%) on n questions.
-    Treats the two runs as independent, so it is conservative (paired runs vary less)."""
-    p = min(max(p / 100, 0.01), 0.99)
-    return 200 * (2 * p * (1 - p) / n) ** 0.5
-
-
-def table(df, base, fmt="{:.1f}", n=None):
-    """Models x columns; non-base cells shaded by their difference vs base, which is shown in small text.
-    With n (questions per column): an extra row with n and the ~2 SE noise band, and differences larger than
-    that band are marked (● and bold)."""
-    head = "".join(f"<th>{escape(str(c))}</th>" for c in df.columns)
-    body = ""
-    if n:
-        band = {c: noise(df.at[base, c], n[c]) if n.get(c) and pd.notna(df.at[base, c]) else None for c in df.columns}
-        body += "<tr class='n'><th scope='row'>n <small>±noise</small></th>" + "".join(
-            f"<td>{n.get(c, '–')}<small>{'' if band[c] is None else f'±{band[c]:.1f}'}</small></td>" for c in df.columns) + "</tr>"
-    for m, row in df.iterrows():
-        cells = ""
-        for c, v in row.items():
-            if pd.isna(v):
-                cells += "<td>–</td>"
-                continue
-            d = None if m == base or pd.isna(df.at[base, c]) else v - df.at[base, c]
-            big = n and d is not None and band.get(c) is not None and abs(d) > band[c]
-            extra = f"<small>{'● ' if big else ''}{d:+.1f}</small>" if d is not None else ""
-            cells += f"<td{shade(d)}{' class=big' if big else ''}>{fmt.format(v)}{extra}</td>"
-        body += f"<tr><th scope='row'>{escape(str(m))}</th>{cells}</tr>"
-    return f"<div class='scroll'><table><tr><th></th>{head}</tr>{body}</table></div>"
-
-
-CSS = """
-:root{--bg:#fafaf8;--card:#fff;--ink:#1a1a1a;--muted:#666;--line:#e3e3e0;--ok:#1a7f4b;--bad:#b3261e}
-@media (prefers-color-scheme:dark){:root{--bg:#161616;--card:#1f1f1f;--ink:#e8e8e6;--muted:#a0a0a0;--line:#333;
-  --ok:#5cc58a;--bad:#ff8a80}}
-*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.5 system-ui,sans-serif}
-main{max-width:1200px;margin:0 auto;padding:20px 16px 48px}h1{font-size:21px;margin:0 0 4px}
-h2{font-size:17px;margin:28px 0 6px}h3{font-size:15px;margin:16px 0 2px}h3+p{margin:0 0 6px}.muted{color:var(--muted)}
-.scroll{overflow-x:auto}table{border-collapse:collapse;background:var(--card);font-variant-numeric:tabular-nums}
-th,td{border:1px solid var(--line);padding:4px 10px;text-align:right;white-space:nowrap}
-th[scope=row],tr:first-child th{text-align:left}td small{display:block;font-size:11px;color:var(--muted)}
-.ok{color:var(--ok);font-weight:600}.bad{color:var(--bad);font-weight:600}
-img{max-width:100%;height:auto;background:#fff;border:1px solid var(--line);border-radius:6px}
-details{margin:8px 0}summary{cursor:pointer;font-weight:600}
-td.big{font-weight:700}td.big small{color:var(--ink);font-weight:700}
-tr.n td,tr.n th{background:transparent;color:var(--muted);font-size:12px}
-"""
+def report_data(args, keys, checks, base):
+    datasets = []
+    for ds in args.datasets:
+        b = checks[ds, base]
+        acc = {m: checks[ds, m]["acc"] or {} for m in keys}
+        levels = [dict(name=lv, groups=[dict(cat=c, n=b["n"].get(c), acc={m: acc[m].get(c) for m in keys})
+                                         for c in cats if any(c in acc[m] for m in keys)])
+                  for lv, cats in b["levels"].items()]
+        ex = []
+        if args.samples:
+            runs = {m: judged(key, ds, args.results)[0] for m, key in keys.items()}
+            ex = samples(ds, runs, b["levels"], args.samples, args.sample_cats)
+        print(f"  {ds}: {sum(len(l['groups']) for l in levels)} category groups, {len(ex)} examples")
+        datasets.append(dict(name=ds, label=LABELS.get(ds, ds), n=b["n"].get("Overall"),
+                             overall={m: acc[m].get("Overall") for m in keys},
+                             levels=[l for l in levels if l["groups"]], samples=ex))
+    verify = [dict(ds=ds, model=m, answers=r["answers"], total=r["total"], scored=r["scored"],
+                   unscored=r["unscored"], random=r["random"], ok=r["ok"]) for (ds, m), r in checks.items()]
+    return dict(set=args.set, base=base, models=list(keys), datasets=datasets, verify=verify)
 
 
 def main():
@@ -180,6 +181,10 @@ def main():
     parser.add_argument("--models", nargs="+", default=list(MODELS), choices=list(MODELS))
     parser.add_argument("--results", default="results")
     parser.add_argument("--html", default=None, help="write the report here (e.g. results/general_bench.html)")
+    parser.add_argument("--samples", type=int, default=4,
+                        help="example questions per (finest) category in the report; 0 = none (smaller file)")
+    parser.add_argument("--sample-cats", nargs="+", default=None,
+                        help="only keep examples for these categories (e.g. structuralized_imagetext_understanding)")
     args = parser.parse_args()
 
     keys = dict(zip(args.models, keys_for([args.set], args.models)))
@@ -199,58 +204,15 @@ def main():
         return
 
     base = "base" if "base" in keys else args.models[0]
-    overall = pd.DataFrame({ds: {m: (checks[ds, m]["acc"] or {}).get("Overall") for m in keys}
-                            for ds in args.datasets}).astype(float)
-    if overall.isna().all().all():
-        raise SystemExit("no scored runs - nothing to report")
-
-    ver_rows = "".join(
-        f"<tr><th scope='row'>{escape(ds)}</th><th scope='row'>{escape(m)}</th>"
-        f"<td>{r['answers']}/{r['total'] or '?'}</td><td>{'yes' if r['scored'] else 'no'}</td>"
-        f"<td>{'–' if r['unscored'] is None else r['unscored']}</td><td>{'–' if r['random'] is None else r['random']}</td>"
-        f"<td class='{'ok' if r['ok'] else 'bad'}'>{'✓ OK' if r['ok'] else '✗ check'}</td></tr>"
-        for (ds, m), r in checks.items())
-    n_ok = len(checks) - len(bad)
-
-    parts = [f"<!doctype html><html lang='en'><head><meta charset='utf-8'>"
-             f"<meta name='viewport' content='width=device-width,initial-scale=1'><title>General benchmarks</title>"
-             f"<style>{CSS}</style></head><body><main>",
-             f"<h1>General benchmarks: base vs v3 ({escape(args.set)})</h1>",
-             f"<p class='muted'>VLMEvalKit, GPT-judge scoring (gpt-4o-mini). Accuracy in %. Small numbers = difference "
-             f"vs base; blue = higher, red = lower. Row n = questions per column (MMBench: circular question groups) and "
-             f"±noise = about 2 standard errors of a difference at that n; <b>● bold</b> = difference larger than that, "
-             f"i.e. unlikely to be chance alone. MMMU = validation split. Runs verified: "
-             f"<b class='{'ok' if not bad else 'bad'}'>{n_ok}/{len(checks)} OK</b> (details at the bottom).</p>",
-             "<h2>Overall accuracy</h2>",
-             table(overall, base, "{:.2f}", {ds: checks[ds, base]["n"].get("Overall") for ds in args.datasets}),
-             "<h2>Difference vs base</h2>",
-             f"<img alt='accuracy minus base per dataset' src='data:image/png;base64,{chart_png(overall, base)}'>"]
-    for ds in args.datasets:
-        cat = pd.DataFrame({m: checks[ds, m]["acc"] or {} for m in keys}).T
-        if cat.empty or "Overall" not in cat:
-            continue
-        n, levels = checks[ds, base]["n"], checks[ds, base]["levels"]
-        parts.append(f"<h2>{escape(ds)} by category</h2>")
-        shown = {"Overall"}
-        for level, cats in levels.items():
-            cols = [c for c in cats if c in cat.columns]
-            if not cols:
-                continue
-            shown |= set(cols)
-            total = sum(n[c] for c in cols)
-            parts += [f"<h3>{escape(level)} ({len(cols)} groups)</h3><p class='muted'>n sums to {total} of "
-                      f"{n['Overall']}</p>", table(cat[["Overall"] + cols].astype(float), base, n=n)]
-        rest = [c for c in cat.columns if c not in shown]
-        if rest:  # columns without a matching category column in the result file
-            parts += ["<h3>other columns</h3>", table(cat[["Overall"] + rest].astype(float), base, n=n)]
-    parts += ["<details><summary>Run verification</summary><div class='scroll'><table>"
-              "<tr><th>dataset</th><th>model</th><th>answers</th><th>scored</th><th>unscored (no judge)</th>"
-              f"<th>random fallback</th><th>status</th></tr>{ver_rows}</table></div></details>",
-              "</main></body></html>"]
+    if not any(checks[ds, base]["acc"] for ds in args.datasets):
+        raise SystemExit("base has no scored runs - nothing to report")
+    data = report_data(args, keys, checks, base)
+    payload = json.dumps(data, separators=(",", ":")).replace("</", "<\\/")
+    html = TEMPLATE.read_text().replace("/*__DATA__*/null", payload)
     out = Path(args.html)
     out.parent.mkdir(parents=True, exist_ok=True)
-    out.write_text("\n".join(parts))
-    print(f"written: {out}")
+    out.write_text(html)
+    print(f"written: {out}  ({out.stat().st_size / 1e6:.1f} MB)")
 
 
 if __name__ == "__main__":
