@@ -19,7 +19,10 @@ set -euo pipefail
 #
 # <MODEL_NAME> must already be registered in $VLMEVALKIT_DIR/vlmeval/config.py
 # (partial(vlm.Qwen3VLChat, model_path=...)).
-# <DATASET> defaults to SEEDBench2; any VLMEvalKit dataset key works
+#   sbatch -J s3-t07-cp-s3  slurm/eval_vlmeval.sh Qwen3-VL-4B-Instruct-t07-cp-s3 "MMMU_DEV_VAL MMStar MMBench_DEV_EN_V11 AI2D_TEST"
+#
+# <DATASET> defaults to SEEDBench2; any VLMEvalKit dataset key works, or several (quoted, space-separated):
+# one job then loads the model once and runs them all; it is done when every dataset has a score file.
 # (MMMU_DEV_VAL, MMStar, MMBench_DEV_EN_V11, AI2D_TEST, VisFactor, OCRBench, ...).
 # MCQ datasets use the GPT judge: the OpenAI key is read from $VLMEVALKIT_DIR/.env.
 MODEL_NAME=${1:?usage: sbatch -J <jobname> slurm/eval_vlmeval.sh <MODEL_NAME> [DATASET]}
@@ -66,7 +69,8 @@ handle_usr1() {
 trap handle_usr1 USR1
 
 set +e
-python run.py --data "$DATASET" --model "$MODEL_NAME" --reuse --verbose &
+# shellcheck disable=SC2086  # $DATASET may hold several dataset names
+python run.py --data $DATASET --model "$MODEL_NAME" --reuse --verbose &
 PYTHON_PID=$!
 wait $PYTHON_PID
 RC=$?
@@ -74,32 +78,35 @@ set -e
 
 # --- Publish (partial or complete) results ---
 OUT_SRC="$VLMEVALKIT_DIR/outputs/$MODEL_NAME"
-# Preserve legacy seedbench_<model> dir layout; other datasets land at <dataset>_<model>
-if [ "$DATASET" = "SEEDBench2" ]; then
-    DEST="$RESULTS_DIR/seedbench_$MODEL_NAME"
-else
-    DEST="$RESULTS_DIR/${DATASET}_$MODEL_NAME"
-fi
-mkdir -p "$DEST"
-if [ -d "$OUT_SRC" ]; then
-    cp -u "$OUT_SRC"/*${DATASET}* "$DEST/" 2>/dev/null || true
-    echo "Copied any available $DATASET outputs to $DEST"
-    ls -la "$DEST" | grep -iE "${DATASET}|.pkl|.xlsx|.csv" || true
-fi
+MISSING=""
+for D in $DATASET; do
+    # Preserve legacy seedbench_<model> dir layout; other datasets land at <dataset>_<model>
+    if [ "$D" = "SEEDBench2" ]; then
+        DEST="$RESULTS_DIR/seedbench_$MODEL_NAME"
+    else
+        DEST="$RESULTS_DIR/${D}_$MODEL_NAME"
+    fi
+    mkdir -p "$DEST"
+    if [ -d "$OUT_SRC" ]; then
+        cp -u "$OUT_SRC"/*_${D}[._]* "$DEST/" 2>/dev/null || true
+        echo "Copied any available $D outputs to $DEST"
+        ls -la "$DEST" | grep -iE "${D}|.pkl|.xlsx|.csv" || true
+    fi
+    # VLMEvalKit exits 0 even when a dataset errors out (e.g. "Engine core initialization
+    # failed"), so exit code alone is not "done": require each dataset's score file as well.
+    [ -n "$(find -L "$OUT_SRC" -name "*_${D}_*acc*" 2>/dev/null | head -1)" ] || MISSING="$MISSING $D"
+done
 
 # --- Chain to next iteration if not done ---
 CHAIN_ITER=${CHAIN_ITER:-1}
 CHAIN_MAX=${CHAIN_MAX:-15}
 
-# VLMEvalKit exits 0 even when a dataset errors out (e.g. "Engine core initialization
-# failed"), so exit code alone is not "done": require the score file as well.
-SCORE=$(find -L "$OUT_SRC" -name "*${DATASET}*acc*" 2>/dev/null | head -1)
-if [ $RC -eq 0 ] && [ -n "$SCORE" ]; then
-    echo "=== Eval completed (iter $CHAIN_ITER), score file: $SCORE. Chain done. ==="
+if [ $RC -eq 0 ] && [ -z "$MISSING" ]; then
+    echo "=== Eval completed (iter $CHAIN_ITER): score files for all of: $DATASET. Chain done. ==="
     exit 0
 fi
 if [ $RC -eq 0 ]; then
-    echo "=== Exit 0 but no ${DATASET} score file under $OUT_SRC: run did not finish; chaining ==="
+    echo "=== Exit 0 but no score file under $OUT_SRC for:$MISSING; run did not finish; chaining ==="
     RC=1
 fi
 
