@@ -13,6 +13,7 @@ Run sets (--set) map to config.py keys:
   t07     base <P>,     v3 <P>-v3-<m>-e3-t07        T0.7 + penalty 1.5, generic prompt
   t0p-cp  <P>[-v3-<m>-e3]-t0p-cp                    T0 + penalty, Qwen MCQ prompt, 200 tokens
   t07-cp  <P>[-v3-<m>-e3]-t07-cp                    T0.7 + penalty, Qwen MCQ prompt, 200 tokens
+  t07-cp-s0 .. t07-cp-s9                            same as t07-cp with vLLM seed 0..9
 
 Usage:
   python scripts/eval_progress.py                                  # SEEDBench2, -cp sets
@@ -35,7 +36,9 @@ MODELS = {"base": "", "continuity-llm": "-v3-continuity-llm-e3", "continuity-bot
           "all-llm": "-v3-all-llm-e3", "all-both": "-v3-all-both-e3"}
 # (base suffix, v3 suffix) per run set
 SETS = {"t0": ("-t0", ""), "t0p": ("-t0p", "-t0p"), "t07": ("", "-t07"),
-        "t0p-cp": ("-t0p-cp", "-t0p-cp"), "t07-cp": ("-t07-cp", "-t07-cp")}
+        "t0p-cp": ("-t0p-cp", "-t0p-cp"), "t07-cp": ("-t07-cp", "-t07-cp"),
+        # seed runs: t07-cp with vLLM seed 0..9 (VLMEvalKit fork keys ...-t07-cp-s<seed>)
+        **{f"t07-cp-s{i}": (f"-t07-cp-s{i}", f"-t07-cp-s{i}") for i in range(10)}}
 
 
 def keys_for(sets, models):
