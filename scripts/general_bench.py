@@ -21,6 +21,7 @@ Usage (on Fir, from fine-tuning-ELVIS):
   python scripts/general_bench.py                                     # verify only
   python scripts/general_bench.py --html results/general_bench.html
   python scripts/general_bench.py --html results/gb.html --samples 12 --sample-cats structuralized_imagetext_understanding
+  python scripts/general_bench.py --html results/general_bench.html --seed-sets t07-cp-s{0..9}   # + seed view
 """
 
 import argparse
@@ -173,6 +174,58 @@ def report_data(args, keys, checks, base):
     return dict(set=args.set, base=base, models=list(keys), datasets=datasets, verify=verify)
 
 
+def seed_data(args, base):
+    """Mean / SD / count over the --seed-sets runs, per dataset x model x (Overall + every category column),
+    in the same shape as report_data's datasets (plus sd and k maps). Only verified (OK) runs are used."""
+    import statistics
+    sizes = {ds: dataset_size(ds) for ds in args.datasets}
+    per, first, bad, n_runs = {}, {}, [], 0
+    for st in args.seed_sets:
+        for m, key in zip(args.models, keys_for([st], args.models)):
+            for ds in args.datasets:
+                n_runs += 1
+                r = check(key, ds, args.results, sizes[ds])
+                if not (r["ok"] and r["acc"]):
+                    bad.append(f"{ds}/{m}/{st}")
+                    continue
+                per.setdefault((ds, m), []).append(r["acc"])
+                if m == base:
+                    first.setdefault(ds, r)
+
+    def agg(ds, m, col):
+        vals = [a[col] for a in per.get((ds, m), []) if col in a]
+        if not vals:
+            return None, None, 0
+        return statistics.fmean(vals), statistics.stdev(vals) if len(vals) > 1 else 0.0, len(vals)
+
+    out = []
+    for ds in args.datasets:
+        b = first.get(ds)
+        if b is None:
+            continue
+
+        def block(col):
+            stats = {m: agg(ds, m, col) for m in args.models}
+            return ({m: v[0] for m, v in stats.items()}, {m: v[1] for m, v in stats.items()},
+                    {m: v[2] for m, v in stats.items()})
+
+        levels = []
+        for lv, cats in b["levels"].items():
+            groups = []
+            for c in cats:
+                acc, sd, k = block(c)
+                if any(v is not None for v in acc.values()):
+                    groups.append(dict(cat=c, n=b["n"].get(c), acc=acc, sd=sd, k=k))
+            if groups:
+                levels.append(dict(name=lv, groups=groups))
+        acc, sd, k = block("Overall")
+        out.append(dict(name=ds, label=LABELS.get(ds, ds), n=b["n"].get("Overall"), overall=acc, sd=sd, k=k,
+                        levels=levels))
+    print(f"  seed runs: {n_runs - len(bad)}/{n_runs} OK" + (f"; left out: {', '.join(bad)}" if bad else ""))
+    return dict(label=f"{len(args.seed_sets)} seeds ({args.seed_sets[0].rsplit('-s', 1)[0]})", datasets=out,
+                ok=n_runs - len(bad), total=n_runs, bad=bad)
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__.strip().splitlines()[0],
                                      formatter_class=argparse.RawDescriptionHelpFormatter, epilog=__doc__)
@@ -185,6 +238,8 @@ def main():
                         help="example questions per (finest) category in the report; 0 = none (smaller file)")
     parser.add_argument("--sample-cats", nargs="+", default=None,
                         help="only keep examples for these categories (e.g. structuralized_imagetext_understanding)")
+    parser.add_argument("--seed-sets", nargs="+", default=None, choices=list(SETS),
+                        help="also add a 'mean ± sd over seeds' view from these sets (e.g. t07-cp-s{0..9})")
     args = parser.parse_args()
 
     keys = dict(zip(args.models, keys_for([args.set], args.models)))
@@ -207,6 +262,8 @@ def main():
     if not any(checks[ds, base]["acc"] for ds in args.datasets):
         raise SystemExit("base has no scored runs - nothing to report")
     data = report_data(args, keys, checks, base)
+    if args.seed_sets:
+        data["seeds"] = seed_data(args, base)
     payload = json.dumps(data, separators=(",", ":")).replace("</", "<\\/")
     html = TEMPLATE.read_text().replace("/*__DATA__*/null", payload)
     out = Path(args.html)
