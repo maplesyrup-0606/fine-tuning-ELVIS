@@ -183,6 +183,12 @@ function sigmaBands(g, x, y0, y1) {  // shaded ±2σ and ±1σ around 0 (seed vi
   [[2, .55], [1, 1]].forEach(([s, op]) => g.append(h("rect", {class: "band", x: x(-s), width: x(s) - x(-s), y: y0, height: y1 - y0, opacity: op})));
 }
 const O = d => ({acc: d.overall, sd: d.sd, k: d.k});
+function dotLabel(g, cx, cy, text, color, right) {
+  const flip = cx > right - 44;
+  g.append(h("text", {x: flip ? cx - 9 : cx + 9, y: cy + 3.5, "text-anchor": flip ? "end" : "start",
+    style: `fill:${color};font-size:10.5px;font-weight:600;pointer-events:none;font-variant-numeric:tabular-nums`, text}));
+}
+const baseTxt = o => SEEDS() ? `base ${fmt(o.acc[BASE])} ± ${fmt(o.sd?.[BASE], 2)}` : `base ${fmt(o.acc[BASE])}`;
 const tip = document.getElementById("tip");
 function showTip(ev, lines) { tip.replaceChildren(...lines.map((l, i) => h("div", i ? {} : {style: "font-weight:600"}, l)));
   tip.style.opacity = 1; tip.style.left = Math.min(ev.clientX + 14, innerWidth - 290) + "px";
@@ -262,12 +268,12 @@ function overview() {
     h("div", {class: "cards"}, cards),
     h("h2", {}, "Difference vs base"),
     h("p", {class: "note"}, SEEDS()
-      ? `Dot = (model mean − base mean) / base sd. Shaded = within ±1σ (darker) and ±2σ of base. Filled dot = at least ${Z_BIG}σ away.`
-      : "Dot = model − base (points). The grey band is each benchmark's noise band around zero: hollow dots inside it are within chance, filled dots are beyond it."),
+      ? `Dot position = (model mean − base mean) / base sd; number = model mean accuracy; base mean ± sd under each benchmark. Shaded = within ±1σ (darker) and ±2σ of base. Filled dot = at least ${Z_BIG}σ away.`
+      : "Dot position = model − base (points); number = model accuracy. The grey band is each benchmark's noise band around zero: hollow dots inside it are within chance, filled dots are beyond it."),
     h("div", {class: "card panel"}, deltaChart())];
 }
 function deltaChart() {
-  const ms = shown(), W = 900, L = 180, R = 24, rowH = 20 + 13 * Math.max(1, ms.length), H = DSETS().length * rowH + 44;
+  const ms = shown(), W = 900, L = 190, R = 24, rowH = 22 + 14 * Math.max(1, ms.length), H = DSETS().length * rowH + 44;
   let ext = SEEDS() ? 3 : 1;
   const rows = DSETS().map(d => { const o = O(d), pts = ms.map(m => ({m, c: cmp(o, m, d.n)}));
     pts.forEach(p => { const v = val(p.c); if (v != null) ext = Math.max(ext, Math.abs(v)); });
@@ -283,10 +289,13 @@ function deltaChart() {
     const y0 = 8 + i * rowH, hgt = rowH - 8;
     if (!SEEDS()) { const band = noise(r.d.overall[BASE], r.d.n) || 0;
       g.append(h("rect", {class: "band", x: x(-band), width: x(band) - x(-band), y: y0, height: hgt, rx: 4})); }
-    g.append(h("text", {x: L - 12, y: y0 + hgt / 2 + 4, "text-anchor": "end", style: "font-size:12px;font-weight:600;fill:var(--ink)", text: r.d.label}));
+    g.append(h("text", {x: L - 12, y: y0 + hgt / 2 - 2, "text-anchor": "end", style: "font-size:12px;font-weight:600;fill:var(--ink)", text: r.d.label}));
+    g.append(h("text", {x: L - 12, y: y0 + hgt / 2 + 13, "text-anchor": "end", style: "font-size:11px;fill:var(--muted)", text: baseTxt(r.o)}));
     r.pts.forEach((p, j) => { const v = val(p.c); if (v == null) return;
-      g.append(h("circle", {cx: x(v), cy: y0 + 10 + j * 13, r: 5.5, fill: p.c.big ? COLOR[p.m] : "var(--surface)", stroke: COLOR[p.m],
-        "stroke-width": 2, style: "cursor:default", onmouseleave: hideTip, onmousemove: ev => showTip(ev, tipLines(r.d.label, p.m, r.o, p.c))})); });
+      const cx = x(v), cy = y0 + 11 + j * 14;
+      g.append(h("circle", {cx, cy, r: 5.5, fill: p.c.big ? COLOR[p.m] : "var(--surface)", stroke: COLOR[p.m],
+        "stroke-width": 2, style: "cursor:default", onmouseleave: hideTip, onmousemove: ev => showTip(ev, tipLines(r.d.label, p.m, r.o, p.c))}));
+      dotLabel(g, cx, cy, fmt(r.o.acc[p.m]), COLOR[p.m], W - R); });
   });
   return svg;
 }
@@ -326,8 +335,8 @@ function dataset(d) {
   return [head, controls,
     h("p", {class: "note"}, `${lv.groups.length} groups at the "${lvName}" level; n sums to ${sumN} of ${d.n}. Click a row to see example questions.`),
     h("div", {class: "card panel"}, h("div", {class: "sub", style: "margin:0 0 6px"}, SEEDS()
-      ? `All fine-tuned models per category: dot = (model mean − base mean) / base sd. Shaded = ±1σ / ±2σ of base. Filled = at least ${Z_BIG}σ.`
-      : "All fine-tuned models per category: dot = model − base (points); grey = that category's noise band. Filled = outside the band."),
+      ? `All fine-tuned models per category: dot position = (model mean − base mean) / base sd, number = model mean accuracy; base mean ± sd under each category. Shaded = ±1σ / ±2σ of base. Filled = at least ${Z_BIG}σ.`
+      : "All fine-tuned models per category: dot position = model − base (points), number = model accuracy; base under each category. Grey = that category's noise band. Filled = outside the band."),
       h("div", {class: "row", style: "gap:14px;margin-bottom:4px"}, ...ms.map(m => h("span", {class: "check"},
         h("span", {class: "thsw", style: `background:${COLOR[m]}`}), m))),
       groups.length ? forest(groups, pick, sel) : h("p", {class: "empty"}, "No groups match.")),
@@ -335,7 +344,7 @@ function dataset(d) {
     examples(d, lvName, sel)];
 }
 function forest(groups, pick, sel) {
-  const ms = shown(), W = 900, L = 260, R = 64, rowH = Math.max(26, 10 + 7 * ms.length), H = groups.length * rowH + 44;
+  const ms = shown(), W = 900, L = 260, R = 64, rowH = Math.max(34, 12 + 11 * ms.length), H = groups.length * rowH + 44;
   let ext = SEEDS() ? 3 : 2;
   groups.forEach(g => { ms.forEach(m => { const v = val(g.c[m]); if (v != null) ext = Math.max(ext, Math.abs(v)); });
     if (!SEEDS() && g.band) ext = Math.max(ext, g.band); });
@@ -355,12 +364,15 @@ function forest(groups, pick, sel) {
     if (!SEEDS() && g.band != null) g0.append(h("rect", {class: "band", x: x(-g.band), width: x(g.band) - x(-g.band), y: top + 3,
       height: rowH - 6, rx: 3, style: "pointer-events:none"}));
     const label = g.cat.length > 40 ? g.cat.slice(0, 39) + "…" : g.cat;
-    g0.append(h("text", {x: L - 12, y: mid + 4, "text-anchor": "end", style: "fill:var(--ink);pointer-events:none", text: label}));
+    g0.append(h("text", {x: L - 12, y: mid - 2, "text-anchor": "end", style: "fill:var(--ink);pointer-events:none", text: label}));
+    g0.append(h("text", {x: L - 12, y: mid + 12, "text-anchor": "end", style: "fill:var(--muted);font-size:10.5px;pointer-events:none", text: baseTxt(g)}));
     g0.append(h("text", {x: W - R + 10, y: mid + 4, style: "pointer-events:none", text: `n ${g.n}`}));
-    const step = ms.length > 1 ? Math.min(7, (rowH - 10) / (ms.length - 1)) : 0;
+    const step = ms.length > 1 ? Math.min(11, (rowH - 10) / (ms.length - 1)) : 0;
     ms.forEach((m, j) => { const c = g.c[m], v = val(c); if (v == null) return;
-      g0.append(h("circle", {cx: x(v), cy: mid + (j - (ms.length - 1) / 2) * step, r: 4.5, fill: c.big ? COLOR[m] : "var(--surface)",
-        stroke: COLOR[m], "stroke-width": 2, style: "pointer-events:none"})); });
+      const cx = x(v), cy = mid + (j - (ms.length - 1) / 2) * step;
+      g0.append(h("circle", {cx, cy, r: 4.5, fill: c.big ? COLOR[m] : "var(--surface)",
+        stroke: COLOR[m], "stroke-width": 2, style: "pointer-events:none"}));
+      dotLabel(g0, cx, cy, fmt(g.acc[m]), COLOR[m], W - R); });
   });
   return svg;
 }
