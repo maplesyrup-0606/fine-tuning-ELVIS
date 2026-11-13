@@ -372,16 +372,24 @@ function catTable(groups, pick, sel) {
 }
 function examples(d, lvName, sel) {
   const box = h("div", {id: "examples"});
-  d = {...d, samples: (D.datasets.find(x => x.name === d.name) || {}).samples || []};
+  const src = D.datasets.find(x => x.name === d.name) || {};
+  d = {...d, samples: src.samples || []};
+  const nDis = src.disagree?.[lvName]?.[sel], nCat = (d.levels.find(l => l.name === lvName)?.groups || []).find(g => g.cat === sel)?.n;
   if (!sel) { box.append(h("p", {class: "note", style: "margin-top:16px"},
     d.samples.length ? "Select a category above to see example questions." : "No example questions stored (run with --samples N).")); return box; }
   const list = d.samples.filter(s => s.cats[lvName] === sel);
   box.append(h("h2", {}, `Examples · ${sel}`), h("p", {class: "note"},
-    list.length ? `${list.length} sampled question(s). Green option = correct answer. Click an image to enlarge; hover an answer for its full text.`
-                : "No examples stored for this category (examples are sampled per finest category; use --samples N or --sample-cats)."));
+    (nDis != null ? `${nDis} of ${nCat ?? "?"} questions in this category have base and at least one fine-tuned model disagreeing (one right, one wrong). ` : "") +
+    (list.length ? `Showing ${list.length}, most disagreement first (single-run answers). Green option = correct answer. Click an image to enlarge; hover an answer for its full text.`
+                 : nDis === 0 ? "All models agree on every question here, so there is nothing to show."
+                 : "No examples stored for this category (examples are sampled per finest category; use --samples N or --sample-cats).")));
   box.append(h("div", {class: "ex-grid"}, ...list.map(s => h("div", {class: "card ex"},
     s.images.length ? h("div", {class: "imgs"}, ...s.images.map(u => h("img", {src: u, alt: "question image", loading: "lazy",
       onclick: () => { lb.querySelector("img").src = u; lb.style.display = "flex"; }}))) : null,
+    (() => { const b = s.preds[BASE], ft = V3.filter(m => s.preds[m]), right = ft.filter(m => s.preds[m][1]).length;
+      return b ? h("div", {class: "row", style: "gap:6px"},
+        h("span", {class: "pill " + (b[1] ? "ok" : "bad")}, `base ${b[1] ? "✓" : "✗"}`),
+        h("span", {class: "pill " + (right > ft.length / 2 ? "ok" : right ? "flat" : "bad")}, `${right}/${ft.length} fine-tuned ✓`)) : null; })(),
     h("div", {class: "meta"}, `index ${s.index}` + Object.entries(s.cats).filter(([k]) => k !== lvName).map(([k, v]) => ` · ${k}: ${v}`).join("")),
     s.hint && s.hint !== "nan" ? h("div", {class: "hint"}, s.hint) : null,
     h("div", {class: "q"}, s.question),

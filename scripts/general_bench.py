@@ -121,12 +121,26 @@ def thumbnails(cell, image_map, size=520, limit=3):
     return out
 
 
+def disagreements(runs):
+    """Per question (base's index): how many fine-tuned models got a different right/wrong than base."""
+    names = list(runs)
+    base = runs[names[0]]
+    hits = pd.DataFrame({m: r["hit"].reindex(base.index) for m, r in runs.items() if r is not None})
+    others = [m for m in names[1:] if m in hits]
+    return (hits[others].ne(hits[names[0]], axis=0) & hits[others].notna()).sum(axis=1)
+
+
 def samples(ds, runs, levels, k, only=None, seed=0):
-    """Up to k example questions per finest-level category, with image thumbnails and every model's answer."""
+    """Up to k example questions per finest-level category, only where base and at least one fine-tuned model
+    disagree (one right, the other wrong); most disagreeing models first. With image thumbnails and every
+    model's answer. Also returns, per level and category, how many questions have such a disagreement."""
     tsv = Path(os.environ.get("LMUData", Path.home() / "LMUData")) / f"{ds}.tsv"
     base = next(iter(runs.values()))
     if k <= 0 or base is None or not tsv.is_file():
-        return []
+        return [], {}
+    ndis = disagreements(runs)
+    counts = {lv: {str(c): int(v) for c, v in (ndis > 0).groupby(base[lv].astype(str)).sum().items()}
+              for lv in levels if lv in base}
     meta = pd.read_csv(tsv, sep="\t", dtype=str, keep_default_na=False)
     image_map = dict(zip(meta["index"], meta["image"])) if "image" in meta else {}
     meta = meta.set_index("index")
@@ -136,7 +150,9 @@ def samples(ds, runs, levels, k, only=None, seed=0):
     for name, g in groups:
         if only and not (name in only or any(str(g[lv].iloc[0]) in only for lv in levels if lv in g)):
             continue
-        for idx in g.sample(min(k, len(g)), random_state=seed).index:
+        cand = ndis.loc[g.index]
+        cand = cand[cand > 0].sample(frac=1, random_state=seed).sort_values(ascending=False, kind="stable")
+        for idx in cand.index[:k]:
             row = meta.loc[idx] if idx in meta.index else None
             if isinstance(row, pd.DataFrame):
                 row = row.iloc[0]
@@ -150,7 +166,7 @@ def samples(ds, runs, levels, k, only=None, seed=0):
                 answer=str(g.at[idx, "answer"]) if "answer" in g else "",
                 preds={m: [str(r.at[idx, "prediction"])[:400], int(r.at[idx, "hit"])]
                        for m, r in runs.items() if r is not None and idx in r.index}))
-    return out
+    return out, counts
 
 
 def report_data(args, keys, checks, base):
@@ -161,14 +177,15 @@ def report_data(args, keys, checks, base):
         levels = [dict(name=lv, groups=[dict(cat=c, n=b["n"].get(c), acc={m: acc[m].get(c) for m in keys})
                                          for c in cats if any(c in acc[m] for m in keys)])
                   for lv, cats in b["levels"].items()]
-        ex = []
+        ex, dis = [], {}
         if args.samples:
-            runs = {m: judged(key, ds, args.results)[0] for m, key in keys.items()}
-            ex = samples(ds, runs, b["levels"], args.samples, args.sample_cats)
+            order = [base] + [m for m in keys if m != base]  # samples() compares everything with the first model
+            runs = {m: judged(keys[m], ds, args.results)[0] for m in order}
+            ex, dis = samples(ds, runs, b["levels"], args.samples, args.sample_cats)
         print(f"  {ds}: {sum(len(l['groups']) for l in levels)} category groups, {len(ex)} examples")
         datasets.append(dict(name=ds, label=LABELS.get(ds, ds), n=b["n"].get("Overall"),
                              overall={m: acc[m].get("Overall") for m in keys},
-                             levels=[l for l in levels if l["groups"]], samples=ex))
+                             levels=[l for l in levels if l["groups"]], samples=ex, disagree=dis))
     verify = [dict(ds=ds, model=m, answers=r["answers"], total=r["total"], scored=r["scored"],
                    unscored=r["unscored"], random=r["random"], ok=r["ok"]) for (ds, m), r in checks.items()]
     return dict(set=args.set, base=base, models=list(keys), datasets=datasets, verify=verify)
@@ -234,8 +251,9 @@ def main():
     parser.add_argument("--models", nargs="+", default=list(MODELS), choices=list(MODELS))
     parser.add_argument("--results", default="results")
     parser.add_argument("--html", default=None, help="write the report here (e.g. results/general_bench.html)")
-    parser.add_argument("--samples", type=int, default=4,
-                        help="example questions per (finest) category in the report; 0 = none (smaller file)")
+    parser.add_argument("--samples", type=int, default=6,
+                        help="example questions per (finest) category, only ones where base and a fine-tuned model "
+                             "disagree (most disagreement first); 0 = none (smaller file)")
     parser.add_argument("--sample-cats", nargs="+", default=None,
                         help="only keep examples for these categories (e.g. structuralized_imagetext_understanding)")
     parser.add_argument("--seed-sets", nargs="+", default=None, choices=list(SETS),
