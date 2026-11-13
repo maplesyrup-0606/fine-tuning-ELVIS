@@ -111,10 +111,10 @@ footer{color:var(--muted);font-size:12px;padding:24px 0}
 </div></header>
 <nav class="tabs"><div class="wrap" id="tabs"></div></nav>
 <main><div class="wrap" id="view"></div></main>
-<footer><div class="wrap">Accuracy in %. Δ = model − base. Seed view: values are means over the seed runs, ± = their
-  standard deviation, and ● uses 2 standard errors of the difference of means (decoding noise only). Single-run view: Noise band = about 2 standard errors of a difference at that
-  sample size (treats the runs as independent, so it is cautious); ● = difference larger than the band. MMMU = validation
-  split; MMBench is scored per circular question group.</div></footer>
+<footer><div class="wrap">Accuracy in %. Δ = model − base. Seed view: values are means over the seed runs (T0.7);
+  base also shows its sd; σ = (model mean − base mean) / base sd, i.e. how many of base's seed-to-seed standard deviations
+  the model is away; ● = at least 2σ. Single-run view: noise band = about 2 standard errors of a difference at that sample
+  size (cautious); ● = outside the band. MMMU = validation split; MMBench is scored per circular question group.</div></footer>
 <div id="tip"></div><div id="lb"><img alt="enlarged question image"></div>
 <script>
 const D = /*__DATA__*/null;
@@ -122,24 +122,15 @@ const PALETTE = ["#2f6db5", "#e07b39", "#2a9d8f", "#a05cc0", "#c2455d", "#7a8b2e
 const BASE = D.base, V3 = D.models.filter(m => m !== BASE);
 const COLOR = {[BASE]: "#8b8f97"}; V3.forEach((m, i) => COLOR[m] = PALETTE[i % PALETTE.length]);
 const hidden = new Set();
-const state = {tab: "overview", model: V3[0], notable: false, sort: "delta", level: {}, cat: {}, mode: "single"};
+const state = {tab: "overview", notable: false, sort: "max", level: {}, cat: {}, mode: "single"};
 try { Object.assign(state, JSON.parse(localStorage.getItem("gbstate") || "{}")); } catch (e) {}
 state.cat = {};
-if (!V3.includes(state.model)) state.model = V3[0];
+if (!(["max", "n", "base", "name"].includes(state.sort) || V3.some(m => state.sort === "m:" + m))) state.sort = "max";
+if (state.tab !== "overview" && state.tab !== "runs" && !D.datasets.some(d => d.name === state.tab)) state.tab = "overview";
 if (!D.seeds) state.mode = "single";
 const SEEDS = () => state.mode === "seeds";
 const DSETS = () => SEEDS() ? D.seeds.datasets : D.datasets;
-// Threshold for "beyond noise" for model m on one result object ({acc, sd, k} maps, n questions):
-//  single run -> ~2 SE question-sampling band at n; seeds -> 2 SE of the difference of the seed means.
-function bandOf(o, m, n) {
-  if (!SEEDS()) return noise(o.acc[BASE], n);
-  const sm = o.sd?.[m], sb = o.sd?.[BASE], km = o.k?.[m], kb = o.k?.[BASE];
-  if (sm == null || sb == null || !km || !kb) return null;
-  return 2 * Math.sqrt(sm * sm / km + sb * sb / kb);
-}
-const sdTxt = (o, m) => SEEDS() && o.sd?.[m] != null ? ` ±${fmt(o.sd[m], 2)}` : "";
-if (state.tab !== "overview" && state.tab !== "runs" && !D.datasets.some(d => d.name === state.tab)) state.tab = "overview";
-const save = () => { try { localStorage.setItem("gbstate", JSON.stringify({tab: state.tab, model: state.model,
+const save = () => { try { localStorage.setItem("gbstate", JSON.stringify({tab: state.tab,
   notable: state.notable, sort: state.sort, level: state.level, mode: state.mode})); } catch (e) {} };
 
 // ---------- helpers ----------
@@ -161,13 +152,37 @@ const sgn = (v, d = 1) => v == null || isNaN(v) ? "–" : (v > 0 ? "+" : v < 0 ?
 function noise(p, n) { if (p == null || !n) return null; const q = Math.min(Math.max(p / 100, .01), .99);
   return 200 * Math.sqrt(2 * q * (1 - q) / n); }
 const shown = () => V3.filter(m => !hidden.has(m));
-function deltaPill(d, band) {
-  const big = band != null && d != null && Math.abs(d) > band;
-  const cls = d == null || Math.abs(d) < .05 ? "flat" : d > 0 ? "up" : "down";
-  return h("span", {class: "pill " + cls}, big ? h("span", {class: "dot", text: "●"}) : null, sgn(d));
+// Comparison of model m with base on one result object o = {acc, sd, k} (n questions):
+//   seeds view   z = (mean_m - mean_base) / sd_base  (base's own seed-to-seed sd); ● when |z| >= Z_BIG
+//   single run   d = acc_m - acc_base vs the ~2 SE question-sampling noise band at n; ● when |d| > band
+const Z_BIG = 2;
+function cmp(o, m, n) {
+  const a = o.acc?.[m], b = o.acc?.[BASE], d = a == null || b == null ? null : a - b;
+  if (SEEDS()) { const sd = o.sd?.[BASE], z = d == null || !sd ? null : d / sd;
+    return {d, z, sd, big: z != null && Math.abs(z) >= Z_BIG}; }
+  const band = noise(b, n);
+  return {d, band, big: d != null && band != null && Math.abs(d) > band};
 }
-function shade(d) { if (d == null || Math.abs(d) < .05) return null;
-  const a = Math.min(Math.abs(d) / 5, 1) * .32; return `background:rgba(var(${d > 0 ? "--up" : "--down"}),${a.toFixed(2)})`; }
+const val = c => SEEDS() ? c.z : c.d;
+const zTxt = c => c.z == null ? "–" : `${sgn(c.z)}σ`;
+function cmpPill(c) {
+  const cls = c.d == null || Math.abs(c.d) < .05 ? "flat" : c.d > 0 ? "up" : "down";
+  return h("span", {class: "pill " + cls, title: SEEDS() ? `Δ ${sgn(c.d, 2)} points · base sd ${fmt(c.sd, 2)}` : `Δ ${sgn(c.d, 2)} · noise ±${fmt(c.band)}`},
+    c.big ? h("span", {class: "dot", text: "●"}) : null, SEEDS() ? zTxt(c) : sgn(c.d));
+}
+function shade(v, full) { if (v == null || Math.abs(v) < .02) return null;
+  const a = Math.min(Math.abs(v) / full, 1) * .32; return `background:rgba(var(${v > 0 ? "--up" : "--down"}),${a.toFixed(2)})`; }
+function tipLines(title, m, o, c) {
+  return SEEDS()
+    ? [`${m} · ${title}`, `mean ${fmt(o.acc[m], 2)} ± ${fmt(o.sd?.[m], 2)}  (base ${fmt(o.acc[BASE], 2)} ± ${fmt(o.sd?.[BASE], 2)})`,
+       `Δ ${sgn(c.d, 2)} points = ${zTxt(c)} of base`, c.z == null ? "base sd is 0 here" : c.big ? `beyond ${Z_BIG}σ` : `within ${Z_BIG}σ`]
+    : [`${m} · ${title}`, `${fmt(o.acc[m], 2)}  (base ${fmt(o.acc[BASE], 2)})`, `Δ ${sgn(c.d, 2)} · noise ±${fmt(c.band)}`,
+       c.big ? "beyond the noise band" : "within the noise band"];
+}
+function sigmaBands(g, x, y0, y1) {  // shaded ±2σ and ±1σ around 0 (seed view)
+  [[2, .55], [1, 1]].forEach(([s, op]) => g.append(h("rect", {class: "band", x: x(-s), width: x(s) - x(-s), y: y0, height: y1 - y0, opacity: op})));
+}
+const O = d => ({acc: d.overall, sd: d.sd, k: d.k});
 const tip = document.getElementById("tip");
 function showTip(ev, lines) { tip.replaceChildren(...lines.map((l, i) => h("div", i ? {} : {style: "font-weight:600"}, l)));
   tip.style.opacity = 1; tip.style.left = Math.min(ev.clientX + 14, innerWidth - 290) + "px";
@@ -230,80 +245,71 @@ function render() {
 // ---------- overview ----------
 function overview() {
   const cards = DSETS().map(d => {
-    const b = d.overall[BASE], o = {acc: d.overall, sd: d.sd, k: d.k}, band = noise(b, d.n);
+    const b = d.overall[BASE], o = O(d);
     return h("div", {class: "card kpi", onclick: () => go(d.name), title: "open " + d.label},
       h("div", {class: "row", style: "justify-content:space-between"}, h("span", {class: "name"}, d.label),
         h("span", {class: "n"}, `n = ${d.n ?? "?"}`)),
-      h("div", {class: "big"}, fmt(b, 2), SEEDS() ? h("span", {style: "font-size:15px;color:var(--muted);font-weight:600"}, sdTxt(o, BASE)) : null),
-      h("div", {class: "cap"}, SEEDS() ? `base mean ± sd over ${d.k?.[BASE] ?? "?"} seeds` : `base accuracy · noise ±${fmt(band)}`),
-      ...shown().map(m => { const a = d.overall[m], dl = a == null || b == null ? null : a - b;
-        return h("div", {class: "mrow"}, h("span", {class: "sw", style: `background:${COLOR[m]}`}),
-          h("span", {}, m), h("span", {class: "acc"}, fmt(a, 2) + sdTxt(o, m)), h("span", {style: "text-align:right"}, deltaPill(dl, bandOf(o, m, d.n)))); }));
+      h("div", {class: "big"}, fmt(b, 2),
+        SEEDS() ? h("span", {style: "font-size:15px;color:var(--muted);font-weight:600"}, ` ±${fmt(d.sd?.[BASE], 2)}`) : null),
+      h("div", {class: "cap"}, SEEDS() ? `base mean ± sd over ${d.k?.[BASE] ?? "?"} seeds` : `base accuracy · noise ±${fmt(noise(b, d.n))}`),
+      ...shown().map(m => h("div", {class: "mrow"}, h("span", {class: "sw", style: `background:${COLOR[m]}`}),
+        h("span", {}, m), h("span", {class: "acc"}, fmt(d.overall[m], 2)), h("span", {style: "text-align:right"}, cmpPill(cmp(o, m, d.n))))));
   });
   return [h("h2", {}, "Overview"),
     h("p", {class: "note"}, SEEDS()
-      ? "Mean ± sd of Overall accuracy over the seed runs (T0.7 sampling). ● = the difference of means is larger than 2 standard errors of that difference, i.e. beyond decoding noise. Question-sampling noise is not included here (see the single-run view). Click a card for the per-category breakdown."
+      ? `Mean over the seed runs (T0.7 sampling); base also shows its sd. Each fine-tuned model is shown as its distance from base's mean in units of base's sd (σ): +2σ means its mean is two of base's seed-to-seed standard deviations above base. ● = at least ${Z_BIG}σ. Click a card for the per-category breakdown.`
       : "Overall accuracy per benchmark; each fine-tuned model is shown as its difference from base. ● marks a difference larger than the noise band for that benchmark's size. Click a card for the per-category breakdown."),
     h("div", {class: "cards"}, cards),
     h("h2", {}, "Difference vs base"),
     h("p", {class: "note"}, SEEDS()
-      ? "Dot = mean(model) − mean(base) over seeds; bar = ± 2 standard errors of that difference. Filled = the bar excludes 0."
+      ? `Dot = (model mean − base mean) / base sd. Shaded = within ±1σ (darker) and ±2σ of base. Filled dot = at least ${Z_BIG}σ away.`
       : "Dot = model − base (points). The grey band is each benchmark's noise band around zero: hollow dots inside it are within chance, filled dots are beyond it."),
     h("div", {class: "card panel"}, deltaChart())];
 }
 function deltaChart() {
-  const W = 900, L = 180, R = 24, k = Math.max(1, shown().length), rowH = 20 + 13 * k, H = DSETS().length * rowH + 44;
-  let ext = 1;
-  const rows = DSETS().map(d => { const b = d.overall[BASE], o = {acc: d.overall, sd: d.sd, k: d.k};
-    const band = SEEDS() ? 0 : noise(b, d.n) || 0;
-    const pts = shown().map(m => ({m, a: d.overall[m], sd: d.sd?.[m], bar: bandOf(o, m, d.n),
-      d: d.overall[m] != null && b != null ? d.overall[m] - b : null}));
-    pts.forEach(p => { if (p.d != null) ext = Math.max(ext, Math.abs(p.d) + (SEEDS() ? p.bar || 0 : 0)); }); ext = Math.max(ext, band);
-    return {d, b, band, pts}; });
+  const ms = shown(), W = 900, L = 180, R = 24, rowH = 20 + 13 * Math.max(1, ms.length), H = DSETS().length * rowH + 44;
+  let ext = SEEDS() ? 3 : 1;
+  const rows = DSETS().map(d => { const o = O(d), pts = ms.map(m => ({m, c: cmp(o, m, d.n)}));
+    pts.forEach(p => { const v = val(p.c); if (v != null) ext = Math.max(ext, Math.abs(v)); });
+    if (!SEEDS()) ext = Math.max(ext, noise(d.overall[BASE], d.n) || 0);
+    return {d, o, pts}; });
   ext *= 1.15;
-  const x = v => L + (v + ext) / (2 * ext) * (W - L - R);
+  const x = v => L + (Math.max(-ext, Math.min(ext, v)) + ext) / (2 * ext) * (W - L - R);
   const svg = h("svg", {viewBox: `0 0 ${W} ${H}`, role: "img", "aria-label": "difference versus base per benchmark"});
   const g = h("g"); svg.append(g);
-  xAxis(g, x, -ext, ext, 4, H - 40, "accuracy − base (points)");
+  if (SEEDS()) sigmaBands(g, x, 4, H - 40);
+  xAxis(g, x, -ext, ext, 4, H - 40, SEEDS() ? "distance from base mean, in base standard deviations (σ)" : "accuracy − base (points)");
   rows.forEach((r, i) => {
     const y0 = 8 + i * rowH, hgt = rowH - 8;
-    if (!SEEDS()) g.append(h("rect", {class: "band", x: x(-r.band), width: x(r.band) - x(-r.band), y: y0, height: hgt, rx: 4}));
-    else g.append(h("rect", {class: "band", x: L, width: W - L - R, y: y0, height: hgt, rx: 4, opacity: .45}));
+    if (!SEEDS()) { const band = noise(r.d.overall[BASE], r.d.n) || 0;
+      g.append(h("rect", {class: "band", x: x(-band), width: x(band) - x(-band), y: y0, height: hgt, rx: 4})); }
     g.append(h("text", {x: L - 12, y: y0 + hgt / 2 + 4, "text-anchor": "end", style: "font-size:12px;font-weight:600;fill:var(--ink)", text: r.d.label}));
-    r.pts.forEach((p, j) => { if (p.d == null) return;
-      const lim = SEEDS() ? p.bar : r.band, cy = y0 + 10 + j * 13, big = lim != null && Math.abs(p.d) > lim;
-      if (SEEDS() && p.bar != null) g.append(h("line", {x1: x(p.d - p.bar), x2: x(p.d + p.bar), y1: cy, y2: cy, stroke: COLOR[p.m],
-        "stroke-width": 2, "stroke-linecap": "round", opacity: .55}));
-      g.append(h("circle", {cx: x(p.d), cy, r: 5.5, fill: big ? COLOR[p.m] : "var(--surface)", stroke: COLOR[p.m], "stroke-width": 2,
-        style: "cursor:default", onmouseleave: hideTip,
-        onmousemove: ev => showTip(ev, SEEDS()
-          ? [p.m, `${r.d.label}: mean ${fmt(p.a, 2)} ± ${fmt(p.sd, 2)} (base ${fmt(r.b, 2)} ± ${fmt(r.d.sd?.[BASE], 2)})`,
-             `Δ ${sgn(p.d, 2)} · ±2 SE ${fmt(p.bar, 2)}`, big ? "beyond decoding noise" : "within decoding noise"]
-          : [p.m, `${r.d.label}: ${fmt(p.a, 2)} (base ${fmt(r.b, 2)})`,
-             `Δ ${sgn(p.d, 2)} · noise ±${fmt(r.band)}`, big ? "beyond the noise band" : "within the noise band"])})); });
+    r.pts.forEach((p, j) => { const v = val(p.c); if (v == null) return;
+      g.append(h("circle", {cx: x(v), cy: y0 + 10 + j * 13, r: 5.5, fill: p.c.big ? COLOR[p.m] : "var(--surface)", stroke: COLOR[p.m],
+        "stroke-width": 2, style: "cursor:default", onmouseleave: hideTip, onmousemove: ev => showTip(ev, tipLines(r.d.label, p.m, r.o, p.c))})); });
   });
   return svg;
 }
 
 // ---------- one benchmark ----------
 function dataset(d) {
-  const b = d.overall[BASE], o = {acc: d.overall, sd: d.sd, k: d.k}, band = noise(b, d.n);
+  const b = d.overall[BASE], o = O(d);
   const head = h("div", {class: "row", style: "justify-content:space-between;align-items:flex-end"},
     h("div", {}, h("h2", {}, d.label), h("div", {class: "sub"}, SEEDS()
-      ? `${d.n} questions · base mean ${fmt(b, 2)} ± ${fmt(d.sd?.[BASE], 2)} over ${d.k?.[BASE]} seeds`
-      : `${d.n} questions · base ${fmt(b, 2)} · noise ±${fmt(band)}`)),
+      ? `${d.n} questions · base mean ${fmt(b, 2)} ± ${fmt(d.sd?.[BASE], 2)} (sd over ${d.k?.[BASE]} seeds)`
+      : `${d.n} questions · base ${fmt(b, 2)} · noise ±${fmt(noise(b, d.n))}`)),
     h("div", {class: "row"}, ...shown().map(m => h("span", {class: "badge", title: m},
-      h("span", {class: "sw", style: `background:${COLOR[m]}`}), m,
-      deltaPill(d.overall[m] != null && b != null ? d.overall[m] - b : null, bandOf(o, m, d.n))))));
+      h("span", {class: "sw", style: `background:${COLOR[m]}`}), m, cmpPill(cmp(o, m, d.n))))));
   if (!d.levels.length) return [head, h("p", {class: "empty"}, "No per-category results for this benchmark.")];
   const lvName = d.levels.some(l => l.name === state.level[d.name]) ? state.level[d.name] : d.levels[0].name;
   const lv = d.levels.find(l => l.name === lvName);
   const sumN = lv.groups.reduce((s, g) => s + (g.n || 0), 0);
-  let groups = lv.groups.map(g => { const bb = g.acc[BASE];
-    return {...g, band: noise(bb, g.n), bm: Object.fromEntries(V3.map(m => [m, bandOf(g, m, g.n)])),
-      d: Object.fromEntries(V3.map(m => [m, g.acc[m] != null && bb != null ? g.acc[m] - bb : null]))}; });
-  if (state.notable) groups = groups.filter(g => shown().some(m => g.d[m] != null && g.bm[m] != null && Math.abs(g.d[m]) > g.bm[m]));
-  const key = {delta: g => -(g.d[state.model] ?? -1e9), n: g => -(g.n || 0), name: g => g.cat, base: g => -(g.acc[BASE] ?? 0)}[state.sort];
+  const ms = shown();
+  let groups = lv.groups.map(g => ({...g, band: noise(g.acc[BASE], g.n), c: Object.fromEntries(V3.map(m => [m, cmp(g, m, g.n)]))}));
+  if (state.notable) groups = groups.filter(g => ms.some(m => g.c[m].big));
+  const mag = g => Math.max(-1, ...ms.map(m => Math.abs(val(g.c[m]) ?? -1)));
+  const key = state.sort.startsWith("m:") ? (g => -(val(g.c[state.sort.slice(2)]) ?? -1e9))
+    : {max: g => -mag(g), n: g => -(g.n || 0), name: g => g.cat, base: g => -(g.acc[BASE] ?? 0)}[state.sort];
   groups.sort((a, c) => { const ka = key(a), kc = key(c); return ka < kc ? -1 : ka > kc ? 1 : 0; });
   const sel = state.cat[d.name + "|" + lvName];
   const pick = c => { const was = state.cat[d.name + "|" + lvName]; state.cat[d.name + "|" + lvName] = was === c ? null : c; render();
@@ -311,63 +317,65 @@ function dataset(d) {
   const controls = h("div", {class: "controls"},
     d.levels.length > 1 ? h("span", {class: "seg"}, ...d.levels.map(l => h("button", {class: l.name === lvName ? "on" : "",
       onclick: () => { state.level[d.name] = l.name; save(); render(); }}, `${l.name} (${l.groups.length})`))) : null,
-    h("label", {class: "check"}, "compare",
-      h("select", {onchange: e => { state.model = e.target.value; save(); render(); }},
-        ...V3.map(m => h("option", {value: m, selected: m === state.model}, m))), "vs base"),
     h("label", {class: "check"}, "sort",
       h("select", {onchange: e => { state.sort = e.target.value; save(); render(); }},
-        ...[["delta", "by Δ of compared model"], ["n", "by size"], ["base", "by base accuracy"], ["name", "by name"]]
-          .map(([v, t]) => h("option", {value: v, selected: v === state.sort}, t)))),
+        ...[["max", "largest difference (any model)"], ...V3.map(m => ["m:" + m, `by ${m}`]), ["n", "by size"],
+            ["base", "by base accuracy"], ["name", "by name"]].map(([v, t]) => h("option", {value: v, selected: v === state.sort}, t)))),
     h("label", {class: "check"}, h("input", {type: "checkbox", checked: state.notable,
-      onchange: e => { state.notable = e.target.checked; save(); render(); }}), "only ● differences"));
+      onchange: e => { state.notable = e.target.checked; save(); render(); }}), "only categories with a ●"));
   return [head, controls,
-    h("p", {class: "note"}, `${lv.groups.length} groups at the "${lvName}" level; n sums to ${sumN} of ${d.n}. Click a row or a line to see example questions.`),
-    h("div", {class: "card panel"}, h("div", {class: "sub", style: "margin:0 0 6px"},
-      h("span", {class: "thsw", style: `background:${COLOR[state.model]}`}),
-      SEEDS() ? `${state.model} − base per category (means over seeds): dot = difference, line = ± 2 SE of the difference; filled dot = the line excludes 0.`
-              : `${state.model} − base per category: dot = difference, line = ± noise band; filled dot = the band excludes 0.`),
+    h("p", {class: "note"}, `${lv.groups.length} groups at the "${lvName}" level; n sums to ${sumN} of ${d.n}. Click a row to see example questions.`),
+    h("div", {class: "card panel"}, h("div", {class: "sub", style: "margin:0 0 6px"}, SEEDS()
+      ? `All fine-tuned models per category: dot = (model mean − base mean) / base sd. Shaded = ±1σ / ±2σ of base. Filled = at least ${Z_BIG}σ.`
+      : "All fine-tuned models per category: dot = model − base (points); grey = that category's noise band. Filled = outside the band."),
+      h("div", {class: "row", style: "gap:14px;margin-bottom:4px"}, ...ms.map(m => h("span", {class: "check"},
+        h("span", {class: "thsw", style: `background:${COLOR[m]}`}), m))),
       groups.length ? forest(groups, pick, sel) : h("p", {class: "empty"}, "No groups match.")),
     h("div", {class: "card panel scroll"}, catTable(groups, pick, sel)),
     examples(d, lvName, sel)];
 }
 function forest(groups, pick, sel) {
-  const m = state.model, W = 900, L = 260, R = 64, rowH = 24, H = groups.length * rowH + 44;
-  let ext = 2; groups.forEach(g => { if (g.d[m] != null) ext = Math.max(ext, Math.abs(g.d[m]) + (g.bm[m] || 0)); });
-  ext = Math.min(ext * 1.08, 100);
+  const ms = shown(), W = 900, L = 260, R = 64, rowH = Math.max(26, 10 + 7 * ms.length), H = groups.length * rowH + 44;
+  let ext = SEEDS() ? 3 : 2;
+  groups.forEach(g => { ms.forEach(m => { const v = val(g.c[m]); if (v != null) ext = Math.max(ext, Math.abs(v)); });
+    if (!SEEDS() && g.band) ext = Math.max(ext, g.band); });
+  ext = Math.min(ext * 1.1, SEEDS() ? 12 : 100);
   const x = v => L + (Math.max(-ext, Math.min(ext, v)) + ext) / (2 * ext) * (W - L - R);
-  const svg = h("svg", {viewBox: `0 0 ${W} ${H}`, role: "img", "aria-label": "per-category difference versus base"});
+  const svg = h("svg", {viewBox: `0 0 ${W} ${H}`, role: "img", "aria-label": "per-category difference versus base, all models"});
   const g0 = h("g"); svg.append(g0);
-  xAxis(g0, x, -ext, ext, 2, H - 40, `${m} − base (points)`);
+  if (SEEDS()) sigmaBands(g0, x, 2, H - 40);
+  xAxis(g0, x, -ext, ext, 2, H - 40, SEEDS() ? "distance from base mean (σ of base)" : "model − base (points)");
   groups.forEach((g, i) => {
-    const y = 2 + i * rowH + rowH / 2, dl = g.d[m], bar = g.bm[m], big = dl != null && bar != null && Math.abs(dl) > bar;
-    g0.append(h("rect", {class: "rowhit" + (sel === g.cat ? " sel" : ""), x: 0, y: y - rowH / 2, width: W, height: rowH, rx: 4,
+    const top = 2 + i * rowH, mid = top + rowH / 2;
+    g0.append(h("rect", {class: "rowhit" + (sel === g.cat ? " sel" : ""), x: 0, y: top, width: W, height: rowH, rx: 4,
       onclick: () => pick(g.cat), onmouseleave: hideTip,
-      onmousemove: ev => showTip(ev, [g.cat, `n = ${g.n} · base ${fmt(g.acc[BASE])}${sdTxt(g, BASE)} · ${m} ${fmt(g.acc[m])}${sdTxt(g, m)}`,
-        `Δ ${sgn(dl)} · ${SEEDS() ? "±2 SE" : "noise ±"}${fmt(bar)}`,
-        big ? (SEEDS() ? "beyond decoding noise" : "beyond the noise band") : (SEEDS() ? "within decoding noise" : "within the noise band")])}));
+      onmousemove: ev => showTip(ev, [g.cat, SEEDS() ? `n = ${g.n} · base ${fmt(g.acc[BASE])} ± ${fmt(g.sd?.[BASE], 2)}`
+                                                     : `n = ${g.n} · base ${fmt(g.acc[BASE])} · noise ±${fmt(g.band)}`,
+        ...ms.map(m => { const c = g.c[m]; return `${c.big ? "● " : ""}${m}: ${fmt(g.acc[m])}  (${SEEDS() ? zTxt(c) + ", " : ""}Δ ${sgn(c.d)})`; })])}));
+    if (!SEEDS() && g.band != null) g0.append(h("rect", {class: "band", x: x(-g.band), width: x(g.band) - x(-g.band), y: top + 3,
+      height: rowH - 6, rx: 3, style: "pointer-events:none"}));
     const label = g.cat.length > 40 ? g.cat.slice(0, 39) + "…" : g.cat;
-    g0.append(h("text", {x: L - 12, y: y + 4, "text-anchor": "end", style: "fill:var(--ink);pointer-events:none", text: label}));
-    g0.append(h("text", {x: W - R + 10, y: y + 4, style: "pointer-events:none", text: `n ${g.n}`}));
-    if (dl == null) return;
-    if (bar != null) g0.append(h("line", {x1: x(dl - bar), x2: x(dl + bar), y1: y, y2: y, stroke: COLOR[m],
-      "stroke-width": 2, "stroke-linecap": "round", opacity: .5, style: "pointer-events:none"}));
-    g0.append(h("circle", {cx: x(dl), cy: y, r: 5, fill: big ? COLOR[m] : "var(--surface)", stroke: COLOR[m],
-      "stroke-width": 2, style: "pointer-events:none"}));
+    g0.append(h("text", {x: L - 12, y: mid + 4, "text-anchor": "end", style: "fill:var(--ink);pointer-events:none", text: label}));
+    g0.append(h("text", {x: W - R + 10, y: mid + 4, style: "pointer-events:none", text: `n ${g.n}`}));
+    const step = ms.length > 1 ? Math.min(7, (rowH - 10) / (ms.length - 1)) : 0;
+    ms.forEach((m, j) => { const c = g.c[m], v = val(c); if (v == null) return;
+      g0.append(h("circle", {cx: x(v), cy: mid + (j - (ms.length - 1) / 2) * step, r: 4.5, fill: c.big ? COLOR[m] : "var(--surface)",
+        stroke: COLOR[m], "stroke-width": 2, style: "pointer-events:none"})); });
   });
   return svg;
 }
 function catTable(groups, pick, sel) {
   const cols = shown();
-  const thead = h("thead", {}, h("tr", {}, h("th", {}, "category"), h("th", {}, "n"), h("th", {}, SEEDS() ? "seeds" : "± noise"),
+  const thead = h("thead", {}, h("tr", {}, h("th", {}, "category"), h("th", {}, "n"), h("th", {}, SEEDS() ? "base sd" : "± noise"),
     h("th", {}, h("span", {class: "thsw", style: `background:${COLOR[BASE]}`}), BASE),
     ...cols.map(m => h("th", {}, h("span", {class: "thsw", style: `background:${COLOR[m]}`}), m))));
   const tbody = h("tbody", {}, ...groups.map(g => h("tr", {class: sel === g.cat ? "sel" : "", onclick: () => pick(g.cat)},
     h("td", {}, g.cat), h("td", {}, g.n ?? "–"),
-    h("td", {}, SEEDS() ? (g.k?.[BASE] ?? "–") : g.band == null ? "–" : "±" + fmt(g.band)),
-    h("td", {}, fmt(g.acc[BASE]), SEEDS() ? h("small", {}, "±" + fmt(g.sd?.[BASE])) : null),
-    ...cols.map(m => { const dl = g.d[m], big = dl != null && g.bm[m] != null && Math.abs(dl) > g.bm[m];
-      return h("td", {class: big ? "big" : null, style: shade(dl)}, fmt(g.acc[m]),
-        h("small", {}, (SEEDS() ? `±${fmt(g.sd?.[m])} · ` : "") + (big ? "● " : "") + sgn(dl))); }))));
+    h("td", {}, SEEDS() ? fmt(g.sd?.[BASE], 2) : g.band == null ? "–" : "±" + fmt(g.band)),
+    h("td", {}, fmt(g.acc[BASE])),
+    ...cols.map(m => { const c = g.c[m];
+      return h("td", {class: c.big ? "big" : null, style: SEEDS() ? shade(c.z, 4) : shade(c.d, 5)}, fmt(g.acc[m]),
+        h("small", {}, (c.big ? "● " : "") + (SEEDS() ? `${zTxt(c)} · Δ ${sgn(c.d)}` : sgn(c.d)))); }))));
   return h("table", {}, thead, tbody);
 }
 function examples(d, lvName, sel) {
