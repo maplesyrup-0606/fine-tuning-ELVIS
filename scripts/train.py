@@ -35,7 +35,7 @@ def load_config(path):
 def build_swift_args(cfg, variant, output_dir, resume_from=None, data=None):
     """Convert config.yaml + variant selection → `swift sft` CLI arguments.
 
-    variant: one of the keys under cfg["variants"] (llm, projector, both).
+    variant: one of the keys under cfg["variants"] (llm, projector, both, vit).
     data: {"dataset_path", "val_dataset_path"}; default: v2's paths under `training`.
     """
     train_cfg = cfg["training"]
@@ -114,7 +114,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__.strip().splitlines()[0])
     parser.add_argument("--config", default="config.yaml")
     parser.add_argument("--variant", required=True,
-                        choices=["llm", "projector", "both"],
+                        choices=["llm", "projector", "both", "vit"],
                         help="which LoRA target scope to train")
     parser.add_argument("--output-dir", default=None,
                         help="override results/checkpoints dir (default: <results>/checkpoints/<variant>)")
