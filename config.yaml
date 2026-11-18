@@ -23,7 +23,7 @@ lora:
 variants:
   # Three fine-tuning ablations. Each becomes a separate `swift sft` run
   # with its own output dir and WandB run. Selected via
-  # `python scripts/train.py --variant {llm|projector|both|vit}`.
+  # `python scripts/train.py --variant {llm|projector|both|vit|vit-both}`.
   #
   # Mechanism: ms-swift routes LoRA to the non-frozen components when
   # target_modules=['all-linear']. See arguments/tuner_args.py docstring
@@ -54,6 +54,12 @@ variants:
     freeze_llm: true
     freeze_vit: false
     freeze_aligner: true
+  vit-both:
+    description: LoRA on everything - vision tower + merger + LLM (= both + vision tower).
+    target_modules: [all-linear]
+    freeze_llm: false
+    freeze_vit: false
+    freeze_aligner: false
 
 data:
   source: elvis_continuity
@@ -119,7 +125,7 @@ training:
 v3:
   # Classification only, with ground-truth rubrics (EXPERIMENT.md "v3 Plan").
   # Data: slurm/gen_v3_data.sh -> scripts/build_v3_dataset.py. Train with
-  # `train.py --run <name>` / `sbatch slurm/train.sh <variant> <name>`; variants llm, both, vit.
+  # `train.py --run <name>` / `sbatch slurm/train.sh <variant> <name>`; variants llm, both, vit, vit-both.
   # Same LoRA/optimizer/epochs (3) as v1/v2: each principle's rows are seen 3 times in
   # both runs, so `all` makes ~6x the updates of `continuity` (2,790 vs 486 steps).
   checkpoint_subdir: checkpoints_v3     # -> <results>/checkpoints_v3/<run>/<variant>/

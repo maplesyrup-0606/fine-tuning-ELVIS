@@ -12,7 +12,7 @@
 
 set -euo pipefail
 
-# Usage: sbatch slurm/train.sh <llm|projector|both|vit> [<run>]
+# Usage: sbatch slurm/train.sh <llm|projector|both|vit|vit-both> [<run>]
 #   <run>: a v3 run under config v3.runs (continuity, all); omit for v2.
 #   e.g.  sbatch -J v3-all-both slurm/train.sh both all
 # Auto-chains on wallclock kill (exit 143/137) up to CHAIN_MAX times. Override
@@ -21,12 +21,12 @@ VARIANT=${1:-}
 RUN=${2:-}
 RUN_ARGS=${RUN:+--run $RUN}
 if [ -z "$VARIANT" ]; then
-    echo "ERROR: variant required. Usage: sbatch slurm/train.sh <llm|projector|both|vit>"
+    echo "ERROR: variant required. Usage: sbatch slurm/train.sh <llm|projector|both|vit|vit-both>"
     exit 1
 fi
 case "$VARIANT" in
-    llm|projector|both|vit) ;;
-    *) echo "ERROR: variant must be one of: llm, projector, both, vit (got: $VARIANT)"; exit 1 ;;
+    llm|projector|both|vit|vit-both) ;;
+    *) echo "ERROR: variant must be one of: llm, projector, both, vit, vit-both (got: $VARIANT)"; exit 1 ;;
 esac
 
 CHAIN_ITER=${CHAIN_ITER:-1}
