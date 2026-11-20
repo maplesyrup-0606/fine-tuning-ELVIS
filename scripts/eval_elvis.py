@@ -33,7 +33,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__.strip().splitlines()[0])
     parser.add_argument("--config", default="config.yaml")
     parser.add_argument("--variant", required=True,
-                        choices=["llm", "projector", "both", "base"],
+                        choices=["llm", "projector", "both", "vit", "vit-both", "base"],
                         help="'base' evaluates the un-fine-tuned model (no adapter) — "
                              "use to populate sibling-principle baseline numbers.")
     parser.add_argument("--checkpoint", default=None,

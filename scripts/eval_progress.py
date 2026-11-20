@@ -33,7 +33,9 @@ from pathlib import Path
 
 PREFIX = "Qwen3-VL-4B-Instruct"
 MODELS = {"base": "", "continuity-llm": "-v3-continuity-llm-e3", "continuity-both": "-v3-continuity-both-e3",
-          "all-llm": "-v3-all-llm-e3", "all-both": "-v3-all-both-e3"}
+          "all-llm": "-v3-all-llm-e3", "all-both": "-v3-all-both-e3",
+          "continuity-vit": "-v3-continuity-vit-e3", "continuity-vit-both": "-v3-continuity-vit-both-e3",
+          "all-vit": "-v3-all-vit-e3", "all-vit-both": "-v3-all-vit-both-e3"}
 # (base suffix, v3 suffix) per run set
 SETS = {"t0": ("-t0", ""), "t0p": ("-t0p", "-t0p"), "t07": ("", "-t07"),
         "t0p-cp": ("-t0p-cp", "-t0p-cp"), "t07-cp": ("-t07-cp", "-t07-cp"),

@@ -15,7 +15,7 @@ set -euo pipefail
 #   sbatch -J <name> slurm/eval_elvis.sh <variant> <checkpoint_path> [<principle> ...]
 #   sbatch -J base slurm/eval_elvis.sh base "" continuity proximity similarity closure symmetry
 #
-# <variant> ∈ {llm, projector, both, base}
+# <variant> ∈ {llm, projector, both, vit, vit-both, base}
 # For variant=base, pass "" as checkpoint (evaluates un-fine-tuned model).
 # Default principles: continuity proximity similarity closure symmetry.
 VARIANT=${1:-}
@@ -31,9 +31,9 @@ if [ -z "$VARIANT" ]; then
     exit 1
 fi
 case "$VARIANT" in
-    llm|projector|both) [ -n "$CHECKPOINT" ] || { echo "ERROR: checkpoint required for variant=$VARIANT"; exit 1; } ;;
+    llm|projector|both|vit|vit-both) [ -n "$CHECKPOINT" ] || { echo "ERROR: checkpoint required for variant=$VARIANT"; exit 1; } ;;
     base) ;;  # no checkpoint needed
-    *) echo "ERROR: variant must be one of: llm, projector, both, base (got: $VARIANT)"; exit 1 ;;
+    *) echo "ERROR: variant must be one of: llm, projector, both, vit, vit-both, base (got: $VARIANT)"; exit 1 ;;
 esac
 
 # --- Environment ---

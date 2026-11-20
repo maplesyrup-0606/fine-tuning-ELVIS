@@ -44,7 +44,7 @@ LEVEL_OF = {
     "Image Generation": "L3",
     "Image & Text Generation": "L3",
 }
-COLORS = ["#1f77b4", "#d62728", "#2ca02c", "#9467bd", "#ff7f0e"]
+COLORS = ["#1f77b4", "#d62728", "#2ca02c", "#9467bd", "#ff7f0e", "#8c564b", "#e377c2", "#17becf", "#bcbd22"]
 
 
 def load_result(result_dir: Path, label: str):
