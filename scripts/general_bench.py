@@ -11,10 +11,14 @@ Per dataset x model (results/*/<key>_<dataset>*):
   random    answers scored by VLMEvalKit's random fallback (judge failed)
 A run is OK when all answers are there, it is scored, and unscored == 0.
 
-Report (scripts/general_bench.html is the page; the data is embedded as JSON): overview cards and a
-difference-vs-base chart with each benchmark's noise band, then per benchmark the category tables for both
-category levels (n, ~2 SE noise band, differences beyond it marked), a forest plot of one model vs base, and
-example questions per category (image, options, correct answer, every model's answer).
+Report (scripts/general_bench.html is the page; the data is embedded as JSON), one tab per evaluation:
+  ELVIS (rubric / own rule)   per-principle accuracy from eval_elvis.py's summary.json files (latest checkpoint
+                              per model, i.e. epoch 3; base from its own folder)
+  SEED-Bench-2 (--single-datasets)   single run only: no seed view, no example images (tsv too large)
+  the --datasets benchmarks   single run + optional seed view (--seed-sets) + example questions
+Per benchmark: overview card, difference-vs-base chart, category tables per level (n, noise band, notable
+differences), a forest plot of all models, and the Runs tab also shows how many answers needed the GPT judge
+(i.e. the rules could not read a letter: a sign of answer-format drift).
 MMMU uses the validation split (the reported one); MMBench counts circular question groups.
 
 Usage (on Fir, from fine-tuning-ELVIS):
@@ -22,6 +26,7 @@ Usage (on Fir, from fine-tuning-ELVIS):
   python scripts/general_bench.py --html results/general_bench.html
   python scripts/general_bench.py --html results/gb.html --samples 12 --sample-cats structuralized_imagetext_understanding
   python scripts/general_bench.py --html results/general_bench.html --seed-sets t07-cp-s{0..9}   # + seed view
+  python scripts/general_bench.py --html results/report.html --seed-sets t07-cp-s{0..9} --single-datasets SEEDBench2
 """
 
 import argparse
@@ -38,8 +43,29 @@ from eval_progress import MODELS, SETS, dataset_size, keys_for
 
 DATASETS = ["MMMU_DEV_VAL", "MMStar", "MMBench_DEV_EN_V11", "AI2D_TEST"]
 LABELS = {"MMMU_DEV_VAL": "MMMU (val)", "MMStar": "MMStar", "MMBench_DEV_EN_V11": "MMBench v1.1 (dev, EN)",
-          "AI2D_TEST": "AI2D (test)"}
-LEVELS = ("category", "l2-category")  # VLMEvalKit's two category levels; each question has one value per level
+          "AI2D_TEST": "AI2D (test)", "SEEDBench2": "SEED-Bench-2"}
+# Category columns in VLMEvalKit result files (each question has one value per column); SEED-Bench-2 also has subpart.
+LEVELS = ("category", "l2-category", "subpart")
+PRINCIPLES = ["continuity", "proximity", "similarity", "closure", "symmetry"]
+BIG_TSV = 2e9   # larger dataset files (SEED-Bench-2, ~30 GB) are not read: no size check, no example images
+
+
+def tsv_path(ds):
+    return Path(os.environ.get("LMUData", Path.home() / "LMUData")) / f"{ds}.tsv"
+
+
+def total_of(ds):
+    """Questions in the dataset (None if its tsv is missing or too large to read here)."""
+    t = tsv_path(ds)
+    return dataset_size(ds) if t.is_file() and t.stat().st_size < BIG_TSV else None
+
+
+def needs_judge(log, pred):
+    """True if the answer could not be read by VLMEvalKit's rules (so the GPT judge, or a fallback, decided)."""
+    log, pred = str(log), str(pred)
+    if log == f"Match Log: {pred}. " or log.startswith(("Succeed During Pre-fetching", "Failed in Prefetching Rolling")):
+        return False
+    return True
 TEMPLATE = Path(__file__).with_name("general_bench.html")
 
 
@@ -71,7 +97,8 @@ def judged(key, dataset, results):
 
 def check(key, dataset, results, total):
     """Completeness + judge stats + accuracies for one run."""
-    r = dict(answers=0, total=total, scored=False, unscored=None, random=None, acc=None, n={}, levels={})
+    r = dict(answers=0, total=total, scored=False, unscored=None, random=None, judge=None, acc=None, n={},
+             levels={}, cat={})
     ans = newest(list(Path(results).glob(f"*/{key}_{dataset}.xlsx")))
     if ans is not None:
         r["answers"] = len(pd.read_excel(ans, usecols=["index"]))
@@ -81,11 +108,15 @@ def check(key, dataset, results, total):
         r["random"] = int(log.str.contains("randomly generate").sum())
         # Questions per category: the same rows report_acc averages (MMMU validation, MMBench circular groups).
         r["n"] = {"Overall": len(d)}
+        if "log" in d and "prediction" in d:
+            r["judge"] = 100 * sum(needs_judge(l, p) for l, p in zip(d["log"], d["prediction"])) / max(len(d), 1)
         for col in LEVELS:
             if col in d:
                 counts = d[col].astype(str).value_counts()
                 r["levels"][col] = list(counts.index)
                 r["n"].update(counts.to_dict())
+                # same definition as VLMEvalKit's report_acc: mean hit per category value
+                r["cat"][col] = {str(c): 100 * float(v) for c, v in d.groupby(d[col].astype(str))["hit"].mean().items()}
     acc = newest(list(Path(results).glob(f"*/{key}_{dataset}_acc.csv")))
     if acc is not None:
         r["scored"] = True
@@ -136,7 +167,7 @@ def samples(ds, runs, levels, k, only=None, seed=0):
     model's answer. Also returns, per level and category, how many questions have such a disagreement."""
     tsv = Path(os.environ.get("LMUData", Path.home() / "LMUData")) / f"{ds}.tsv"
     base = next(iter(runs.values()))
-    if k <= 0 or base is None or not tsv.is_file():
+    if k <= 0 or base is None or not tsv.is_file() or tsv.stat().st_size >= BIG_TSV:
         return [], {}
     ndis = disagreements(runs)
     counts = {lv: {str(c): int(v) for c, v in (ndis > 0).groupby(base[lv].astype(str)).sum().items()}
@@ -170,32 +201,68 @@ def samples(ds, runs, levels, k, only=None, seed=0):
 
 
 def report_data(args, keys, checks, base):
-    datasets = []
-    for ds in args.datasets:
+    datasets = elvis_data(args, list(keys))
+    for ds in args.single_datasets + args.datasets:
         b = checks[ds, base]
         acc = {m: checks[ds, m]["acc"] or {} for m in keys}
-        levels = [dict(name=lv, groups=[dict(cat=c, n=b["n"].get(c), acc={m: acc[m].get(c) for m in keys})
-                                         for c in cats if any(c in acc[m] for m in keys)])
+        cat = {m: checks[ds, m]["cat"] for m in keys}
+        levels = [dict(name=lv, groups=[dict(cat=c, n=b["n"].get(c), acc={m: cat[m].get(lv, {}).get(c) for m in keys})
+                                         for c in cats])
                   for lv, cats in b["levels"].items()]
         ex, dis = [], {}
-        if args.samples:
+        if args.samples and ds not in args.single_datasets:
             order = [base] + [m for m in keys if m != base]  # samples() compares everything with the first model
             runs = {m: judged(keys[m], ds, args.results)[0] for m in order}
             ex, dis = samples(ds, runs, b["levels"], args.samples, args.sample_cats)
         print(f"  {ds}: {sum(len(l['groups']) for l in levels)} category groups, {len(ex)} examples")
         datasets.append(dict(name=ds, label=LABELS.get(ds, ds), n=b["n"].get("Overall"),
                              overall={m: acc[m].get("Overall") for m in keys},
-                             levels=[l for l in levels if l["groups"]], samples=ex, disagree=dis))
+                             levels=[l for l in levels if l["groups"]], samples=ex, disagree=dis,
+                             single=ds in args.single_datasets))
     verify = [dict(ds=ds, model=m, answers=r["answers"], total=r["total"], scored=r["scored"],
-                   unscored=r["unscored"], random=r["random"], ok=r["ok"]) for (ds, m), r in checks.items()]
+                   unscored=r["unscored"], random=r["random"], judge=r["judge"], ok=r["ok"])
+              for (ds, m), r in checks.items()]
     return dict(set=args.set, base=base, models=list(keys), datasets=datasets, verify=verify)
+
+
+def elvis_data(args, models):
+    """ELVIS per-principle accuracy (%) per model, one pseudo-benchmark per mode, from eval_elvis.py's
+    <root>/<model>/<version>/checkpoint-<step>/summary.json (latest step per model = epoch 3) and
+    <root>/base/<timestamp>/summary.json (newest). Overall = unweighted mean over the principles present."""
+    import re
+    out = []
+    for mode, root, base_root in [("rubric", args.elvis_rubric, args.elvis_rubric),
+                                  ("own rule", args.elvis_own, args.elvis_own_base)]:
+        if not root or not Path(root).is_dir():
+            if root:
+                print(f"  [skip] ELVIS {mode}: no folder {root}")
+            continue
+        found = {}
+        for f in Path(root).glob("*/*/*/summary.json"):
+            model = f.relative_to(root).parts[0]
+            m = re.search(r"checkpoint-(\d+)", f.parent.name)
+            if model in models and model != "base" and m and int(m.group(1)) > found.get(model, (-1,))[0]:
+                found[model] = (int(m.group(1)), f)
+        bases = sorted(Path(base_root).glob("base/*/summary.json")) if base_root and Path(base_root).is_dir() else []
+        if bases:
+            found["base"] = (0, bases[-1])
+        acc = {m: json.load(open(f)).get("principles", {}) for m, (_, f) in found.items()}
+        groups = [dict(cat=p, n=None, acc={m: acc.get(m, {}).get(p, {}).get("accuracy") for m in models})
+                  for p in PRINCIPLES if any(acc.get(m, {}).get(p) for m in models)]
+        overall = {m: (sum(v) / len(v) if (v := [g["acc"][m] for g in groups if g["acc"][m] is not None]) else None)
+                   for m in models}
+        print(f"  ELVIS {mode}: {len(found)} models ({', '.join(f'{m}@{s}' if s else m for m, (s, _) in found.items())})")
+        out.append(dict(name=f"ELVIS-{mode.replace(' ', '-')}", label=f"ELVIS ({mode})", n=None, overall=overall,
+                        levels=[dict(name="principle", groups=groups)] if groups else [], samples=[], disagree={},
+                        single=True, elvis=True))
+    return out
 
 
 def seed_data(args, base):
     """Mean / SD / count over the --seed-sets runs, per dataset x model x (Overall + every category column),
     in the same shape as report_data's datasets (plus sd and k maps). Only verified (OK) runs are used."""
     import statistics
-    sizes = {ds: dataset_size(ds) for ds in args.datasets}
+    sizes = {ds: total_of(ds) for ds in args.datasets}
     per, first, bad, n_runs = {}, {}, [], 0
     for st in args.seed_sets:
         for m, key in zip(args.models, keys_for([st], args.models)):
@@ -205,12 +272,13 @@ def seed_data(args, base):
                 if not (r["ok"] and r["acc"]):
                     bad.append(f"{ds}/{m}/{st}")
                     continue
-                per.setdefault((ds, m), []).append(r["acc"])
+                per.setdefault((ds, m), []).append(r)
                 if m == base:
                     first.setdefault(ds, r)
 
-    def agg(ds, m, col):
-        vals = [a[col] for a in per.get((ds, m), []) if col in a]
+    def agg(ds, m, col, lv=None):
+        vals = [(r["acc"] if lv is None else r["cat"].get(lv, {})).get(col) for r in per.get((ds, m), [])]
+        vals = [v for v in vals if v is not None]
         if not vals:
             return None, None, 0
         return statistics.fmean(vals), statistics.stdev(vals) if len(vals) > 1 else 0.0, len(vals)
@@ -221,8 +289,8 @@ def seed_data(args, base):
         if b is None:
             continue
 
-        def block(col):
-            stats = {m: agg(ds, m, col) for m in args.models}
+        def block(col, lv=None):
+            stats = {m: agg(ds, m, col, lv) for m in args.models}
             return ({m: v[0] for m, v in stats.items()}, {m: v[1] for m, v in stats.items()},
                     {m: v[2] for m, v in stats.items()})
 
@@ -230,7 +298,7 @@ def seed_data(args, base):
         for lv, cats in b["levels"].items():
             groups = []
             for c in cats:
-                acc, sd, k = block(c)
+                acc, sd, k = block(c, lv)
                 if any(v is not None for v in acc.values()):
                     groups.append(dict(cat=c, n=b["n"].get(c), acc=acc, sd=sd, k=k))
             if groups:
@@ -258,13 +326,21 @@ def main():
                         help="only keep examples for these categories (e.g. structuralized_imagetext_understanding)")
     parser.add_argument("--seed-sets", nargs="+", default=None, choices=list(SETS),
                         help="also add a 'mean ± sd over seeds' view from these sets (e.g. t07-cp-s{0..9})")
+    parser.add_argument("--single-datasets", nargs="*", default=[],
+                        help="benchmarks shown from the --set run only (no seeds, no examples), e.g. SEEDBench2")
+    parser.add_argument("--elvis-rubric", default="results/eval_v3_rubric_on_test_v3",
+                        help="ELVIS rubric-mode results (eval_elvis.py --rubrics); '' to leave out")
+    parser.add_argument("--elvis-own", default="results/eval_v3_on_test_v3",
+                        help="ELVIS own-rule results of the fine-tuned models; '' to leave out")
+    parser.add_argument("--elvis-own-base", default="results/eval_v2_on_test_v3",
+                        help="where the own-rule base run was written (base has no v3 run)")
     args = parser.parse_args()
 
     keys = dict(zip(args.models, keys_for([args.set], args.models)))
     checks = {}
     print(f"{'dataset':20s} {'model':16s} {'answers':>13s} {'scored':6s} {'unscored':>8s} {'random':>6s}  status")
-    for ds in args.datasets:
-        total = dataset_size(ds)
+    for ds in args.single_datasets + args.datasets:
+        total = total_of(ds)
         for m, key in keys.items():
             r = checks[ds, m] = check(key, ds, args.results, total)
             print(f"{ds:20s} {m:16s} {r['answers']:>6d}/{total or '?':<6} {'yes' if r['scored'] else 'no':6s} "
@@ -277,7 +353,7 @@ def main():
         return
 
     base = "base" if "base" in keys else args.models[0]
-    if not any(checks[ds, base]["acc"] for ds in args.datasets):
+    if not any(checks[ds, base]["acc"] for ds in args.single_datasets + args.datasets):
         raise SystemExit("base has no scored runs - nothing to report")
     data = report_data(args, keys, checks, base)
     if args.seed_sets:

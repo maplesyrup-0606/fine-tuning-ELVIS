@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>General Benchmarks Report</title>
+<title>Evaluation Report</title>
 <!-- Template for scripts/general_bench.py: the data is injected in place of the null below. -->
 <style>
 :root{
@@ -103,7 +103,7 @@ footer{color:var(--muted);font-size:12px;padding:24px 0}
 <body>
 <header class="top"><div class="wrap">
   <div class="row" style="justify-content:space-between">
-    <div><h1>General benchmarks</h1><div class="sub" id="sub"></div></div>
+    <div><h1>Evaluation report</h1><div class="sub" id="sub"></div></div>
     <div class="row"><span id="modes" class="seg"></span><span id="verify" class="badge"></span>
       <button class="chip" id="theme" title="Toggle light/dark">◐ theme</button></div>
   </div>
@@ -128,8 +128,18 @@ state.cat = {};
 if (!(["max", "n", "base", "name"].includes(state.sort) || V3.some(m => state.sort === "m:" + m))) state.sort = "max";
 if (state.tab !== "overview" && state.tab !== "runs" && !D.datasets.some(d => d.name === state.tab)) state.tab = "overview";
 if (!D.seeds) state.mode = "single";
-const SEEDS = () => state.mode === "seeds";
-const DSETS = () => SEEDS() ? D.seeds.datasets : D.datasets;
+// Benchmarks without seed runs (ELVIS, SEED-Bench-2) are shown from their single run even in the seed view:
+// FORCE_SINGLE switches the comparison helpers to single-run semantics while such a benchmark is built.
+let FORCE_SINGLE = false;
+const SEEDS = () => state.mode === "seeds" && !FORCE_SINGLE;
+const seedOf = d => D.seeds?.datasets.find(x => x.name === d.name);
+function view(d, fn) {
+  if (state.mode !== "seeds") return fn(d);
+  const s = seedOf(d); if (s) return fn(s);
+  const prev = FORCE_SINGLE; FORCE_SINGLE = true;
+  try { return fn(d); } finally { FORCE_SINGLE = prev; }
+}
+const DSETS = () => state.mode === "seeds" ? D.datasets.map(d => seedOf(d)).filter(Boolean) : D.datasets;
 const save = () => { try { localStorage.setItem("gbstate", JSON.stringify({tab: state.tab,
   notable: state.notable, sort: state.sort, level: state.level, mode: state.mode})); } catch (e) {} };
 
@@ -244,23 +254,27 @@ function tabs() {
 function go(t) { state.tab = t; save(); tabs(); render(); scrollTo({top: 0}); }
 function render() {
   hideTip();
-  const ds = DSETS().find(d => d.name === state.tab);
-  document.getElementById("view").replaceChildren(...(state.tab === "runs" ? runs() : ds ? dataset(ds) : overview()));
+  const ds = D.datasets.find(d => d.name === state.tab);
+  FORCE_SINGLE = !!(ds && state.mode === "seeds" && !seedOf(ds));   // stays on while this tab is shown (tooltips)
+  const shownDs = ds && state.mode === "seeds" && seedOf(ds) ? seedOf(ds) : ds;
+  document.getElementById("view").replaceChildren(...(state.tab === "runs" ? runs() : ds ? dataset(shownDs) : overview()));
 }
 
 // ---------- overview ----------
 function overview() {
-  const cards = DSETS().map(d => {
-    const b = d.overall[BASE], o = O(d);
+  const cards = D.datasets.map(d0 => view(d0, d => {
+    const b = d.overall[BASE], o = O(d), el = d0.elvis;
     return h("div", {class: "card kpi", onclick: () => go(d.name), title: "open " + d.label},
       h("div", {class: "row", style: "justify-content:space-between"}, h("span", {class: "name"}, d.label),
-        h("span", {class: "n"}, `n = ${d.n ?? "?"}`)),
+        h("span", {class: "n"}, el ? `${d.levels[0]?.groups.length ?? 0} principles` : `n = ${d.n ?? "?"}`)),
       h("div", {class: "big"}, fmt(b, 2),
         SEEDS() ? h("span", {style: "font-size:15px;color:var(--muted);font-weight:600"}, ` ±${fmt(d.sd?.[BASE], 2)}`) : null),
-      h("div", {class: "cap"}, SEEDS() ? `base mean ± sd over ${d.k?.[BASE] ?? "?"} seeds` : `base accuracy · noise ±${fmt(noise(b, d.n))}`),
+      h("div", {class: "cap"}, SEEDS() ? `base mean ± sd over ${d.k?.[BASE] ?? "?"} seeds`
+        : (el ? "base · mean over principles" : `base accuracy · noise ±${fmt(noise(b, d.n))}`)
+          + (FORCE_SINGLE ? " · single run (no seeds)" : "")),
       ...shown().map(m => h("div", {class: "mrow"}, h("span", {class: "sw", style: `background:${COLOR[m]}`}),
         h("span", {}, m), h("span", {class: "acc"}, fmt(d.overall[m], 2)), h("span", {style: "text-align:right"}, cmpPill(cmp(o, m, d.n))))));
-  });
+  }));
   return [h("h2", {}, "Overview"),
     h("p", {class: "note"}, SEEDS()
       ? `Mean over the seed runs (T0.7 sampling); base also shows its sd. Each fine-tuned model is shown as its distance from base's mean in units of base's sd (σ): +2σ means its mean is two of base's seed-to-seed standard deviations above base. ● = at least ${Z_BIG}σ. Click a card for the per-category breakdown.`
@@ -270,7 +284,9 @@ function overview() {
     h("p", {class: "note"}, SEEDS()
       ? `Dot position = (model mean − base mean) / base sd; number = model mean accuracy; base mean ± sd under each benchmark. Shaded = within ±1σ (darker) and ±2σ of base. Filled dot = at least ${Z_BIG}σ away.`
       : "Dot position = model − base (points); number = model accuracy. The grey band is each benchmark's noise band around zero: hollow dots inside it are within chance, filled dots are beyond it."),
-    h("div", {class: "card panel"}, deltaChart())];
+    h("div", {class: "card panel"}, deltaChart(),
+      state.mode === "seeds" && D.datasets.some(d => !seedOf(d))
+        ? h("p", {class: "note", style: "margin:8px 0 0"}, `Not in this chart (no seed runs, so no σ): ${D.datasets.filter(d => !seedOf(d)).map(d => d.label).join(", ")}. Switch to the single-run view to compare them.`) : null)];
 }
 function deltaChart() {
   const ms = shown(), W = 900, L = 190, R = 24, rowH = 22 + 14 * Math.max(1, ms.length), H = DSETS().length * rowH + 44;
@@ -306,7 +322,9 @@ function dataset(d) {
   const head = h("div", {class: "row", style: "justify-content:space-between;align-items:flex-end"},
     h("div", {}, h("h2", {}, d.label), h("div", {class: "sub"}, SEEDS()
       ? `${d.n} questions · base mean ${fmt(b, 2)} ± ${fmt(d.sd?.[BASE], 2)} (sd over ${d.k?.[BASE]} seeds)`
-      : `${d.n} questions · base ${fmt(b, 2)} · noise ±${fmt(noise(b, d.n))}`)),
+      : d.elvis ? `accuracy (%) per Gestalt principle · overall = mean over principles · base ${fmt(b, 2)} · epoch 3 checkpoints`
+      : `${d.n} questions · base ${fmt(b, 2)} · noise ±${fmt(noise(b, d.n))}`
+        + (FORCE_SINGLE ? " · single run only (no seed runs for this benchmark)" : ""))),
     h("div", {class: "row"}, ...shown().map(m => h("span", {class: "badge", title: m},
       h("span", {class: "sw", style: `background:${COLOR[m]}`}), m, cmpPill(cmp(o, m, d.n))))));
   if (!d.levels.length) return [head, h("p", {class: "empty"}, "No per-category results for this benchmark.")];
@@ -333,7 +351,8 @@ function dataset(d) {
     h("label", {class: "check"}, h("input", {type: "checkbox", checked: state.notable,
       onchange: e => { state.notable = e.target.checked; save(); render(); }}), "only categories with a ●"));
   return [head, controls,
-    h("p", {class: "note"}, `${lv.groups.length} groups at the "${lvName}" level; n sums to ${sumN} of ${d.n}. Click a row to see example questions.`),
+    h("p", {class: "note"}, d.elvis ? "No question counts are stored for ELVIS, so no noise band or ● here: read the differences as descriptive."
+      : `${lv.groups.length} groups at the "${lvName}" level; n sums to ${sumN} of ${d.n}. Click a row to see example questions.`),
     h("div", {class: "card panel"}, h("div", {class: "sub", style: "margin:0 0 6px"}, SEEDS()
       ? `All fine-tuned models per category: dot position = (model mean − base mean) / base sd, number = model mean accuracy; base mean ± sd under each category. Shaded = ±1σ / ±2σ of base. Filled = at least ${Z_BIG}σ.`
       : "All fine-tuned models per category: dot position = model − base (points), number = model accuracy; base under each category. Grey = that category's noise band. Filled = outside the band."),
@@ -366,7 +385,7 @@ function forest(groups, pick, sel) {
     const label = g.cat.length > 40 ? g.cat.slice(0, 39) + "…" : g.cat;
     g0.append(h("text", {x: L - 12, y: mid - 2, "text-anchor": "end", style: "fill:var(--ink);pointer-events:none", text: label}));
     g0.append(h("text", {x: L - 12, y: mid + 12, "text-anchor": "end", style: "fill:var(--muted);font-size:10.5px;pointer-events:none", text: baseTxt(g)}));
-    g0.append(h("text", {x: W - R + 10, y: mid + 4, style: "pointer-events:none", text: `n ${g.n}`}));
+    if (g.n != null) g0.append(h("text", {x: W - R + 10, y: mid + 4, style: "pointer-events:none", text: `n ${g.n}`}));
     const step = ms.length > 1 ? Math.min(11, (rowH - 10) / (ms.length - 1)) : 0;
     ms.forEach((m, j) => { const c = g.c[m], v = val(c); if (v == null) return;
       const cx = x(v), cy = mid + (j - (ms.length - 1) / 2) * step;
@@ -425,14 +444,15 @@ function examples(d, lvName, sel) {
 // ---------- runs ----------
 function runs() {
   return [h("h2", {}, "Run verification"),
-    h("p", {class: "note"}, "OK = every question answered, a score file exists, and no answer was scored without the GPT judge. A few random fallbacks (the judge failed on that answer) are normal."),
+    h("p", {class: "note"}, "OK = every question answered, a score file exists, and no answer was scored without the GPT judge. A few random fallbacks (the judge failed on that answer) are normal. \"Needed the judge\" = answers the rules could not read as an option letter: a high or rising share for one model points to answer-format drift."),
     h("div", {class: "card panel scroll"}, h("table", {},
-      h("thead", {}, h("tr", {}, ...["benchmark", "model", "answers", "scored", "unscored (no judge)", "random fallback", "status"].map(t => h("th", {}, t)))),
+      h("thead", {}, h("tr", {}, ...["benchmark", "model", "answers", "scored", "unscored (no judge)", "random fallback", "needed the judge", "status"].map(t => h("th", {}, t)))),
       h("tbody", {}, ...D.verify.map(v => h("tr", {style: "cursor:default"},
         h("td", {}, (D.datasets.find(d => d.name === v.ds) || {}).label || v.ds),
         h("td", {}, h("span", {class: "thsw", style: `background:${COLOR[v.model]}`}), v.model),
         h("td", {}, `${v.answers}/${v.total ?? "?"}`), h("td", {}, v.scored ? "yes" : "no"),
         h("td", {}, v.unscored ?? "–"), h("td", {}, v.random ?? "–"),
+        h("td", {title: "share of answers the rules could not read as a letter (judge or fallback decided)"}, v.judge == null ? "–" : `${fmt(v.judge)}%`),
         h("td", {}, h("span", {class: "pill " + (v.ok ? "ok" : "bad")}, v.ok ? "✓ OK" : "✗ check")))))))];
 }
 
