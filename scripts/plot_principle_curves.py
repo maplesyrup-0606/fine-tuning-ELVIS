@@ -29,16 +29,25 @@ from aggregate_results import PRINCIPLES, load_config_baseline, parse_summary
 
 # Categorical slots of the dataviz reference palette (validated: CVD-safe on the light
 # surface; low-contrast slots need non-color relief -> markers + legend + table).
-VARIANT_ORDER = ["llm", "projector", "both", "continuity-llm", "continuity-both", "all-llm", "all-both"]
+VARIANT_ORDER = ["llm", "projector", "both", "continuity-llm", "continuity-both", "all-llm", "all-both",
+                 "continuity-vit", "continuity-vit-both", "all-vit", "all-vit-both"]
+V3_RUNS = ("continuity", "all")   # v3 labels are <run>-<variant>; variants may contain '-' (vit-both)
 COLORS = {"llm": "#2a78d6", "projector": "#eb6834", "both": "#1baf7a",
           "continuity-llm": "#2a78d6", "continuity-both": "#eb6834",
-          "all-llm": "#1baf7a", "all-both": "#eda100"}
+          "all-llm": "#1baf7a", "all-both": "#eda100",
+          "continuity-vit": "#a05cc0", "continuity-vit-both": "#c2455d", "all-vit": "#7a8b2e", "all-vit-both": "#17becf"}
 SURFACE, INK, INK_2, GRID = "#fcfcfb", "#0b0b0b", "#52514e", "#e4e3df"
 SUMMARY = "summary.json"     # --summary summary_clean.json: overlap-free re-scoring (rescore_without_leaks.py)
 
 
+def split_label(label):
+    """'continuity-vit-both' -> ('continuity', 'vit-both'); v1/v2 labels ('llm') -> ('', 'llm')."""
+    run, _, rest = label.partition("-")
+    return (run, rest) if run in V3_RUNS and rest else ("", label)
+
+
 def marker(variant):
-    return {"llm": "o", "projector": "s", "both": "^"}[variant.rsplit("-", 1)[-1]]
+    return {"llm": "o", "projector": "s", "both": "^", "vit": "D", "vit-both": "P"}[split_label(variant)[1]]
 
 
 def load(root, metric, config, fill_base_continuity, base_root=None):
@@ -52,7 +61,7 @@ def load(root, metric, config, fill_base_continuity, base_root=None):
                [parse_summary(p, base_root) for p in sorted(base_root.glob(f"base/**/{SUMMARY}"))]
     variants = sorted({r["variant"] for r in rows if r["variant"] != "base"},
                       key=lambda v: VARIANT_ORDER.index(v) if v in VARIANT_ORDER else 99)
-    run_of = lambda v: v.rsplit("-", 1)[0] if "-" in v else ""     # continuity-both -> continuity
+    run_of = lambda v: split_label(v)[0]     # continuity-vit-both -> continuity
     steps_per_epoch = {}
     for r in rows:
         if r["step"]:
