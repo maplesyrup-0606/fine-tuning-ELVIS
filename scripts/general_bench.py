@@ -332,8 +332,8 @@ def main():
                         help="ELVIS rubric-mode results (eval_elvis.py --rubrics); '' to leave out")
     parser.add_argument("--elvis-own", default="results/eval_v3_on_test_v3",
                         help="ELVIS own-rule results of the fine-tuned models; '' to leave out")
-    parser.add_argument("--elvis-own-base", default="results/eval_v2_on_test_v3",
-                        help="where the own-rule base run was written (base has no v3 run)")
+    parser.add_argument("--elvis-own-base", default="results/eval_v3_on_test_v3",
+                        help="folder holding the own-rule base run (base/<timestamp>/summary.json)")
     args = parser.parse_args()
 
     keys = dict(zip(args.models, keys_for([args.set], args.models)))
