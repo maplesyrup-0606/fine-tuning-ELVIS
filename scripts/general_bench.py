@@ -27,6 +27,8 @@ Usage (on Fir, from fine-tuning-ELVIS):
   python scripts/general_bench.py --html results/gb.html --samples 12 --sample-cats structuralized_imagetext_understanding
   python scripts/general_bench.py --html results/general_bench.html --seed-sets t07-cp-s{0..9}   # + seed view
   python scripts/general_bench.py --html results/report.html --seed-sets t07-cp-s{0..9} --single-datasets SEEDBench2
+  python scripts/general_bench.py --html results/report.html --seed-sets t07-cp-s{0..9} --single-datasets SEEDBench2 \
+      --alt-set t0p-cp-r224          # + a separate "224x224 images" view
 """
 
 import argparse
@@ -200,8 +202,9 @@ def samples(ds, runs, levels, k, only=None, seed=0):
     return out, counts
 
 
-def report_data(args, keys, checks, base):
-    datasets = elvis_data(args, list(keys))
+def report_data(args, keys, checks, base, alt=False):
+    """alt=True: the --alt-set view (e.g. 224x224 images): benchmarks only, no ELVIS, no examples."""
+    datasets = [] if alt else elvis_data(args, list(keys))
     for ds in args.single_datasets + args.datasets:
         b = checks[ds, base]
         acc = {m: checks[ds, m]["acc"] or {} for m in keys}
@@ -210,11 +213,11 @@ def report_data(args, keys, checks, base):
                                          for c in cats])
                   for lv, cats in b["levels"].items()]
         ex, dis = [], {}
-        if args.samples and ds not in args.single_datasets:
+        if args.samples and not alt and ds not in args.single_datasets:
             order = [base] + [m for m in keys if m != base]  # samples() compares everything with the first model
             runs = {m: judged(keys[m], ds, args.results)[0] for m in order}
             ex, dis = samples(ds, runs, b["levels"], args.samples, args.sample_cats)
-        print(f"  {ds}: {sum(len(l['groups']) for l in levels)} category groups, {len(ex)} examples")
+        print(f"  {'[alt] ' if alt else ''}{ds}: {sum(len(l['groups']) for l in levels)} category groups, {len(ex)} examples")
         datasets.append(dict(name=ds, label=LABELS.get(ds, ds), n=b["n"].get("Overall"),
                              overall={m: acc[m].get("Overall") for m in keys},
                              levels=[l for l in levels if l["groups"]], samples=ex, disagree=dis,
@@ -324,6 +327,10 @@ def main():
                              "disagree (most disagreement first); 0 = none (smaller file)")
     parser.add_argument("--sample-cats", nargs="+", default=None,
                         help="only keep examples for these categories (e.g. structuralized_imagetext_understanding)")
+    parser.add_argument("--alt-set", default=None, choices=list(SETS),
+                        help="add a separate view from this run set, e.g. t0p-cp-r224 (images capped at 224x224); "
+                             "only models with runs in it are shown there")
+    parser.add_argument("--alt-label", default="224×224 images", help="name of the --alt-set view")
     parser.add_argument("--seed-sets", nargs="+", default=None, choices=list(SETS),
                         help="also add a 'mean ± sd over seeds' view from these sets (e.g. t07-cp-s{0..9})")
     parser.add_argument("--single-datasets", nargs="*", default=[],
@@ -356,6 +363,19 @@ def main():
     if not any(checks[ds, base]["acc"] for ds in args.single_datasets + args.datasets):
         raise SystemExit("base has no scored runs - nothing to report")
     data = report_data(args, keys, checks, base)
+    if args.alt_set:
+        akeys = dict(zip(args.models, keys_for([args.alt_set], args.models)))
+        achecks = {(ds, m): check(k, ds, args.results, total_of(ds))
+                   for ds in args.single_datasets + args.datasets for m, k in akeys.items()}
+        have = [m for m in akeys if any(achecks[ds, m]["acc"] for ds in args.single_datasets + args.datasets)]
+        if base in have:
+            alt = report_data(args, {m: akeys[m] for m in have}, {k: v for k, v in achecks.items() if k[1] in have}, base,
+                              alt=True)
+            data["alt"] = dict(alt, label=args.alt_label, set=args.alt_set)
+            n_ok = sum(r["ok"] for k, r in achecks.items() if k[1] in have)
+            print(f"  alt view {args.alt_set}: models {', '.join(have)}; {n_ok}/{len(have) * len(args.single_datasets + args.datasets)} runs OK")
+        else:
+            print(f"  [skip] alt view {args.alt_set}: base has no runs")
     if args.seed_sets:
         data["seeds"] = seed_data(args, base)
     payload = json.dumps(data, separators=(",", ":")).replace("</", "<\\/")

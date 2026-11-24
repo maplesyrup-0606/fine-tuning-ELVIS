@@ -127,19 +127,23 @@ try { Object.assign(state, JSON.parse(localStorage.getItem("gbstate") || "{}"));
 state.cat = {};
 if (!(["max", "n", "base", "name"].includes(state.sort) || V3.some(m => state.sort === "m:" + m))) state.sort = "max";
 if (state.tab !== "overview" && state.tab !== "runs" && !D.datasets.some(d => d.name === state.tab)) state.tab = "overview";
-if (!D.seeds) state.mode = "single";
+if ((state.mode === "seeds" && !D.seeds) || (state.mode === "alt" && !D.alt)) state.mode = "single";
+const ALT = () => state.mode === "alt";   // separate view of another run set (e.g. images capped at 224x224)
+const altOf = d => D.alt?.datasets.find(x => x.name === d.name);
 // Benchmarks without seed runs (ELVIS, SEED-Bench-2) are shown from their single run even in the seed view:
 // FORCE_SINGLE switches the comparison helpers to single-run semantics while such a benchmark is built.
 let FORCE_SINGLE = false;
 const SEEDS = () => state.mode === "seeds" && !FORCE_SINGLE;
 const seedOf = d => D.seeds?.datasets.find(x => x.name === d.name);
 function view(d, fn) {
+  if (ALT()) { const a = altOf(d); return a ? fn(a) : (d.elvis ? fn(d) : null); }
   if (state.mode !== "seeds") return fn(d);
   const s = seedOf(d); if (s) return fn(s);
   const prev = FORCE_SINGLE; FORCE_SINGLE = true;
   try { return fn(d); } finally { FORCE_SINGLE = prev; }
 }
-const DSETS = () => state.mode === "seeds" ? D.datasets.map(d => seedOf(d)).filter(Boolean) : D.datasets;
+const DSETS = () => state.mode === "seeds" ? D.datasets.map(d => seedOf(d)).filter(Boolean)
+  : ALT() ? D.datasets.map(d => altOf(d)).filter(Boolean) : D.datasets;
 const save = () => { try { localStorage.setItem("gbstate", JSON.stringify({tab: state.tab,
   notable: state.notable, sort: state.sort, level: state.level, mode: state.mode})); } catch (e) {} };
 
@@ -161,7 +165,7 @@ const fmt = (v, d = 1) => v == null || isNaN(v) ? "–" : v.toFixed(d);
 const sgn = (v, d = 1) => v == null || isNaN(v) ? "–" : (v > 0 ? "+" : v < 0 ? "−" : "±") + Math.abs(v).toFixed(d);
 function noise(p, n) { if (p == null || !n) return null; const q = Math.min(Math.max(p / 100, .01), .99);
   return 200 * Math.sqrt(2 * q * (1 - q) / n); }
-const shown = () => V3.filter(m => !hidden.has(m));
+const shown = () => V3.filter(m => !hidden.has(m) && (!ALT() || D.alt.models.includes(m)));
 // Comparison of model m with base on one result object o = {acc, sd, k} (n questions):
 //   seeds view   z = (mean_m - mean_base) / sd_base  (base's own seed-to-seed sd); ● when |z| >= Z_BIG
 //   single run   d = acc_m - acc_base vs the ~2 SE question-sampling noise band at n; ● when |d| > band
@@ -229,17 +233,20 @@ vb.textContent = (allOk ? "✓ " : "✗ ") + `${nOk}/${D.verify.length} runs ver
 vb.style.cursor = "pointer"; vb.onclick = () => go("runs");
 function modes() {
   const el = document.getElementById("modes");
-  if (!D.seeds) { el.style.display = "none"; return; }
-  el.replaceChildren(...[["single", `single run (${D.set})`], ["seeds", `${D.seeds.label}: mean ± sd`]].map(([k, t]) =>
+  if (!D.seeds && !D.alt) { el.style.display = "none"; return; }
+  const items = [["single", `single run (${D.set})`]];
+  if (D.seeds) items.push(["seeds", `${D.seeds.label}: mean ± sd`]);
+  if (D.alt) items.push(["alt", `${D.alt.label} (${D.alt.set})`]);
+  el.replaceChildren(...items.map(([k, t]) =>
     h("button", {class: state.mode === k ? "on" : "", title: k === "seeds" ? `${D.seeds.ok}/${D.seeds.total} seed runs verified` : "",
-      onclick: () => { state.mode = k; save(); modes(); render(); }}, t)));
+      onclick: () => { state.mode = k; save(); modes(); legend(); render(); }}, t)));
 }
 document.getElementById("theme").onclick = () => {
   const r = document.documentElement;
   const dark = r.dataset.theme ? r.dataset.theme === "dark" : matchMedia("(prefers-color-scheme: dark)").matches;
   r.dataset.theme = dark ? "light" : "dark"; };
 function legend() {
-  document.getElementById("legend").replaceChildren(...D.models.map(m => h("button", {
+  document.getElementById("legend").replaceChildren(...(ALT() ? D.alt.models : D.models).map(m => h("button", {
     class: "chip" + (hidden.has(m) ? " off" : ""), disabled: m === BASE, title: m === BASE ? "reference" : "show / hide",
     onclick: () => { hidden.has(m) ? hidden.delete(m) : hidden.add(m); legend(); render(); }},
     h("span", {class: "sw", style: `background:${COLOR[m]}`}), m === BASE ? `${m} (reference)` : m)));
@@ -256,7 +263,7 @@ function render() {
   hideTip();
   const ds = D.datasets.find(d => d.name === state.tab);
   FORCE_SINGLE = !!(ds && state.mode === "seeds" && !seedOf(ds));   // stays on while this tab is shown (tooltips)
-  const shownDs = ds && state.mode === "seeds" && seedOf(ds) ? seedOf(ds) : ds;
+  const shownDs = ds && state.mode === "seeds" && seedOf(ds) ? seedOf(ds) : ds && ALT() ? (altOf(ds) || ds) : ds;
   document.getElementById("view").replaceChildren(...(state.tab === "runs" ? runs() : ds ? dataset(shownDs) : overview()));
 }
 
@@ -274,8 +281,9 @@ function overview() {
           + (FORCE_SINGLE ? " · single run (no seeds)" : "")),
       ...shown().map(m => h("div", {class: "mrow"}, h("span", {class: "sw", style: `background:${COLOR[m]}`}),
         h("span", {}, m), h("span", {class: "acc"}, fmt(d.overall[m], 2)), h("span", {style: "text-align:right"}, cmpPill(cmp(o, m, d.n))))));
-  }));
+  })).filter(Boolean);
   return [h("h2", {}, "Overview"),
+    ALT() ? h("p", {class: "note", style: "color:var(--ink)"}, `${D.alt.label} view (${D.alt.set}): the same single greedy run as the single-run view, except every image is capped at 224×224 pixels (≤ 49 visual tokens, the size of the ELVIS fine-tuning images). Only models with runs at this resolution are shown. ELVIS is unchanged (its images are 224×224 already). Compare with the single-run view to see the effect of resolution.`) : null,
     h("p", {class: "note"}, SEEDS()
       ? `Mean over the seed runs (T0.7 sampling); base also shows its sd. Each fine-tuned model is shown as its distance from base's mean in units of base's sd (σ): +2σ means its mean is two of base's seed-to-seed standard deviations above base. ● = at least ${Z_BIG}σ. Click a card for the per-category breakdown.`
       : "Overall accuracy per benchmark; each fine-tuned model is shown as its difference from base. ● marks a difference larger than the noise band for that benchmark's size. Click a card for the per-category breakdown."),
@@ -324,7 +332,8 @@ function dataset(d) {
       ? `${d.n} questions · base mean ${fmt(b, 2)} ± ${fmt(d.sd?.[BASE], 2)} (sd over ${d.k?.[BASE]} seeds)`
       : d.elvis ? `accuracy (%) per Gestalt principle · overall = mean over principles · base ${fmt(b, 2)} · epoch 3 checkpoints`
       : `${d.n} questions · base ${fmt(b, 2)} · noise ±${fmt(noise(b, d.n))}`
-        + (FORCE_SINGLE ? " · single run only (no seed runs for this benchmark)" : ""))),
+        + (FORCE_SINGLE ? " · single run only (no seed runs for this benchmark)" : "")
+        + (ALT() && !d.elvis ? ` · ${D.alt.label}` : "") + (ALT() && d.elvis ? " · same as the other views (ELVIS images are 224×224 already)" : ""))),
     h("div", {class: "row"}, ...shown().map(m => h("span", {class: "badge", title: m},
       h("span", {class: "sw", style: `background:${COLOR[m]}`}), m, cmpPill(cmp(o, m, d.n))))));
   if (!d.levels.length) return [head, h("p", {class: "empty"}, "No per-category results for this benchmark.")];
@@ -411,6 +420,7 @@ function catTable(groups, pick, sel) {
 }
 function examples(d, lvName, sel) {
   const box = h("div", {id: "examples"});
+  if (ALT()) { box.append(h("p", {class: "note", style: "margin-top:16px"}, "Example questions are only shown in the single-run view (their answers come from the full-resolution run).")); return box; }
   const src = D.datasets.find(x => x.name === d.name) || {};
   d = {...d, samples: src.samples || []};
   const nDis = src.disagree?.[lvName]?.[sel], nCat = (d.levels.find(l => l.name === lvName)?.groups || []).find(g => g.cat === sel)?.n;
@@ -443,11 +453,11 @@ function examples(d, lvName, sel) {
 
 // ---------- runs ----------
 function runs() {
-  return [h("h2", {}, "Run verification"),
+  return [h("h2", {}, ALT() ? `Run verification · ${D.alt.label} (${D.alt.set})` : "Run verification"),
     h("p", {class: "note"}, "OK = every question answered, a score file exists, and no answer was scored without the GPT judge. A few random fallbacks (the judge failed on that answer) are normal. \"Needed the judge\" = answers the rules could not read as an option letter: a high or rising share for one model points to answer-format drift."),
     h("div", {class: "card panel scroll"}, h("table", {},
       h("thead", {}, h("tr", {}, ...["benchmark", "model", "answers", "scored", "unscored (no judge)", "random fallback", "needed the judge", "status"].map(t => h("th", {}, t)))),
-      h("tbody", {}, ...D.verify.map(v => h("tr", {style: "cursor:default"},
+      h("tbody", {}, ...(ALT() ? D.alt.verify : D.verify).map(v => h("tr", {style: "cursor:default"},
         h("td", {}, (D.datasets.find(d => d.name === v.ds) || {}).label || v.ds),
         h("td", {}, h("span", {class: "thsw", style: `background:${COLOR[v.model]}`}), v.model),
         h("td", {}, `${v.answers}/${v.total ?? "?"}`), h("td", {}, v.scored ? "yes" : "no"),
