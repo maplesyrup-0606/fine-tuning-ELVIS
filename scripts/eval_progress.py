@@ -140,7 +140,9 @@ def overall_table(sets, models, root, results, dataset):
             acc = progress(key, root, results, dataset, 10000)[3]
             if acc:
                 df = pd.read_csv(acc[0]) if acc[0].suffix == ".csv" else pd.read_excel(acc[0])
-                v = float(df["Overall"].iloc[0])
+                # MMMU_DEV_VAL has a row per split; the reported number is the validation split, not dev
+                val = df[df["split"] == "validation"] if "split" in df else df.iloc[0:0]
+                v = float((val if len(val) else df)["Overall"].iloc[0])
                 row[s] = f"{100 * v if v <= 1 else v:.2f}"
             else:
                 row[s] = "-"
