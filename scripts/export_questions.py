@@ -3,7 +3,8 @@
 Export every benchmark question as text (no images) with every model's answer and right/wrong, one CSV per
 benchmark, for offline analysis (e.g. reading the questions' text priors). Small enough to copy to a laptop.
 
-Columns: index, category columns (category / l2-category / subpart), question, hint, A..E, answer,
+Columns: every metadata column of the results (index, category columns, question, hint, options, answer, ...;
+  SEED-Bench-2 also gets question_type / question_type_id, its 27 capability types, from base's *_enriched.xlsx),
   <model>_hit (1/0) and <model>_pred (first 80 characters) for every model,
   n_diff = how many fine-tuned models got a different right/wrong than base on that question.
 Source: each model's judged results of --set (default t0p-cp, the single greedy run); MMMU: validation split.
@@ -22,7 +23,8 @@ import pandas as pd
 from eval_progress import MODELS, SETS, keys_for
 
 DATASETS = ["SEEDBench2", "MMMU_DEV_VAL", "MMStar", "MMBench_DEV_EN_V11", "AI2D_TEST"]
-META = ["index", "category", "l2-category", "subpart", "question", "hint", "A", "B", "C", "D", "E", "answer"]
+# Columns of the result files that are model output / scoring, not question metadata (everything else is kept).
+NOT_META = {"prediction", "hit", "log", "GT", "tmp_flag", "g_index", "extra_records", "split", "image", "image_path"}
 
 
 def result_file(key, ds, results):
@@ -57,7 +59,17 @@ def main():
             print(f"[skip] {ds}: no base results")
             continue
         b = runs[base]
-        out = b[[c for c in META if c in b]].copy()
+        out = b[[c for c in b.columns if c not in NOT_META and not str(c).startswith("Unnamed")]].copy()
+        enriched = [f for f in Path(args.results).glob(f"*/{keys_for([args.set], [base])[0]}_{ds}_*_enriched.xlsx")
+                    if "_old" not in f.stem]
+        if enriched:  # SEED-Bench-2 capability types (enrich_seedbench.py), aligned by position + question text
+            e = pd.read_excel(max(enriched, key=lambda f: f.stat().st_mtime))
+            cols = [c for c in ("question_type_id", "question_type") if c in e]
+            if cols and len(e) == len(b) and (e["question"].astype(str).values == b["question"].astype(str).values).all():
+                for c in cols:
+                    out[c] = e[c].values
+            else:
+                print(f"  [warn] {ds}: enriched file does not line up with base; no question types added")
         for m, d in runs.items():
             if len(d) != len(b) or not (d["question"].astype(str).values == b["question"].astype(str).values).all():
                 print(f"  [skip] {ds}/{m}: questions do not line up with base")
