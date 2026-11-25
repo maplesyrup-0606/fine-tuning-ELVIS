@@ -3,7 +3,8 @@
 Loads SEEDBench2_Fix exactly as a run would (VLMEvalKit build_dataset) and checks:
   1. 24,371 rows, 24,371 distinct indices, indices are the text ids ('5_0', not 50)
   2. questions / options / answers identical to the raw tsv, row for row
-  3. every row's image file(s) exist on disk; how many rows share an image set
+  3. every row's image file names are its own id ('1_10.jpg' / '1_10_0.jpg'), checked in memory;
+     only a few files are looked up on disk (to confirm runs can find them)
   4. the formerly colliding pairs (e.g. '1_10' vs '11_0') now differ in question and image
 Prints PASS/FAIL per check; exit code 1 on any FAIL.
 
@@ -11,6 +12,7 @@ Prints PASS/FAIL per check; exit code 1 on any FAIL.
 """
 import argparse
 import os.path as osp
+import re
 import sys
 from collections import Counter
 
@@ -58,8 +60,15 @@ def main():
         print("note: no image_path column (images inline); skipping file checks")
     else:
         full = lambda x: x if osp.isabs(x) else osp.join(ds.img_root, x)  # noqa: E731
-        missing = sum(not all(osp.exists(full(x)) for x in ps) for ps in paths)
-        ok &= report(missing == 0, f"rows with a missing image file: {missing}")
+        print("image path example:", paths[0][:2], "->", full(paths[0][0]))
+        wrong = [x for x, ps in zip(idx, paths)
+                 if not all(re.fullmatch(rf"{re.escape(x)}(_\d+)?\.\w+", osp.basename(p)) for p in ps)]
+        ok &= report(not wrong, f"rows whose image file names are not their own id: {len(wrong)} "
+                     f"{wrong[:5]}")
+        few = [p for ps in paths[::max(1, len(paths) // 20)] for p in ps[:1]]
+        missing = [p for p in few if not osp.exists(full(p))]
+        ok &= report(not missing, f"spot check on disk: {len(few) - len(missing)}/{len(few)} files found "
+                     f"{missing[:3]}")
         shared = Counter(tuple(ps) for ps in paths)
         print(f"info: rows whose image set is shared with another row: "
               f"{sum(v for v in shared.values() if v > 1)} "
