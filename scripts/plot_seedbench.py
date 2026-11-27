@@ -61,6 +61,12 @@ def load_result(result_dir: Path, label: str):
     for col in ("hit", "subpart", "level"):
         if col not in df.columns:
             raise ValueError(f"{source} missing column: {col}")
+    # SEEDBench2_Fix keeps the text ids ('12_5'): the number before '_' is the question type id,
+    # so no enrich step is needed
+    if "question_type" not in df.columns and df["index"].astype(str).str.fullmatch(r"\d+_\d+").all():
+        from enrich_seedbench import QUESTION_TYPE_NAMES
+        df["question_type_id"] = df["index"].astype(str).str.split("_").str[0].astype(int)
+        df["question_type"] = df["question_type_id"].map(QUESTION_TYPE_NAMES)
 
     per_subpart = (df.groupby("subpart")
                      .agg(n=("hit", "size"), acc=("hit", "mean"))
@@ -412,6 +418,9 @@ def main():
                         "plots go to results/plots/seedbench/<set>/")
     p.add_argument("--models", nargs="+", default=list(MODELS), choices=list(MODELS))
     p.add_argument("--results", default="results")
+    p.add_argument("--dataset", default="SEEDBench2", choices=["SEEDBench2", "SEEDBench2_Fix"],
+                   help="with --set: SEEDBench2_Fix = fixed runs (all 24,371 questions), "
+                        "plots go to results/plots/seedbench/<set>-fix/")
     p.add_argument("--group-by", choices=["subpart", "skill"], default="subpart",
                    help="radar at subpart level (default) or "
                         "faceted bars at skill level (requires enriched xlsx)")
@@ -432,10 +441,12 @@ def main():
     args = p.parse_args()
     if args.set:
         for s in args.set:
-            dirs = [f"{run_dir(args.results, k)}:{m}" for m, k in zip(args.models, keys_for([s], args.models))]
-            # one folder per set: results/plots/seedbench/<set>/ (radar.png, skills.png, 1_..6_<subpart>.png)
+            dirs = [f"{run_dir(args.results, k, args.dataset)}:{m}"
+                    for m, k in zip(args.models, keys_for([s], args.models))]
+            # one folder per set: results/plots/seedbench/<set>[-fix]/ (radar.png, skills.png, 1_..6_<subpart>.png)
             name = "radar" if args.group_by == "subpart" else "skills"
-            out = f"{args.results}/plots/seedbench/{s}/{name}.png"
+            tag = "-fix" if args.dataset == "SEEDBench2_Fix" else ""
+            out = f"{args.results}/plots/seedbench/{s}{tag}/{name}.png"
             run(p, args, dirs, args.out or out, f" [{s}]")
         return
     if not args.result:
@@ -443,10 +454,14 @@ def main():
     run(p, args, args.result, args.out)
 
 
-def run_dir(results, key):
-    """results/seedbench_<key>, else whichever results/*/ folder holds <key>_SEEDBench2.xlsx."""
+def run_dir(results, key, dataset="SEEDBench2"):
+    """results/seedbench_<key> (old runs), else whichever results/*/ folder holds <key>_<dataset>.xlsx."""
+    found = sorted(Path(results).glob(f"*/{key}_{dataset}.xlsx"))
+    if dataset != "SEEDBench2":
+        if not found:
+            raise SystemExit(f"no {key}_{dataset}.xlsx under {results}/*/ (run not finished?)")
+        return found[0].parent
     d = Path(results) / f"seedbench_{key}"
-    found = sorted(Path(results).glob(f"*/{key}_SEEDBench2.xlsx"))
     return d if d.is_dir() or not found else found[0].parent
 
 
