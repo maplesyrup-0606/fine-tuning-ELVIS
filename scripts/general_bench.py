@@ -45,7 +45,8 @@ from eval_progress import MODELS, SETS, dataset_size, keys_for
 
 DATASETS = ["MMMU_DEV_VAL", "MMStar", "MMBench_DEV_EN_V11", "AI2D_TEST"]
 LABELS = {"MMMU_DEV_VAL": "MMMU (val)", "MMStar": "MMStar", "MMBench_DEV_EN_V11": "MMBench v1.1 (dev, EN)",
-          "AI2D_TEST": "AI2D (test)", "SEEDBench2": "SEED-Bench-2"}
+          "AI2D_TEST": "AI2D (test)", "SEEDBench2": "SEED-Bench-2",
+          "SEEDBench2_Fix": "SEED-Bench-2 (fixed, all 24,371 questions)"}
 # Category columns in VLMEvalKit result files (each question has one value per column); SEED-Bench-2 also has subpart.
 LEVELS = ("category", "l2-category", "subpart")
 PRINCIPLES = ["continuity", "proximity", "similarity", "closure", "symmetry"]
@@ -86,7 +87,9 @@ def _num(v):
 
 def judged(key, dataset, results):
     """Judged rows of one run (prediction, hit, category columns, log, ...); MMMU validation split only."""
-    f = newest(list(Path(results).glob(f"*/{key}_{dataset}_*_result.xlsx")))
+    # SEEDBench2 is a prefix of SEEDBench2_Fix: don't let the old name pick up the fixed run's files
+    f = newest([f for f in Path(results).glob(f"*/{key}_{dataset}_*_result.xlsx")
+                if dataset.endswith("_Fix") or "_Fix_" not in f.name])
     if f is None:
         return None, None
     d = pd.read_excel(f)
@@ -94,6 +97,11 @@ def judged(key, dataset, results):
     if "split" in d and (d["split"] == "validation").any():
         d = d[d["split"] == "validation"]
     d["index"] = d["index"].astype(str)
+    # SEEDBench2_Fix keeps text ids ('12_5'); the number before '_' is the question type (27 types)
+    if dataset.startswith("SEEDBench2") and "category" not in d and d["index"].str.fullmatch(r"\d+_\d+").all():
+        from enrich_seedbench import QUESTION_TYPE_NAMES
+        t = d["index"].str.split("_").str[0].astype(int)
+        d["category"] = [f"{i}. {QUESTION_TYPE_NAMES[i]}" for i in t]
     return d.set_index("index"), log
 
 
