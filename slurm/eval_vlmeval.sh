@@ -118,7 +118,13 @@ fi
 NEXT_ITER=$((CHAIN_ITER + 1))
 echo "=== Iter $CHAIN_ITER exited $RC — submitting iter $NEXT_ITER (of max $CHAIN_MAX) ==="
 cd "$SLURM_SUBMIT_DIR"
-sbatch --job-name="$SLURM_JOB_NAME" \
+# carry this job's --exclude over to the next link (sbatch does not inherit it), so a bad node
+# excluded at submit time stays excluded for the whole chain
+EXC=$(scontrol show job "$SLURM_JOB_ID" | grep -o 'ExcNodeList=[^ ]*' | cut -d= -f2 || true)
+EXC_ARG=()
+if [ -n "$EXC" ] && [ "$EXC" != "(null)" ]; then EXC_ARG=(--exclude="$EXC"); fi
+echo "=== next link excludes: ${EXC:-none} ==="
+sbatch --job-name="$SLURM_JOB_NAME" ${EXC_ARG[@]+"${EXC_ARG[@]}"} \
        --dependency=afterany:$SLURM_JOB_ID \
        --export=ALL,CHAIN_ITER=$NEXT_ITER,CHAIN_MAX=$CHAIN_MAX \
        slurm/eval_vlmeval.sh "$MODEL_NAME" "$DATASET"
