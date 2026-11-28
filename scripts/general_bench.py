@@ -29,6 +29,8 @@ Usage (on Fir, from fine-tuning-ELVIS):
   python scripts/general_bench.py --html results/report.html --seed-sets t07-cp-s{0..9} --single-datasets SEEDBench2
   python scripts/general_bench.py --html results/report.html --seed-sets t07-cp-s{0..9} --single-datasets SEEDBench2 \
       --alt-set t0p-cp-r224          # + a separate "224x224 images" view
+  python scripts/general_bench.py --html results/report.html --seed-sets t07-cp-s{0..9} \
+      --single-datasets SEEDBench2_Fix MathVista_MINI     # MathVista: greedy run only, by task / image context
 """
 
 import argparse
@@ -46,9 +48,17 @@ from eval_progress import MODELS, SETS, dataset_size, keys_for
 DATASETS = ["MMMU_DEV_VAL", "MMStar", "MMBench_DEV_EN_V11", "AI2D_TEST"]
 LABELS = {"MMMU_DEV_VAL": "MMMU (val)", "MMStar": "MMStar", "MMBench_DEV_EN_V11": "MMBench v1.1 (dev, EN)",
           "AI2D_TEST": "AI2D (test)", "SEEDBench2": "SEED-Bench-2",
-          "SEEDBench2_Fix": "SEED-Bench-2 (fixed, all 24,371 questions)"}
+          "SEEDBench2_Fix": "SEED-Bench-2 (fixed, all 24,371 questions)", "MathVista_MINI": "MathVista (testmini)"}
 # Category columns in VLMEvalKit result files (each question has one value per column); SEED-Bench-2 also has subpart.
 LEVELS = ("category", "l2-category", "subpart")
+# MathVista: task (5), image context (16), general vs math-targeted VQA (its multi-label `skills` column is left out)
+LEVELS_BY = {"MathVista_MINI": ("task", "context", "category")}
+
+
+def mathvista(dataset):
+    """MathVista is scored differently: GPT extracts the answer into `res` (<key>_<ds>_<judge>.xlsx), VLMEvalKit's
+    post_check compares it with the answer, and the scores go to <key>_<ds>_<judge>_score.csv (Task&Skill, acc)."""
+    return dataset.startswith("MathVista")
 PRINCIPLES = ["continuity", "proximity", "similarity", "closure", "symmetry"]
 BIG_TSV = 2e9   # larger dataset files (SEED-Bench-2, ~30 GB) are not read: no size check, no example images
 
@@ -88,11 +98,15 @@ def _num(v):
 def judged(key, dataset, results):
     """Judged rows of one run (prediction, hit, category columns, log, ...); MMMU validation split only."""
     # SEEDBench2 is a prefix of SEEDBench2_Fix: don't let the old name pick up the fixed run's files
-    f = newest([f for f in Path(results).glob(f"*/{key}_{dataset}_*_result.xlsx")
+    pattern = f"*/{key}_{dataset}_*.xlsx" if mathvista(dataset) else f"*/{key}_{dataset}_*_result.xlsx"
+    f = newest([f for f in Path(results).glob(pattern)
                 if dataset.endswith("_Fix") or "_Fix_" not in f.name])
     if f is None:
         return None, None
     d = pd.read_excel(f)
+    if mathvista(dataset):
+        from vlmeval.dataset.utils.mathvista import post_check  # the exact rule MathVista_acc scores with
+        d["hit"] = [int(bool(post_check(r, prefetch=False))) for _, r in d.iterrows()]
     log = d["log"].astype(str) if "log" in d else pd.Series([], dtype=str)
     if "split" in d and (d["split"] == "validation").any():
         d = d[d["split"] == "validation"]
@@ -114,20 +128,34 @@ def check(key, dataset, results, total):
         r["answers"] = len(pd.read_excel(ans, usecols=["index"]))
     d, log = judged(key, dataset, results)
     if d is not None:
-        r["unscored"] = int(log.str.contains("no GPT-based answer matching").sum())
+        # MathVista: the judge gave up on an answer (counted wrong) = "All 5 retries failed"
+        r["unscored"] = int(log.str.contains("no GPT-based answer matching|All 5 retries failed").sum())
         r["random"] = int(log.str.contains("randomly generate").sum())
         # Questions per category: the same rows report_acc averages (MMMU validation, MMBench circular groups).
         r["n"] = {"Overall": len(d)}
-        if "log" in d and "prediction" in d:
+        if mathvista(dataset):  # rules read the answer = "Prefetch succeed"; anything else went to the GPT judge
+            r["judge"] = 100 * float((d["log"].astype(str) != "Prefetch succeed").mean())
+        elif "log" in d and "prediction" in d:
             r["judge"] = 100 * sum(needs_judge(l, p) for l, p in zip(d["log"], d["prediction"])) / max(len(d), 1)
-        for col in LEVELS:
+        for col in LEVELS_BY.get(dataset, LEVELS):
             if col in d:
                 counts = d[col].astype(str).value_counts()
                 r["levels"][col] = list(counts.index)
                 r["n"].update(counts.to_dict())
                 # same definition as VLMEvalKit's report_acc: mean hit per category value
                 r["cat"][col] = {str(c): 100 * float(v) for c, v in d.groupby(d[col].astype(str))["hit"].mean().items()}
-    acc = newest(list(Path(results).glob(f"*/{key}_{dataset}_acc.csv")))
+    if mathvista(dataset):
+        sc = newest(list(Path(results).glob(f"*/{key}_{dataset}_*_score.csv")))
+        if sc is not None:
+            r["scored"] = True
+            a = pd.read_csv(sc)
+            r["acc"] = {str(t): float(v) for t, v in zip(a["Task&Skill"], a["acc"])}  # already in %
+            if d is not None and abs(r["acc"]["Overall"] - 100 * d["hit"].mean()) > 0.05:
+                print(f"  !! {key} {dataset}: per-question hits {100 * d['hit'].mean():.1f} != score file "
+                      f"{r['acc']['Overall']:.1f}")
+        acc = None
+    else:
+        acc = newest(list(Path(results).glob(f"*/{key}_{dataset}_acc.csv")))
     if acc is not None:
         r["scored"] = True
         a = pd.read_csv(acc)
